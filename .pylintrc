@@ -1,0 +1,21 @@
+[MASTER]
+init-hook="import sys; sys.path.insert(0, './')"
+min-public-methods=1
+generated-members=cv2
+
+[FORMAT]
+max-line-length=120
+
+[SIMILARITIES]
+
+# Minimum lines number of a similarity.
+min-similarity-lines=50
+
+# Ignore comments when computing similarities.
+ignore-comments=yes
+
+# Ignore docstrings when computing similarities.
+ignore-docstrings=yes
+
+# Ignore the .venv folder
+ignore-patterns=.venv

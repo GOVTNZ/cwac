@@ -1,0 +1,135 @@
+{
+    "audit_data_source": "put_results_folder_name_here",
+    "charts_to_render": [
+        {
+            "report_type": "per_organisation",
+            "file_name": "axe_core_audit.csv",
+            "chart_name": "Accessibility issues by Website (template-aware)",
+            "description": "This test uses the <a href='https://github.com/dequelabs/axe-core'>axe-core library</a> to check for accessibility issues. Template-level issues repeated across multiple pages are counted only once. To run axe-core on individual web pages, use the <a href='https://www.deque.com/axe/devtools/'>axe DevTools</a> browser extension. Rows in the CSV data where 'best-practice' is 'Yes' are just recommendations, and are not strict WCAG failures. Filter the CSV data to show rows where 'best-practice' is equal to 'No' to see actual WCAG failures. In this chart, only strict WCAG failures are counted (where the best-practice column is 'No').  <strong>Low scores are good.</strong>",
+            "x_axis_title": "Website",
+            "y_axis_title": "Accessibility issues",
+            "sql_query": "AxeCoreAuditTemplateAware",
+            "query_table_x_key": "base_url",
+            "query_table_y_key": "count"
+        },
+        {
+        "report_type": "per_organisation",
+        "file_name": "axe_core_audit.csv",
+        "chart_name": "Accessibility issues by Website (template-unaware)",
+        "description": "This test uses the <a href='https://github.com/dequelabs/axe-core'>axe-core library</a> to check for accessibility issues. To run axe-core on individual web pages, use the <a href='https://www.deque.com/axe/devtools/'>axe DevTools</a> browser extension. Rows in the CSV data where 'best-practice' is 'Yes' are just recommendations, and are not strict WCAG failures. Filter the CSV data to show rows where 'best-practice' is equal to 'No' to see actual WCAG failures. <strong>Low scores are good.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "Accessibility issues",
+        "sql_query": "SELECT base_url, SUM(count) AS count_sum FROM cwac_table WHERE organisation LIKE :organisation AND viewport_size LIKE :viewport_size GROUP BY base_url ORDER BY count_sum DESC;",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "count"
+    },
+    {
+        "report_type": "per_organisation",
+        "file_name": "focus_indicator_audit.csv",
+        "chart_name": "Focus indicator issues by Website",
+        "description": "<strong>Warning: This is an experimental test, all results should be manually checked. This test has a low false-positive rate, but a high false-negative rate.</strong> This test provides indicative information about whether the focus indicator can be visually detected by a machine algorithm when pressing the Tab key. It also detects if a web page is continually animating. <strong>Low scores are good.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "Focus indicator issues",
+        "sql_query": "SELECT base_url, SUM(count) AS count_sum FROM cwac_table WHERE organisation LIKE :organisation AND viewport_size LIKE :viewport_size GROUP BY base_url ORDER BY count_sum DESC;",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "count"
+    },
+    {
+        "report_type": "per_organisation",
+        "file_name": "reflow_audit.csv",
+        "chart_name": "Average x-axis overflow by Website",
+        "description": "<strong>Warning: This is an experimental test, all results should be manually checked. Failures of this test indicate, but do not confirm, potential <a href='https://www.w3.org/TR/WCAG21/#reflow'>WCAG 1.4.10 Reflow</a> failures.</strong> This test shows how much x-overflow occurs at a width of 320 CSS pixels. This is a potential indicator of WCAG 1.4.10 Failures, and non-responsive design. <strong>Low scores are good.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "Average x-axis overflow (px)",
+        "sql_query": "SELECT base_url, AVG(overflow_amount_px) AS count_sum FROM cwac_table WHERE organisation LIKE :organisation AND viewport_size LIKE :viewport_size GROUP BY base_url ORDER BY count_sum DESC;",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "overflow_amount_px"
+    },
+    {
+        "report_type": "per_organisation",
+        "file_name": "language_audit.csv",
+        "chart_name": "Flesch-Kincaid Grade Level by Website",
+        "description": "This test provides the Flesch-Kincaid Grade Level average for each website. Flesch-Kincaid scores are a way of estimating how easy it is to read a piece of text. For more information, visit <a href='https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests'>Flesch-Kincaid readability tests &mdash; Wikipedia</a> <strong>A score of ~8 or lower is recommended.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "Flesch-Kincaid Grade Level",
+        "sql_query": "SELECT base_url, AVG(flesch_kincaid_gl) AS gl_avg FROM cwac_table WHERE organisation LIKE :organisation AND viewport_size LIKE :viewport_size GROUP BY base_url ORDER BY gl_avg DESC;",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "flesch_kincaid_gl"
+    },
+    {
+        "report_type": "per_organisation",
+        "file_name": "language_audit.csv",
+        "chart_name": "SMOG by Website",
+        "description": "This test provides the Simple Measure of Gobbledygook (SMOG) grade level average for each website. SMOG grade levels are a way of estimating how easy it is to read a piece of text. For more information, visit <a href='https://en.wikipedia.org/wiki/SMOG'>SMOG &mdash; Wikipedia</a>. <strong>A score of ~8 or lower is recommended.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "SMOG score",
+        "sql_query": "SELECT base_url, AVG(smog_gl) AS sum FROM cwac_table WHERE organisation LIKE :organisation AND viewport_size LIKE :viewport_size GROUP BY base_url ORDER BY sum DESC;",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "smog_gl"
+    }, {
+        "report_type": "general",
+        "file_name": "axe_core_audit.csv",
+        "chart_name": "Accessibility issues by Website (template-aware)",
+        "description": "This test uses the <a href='https://github.com/dequelabs/axe-core'>axe-core library</a> to check for accessibility issues. Template-level issues repeated across multiple pages are counted only once. To run axe-core on individual web pages, use the <a href='https://www.deque.com/axe/devtools/'>axe DevTools</a> browser extension. Rows in the CSV data where 'best-practice' is 'Yes' are just recommendations, and are not strict WCAG failures. Filter the CSV data to show rows where 'best-practice' is equal to 'No' to see actual WCAG failures. In this chart, only strict WCAG failures are counted (where the best-practice column is 'No').  <strong>Low scores are good.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "Accessibility issues",
+        "sql_query": "AxeCoreAuditTemplateAware",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "count"
+    },
+    {
+        "report_type": "general",
+        "file_name": "axe_core_audit.csv",
+        "chart_name": "Axe-core issues by Website (template unaware)",
+        "description": "This test uses the axe-core library to check for common accessibility issues. Template-level issues repeated across multiple pages are only counted once. To run axe-core on individual web pages, use the <a href='https://www.deque.com/axe/devtools/'>axe DevTools</a> browser extension. <strong>Low scores are good.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "axe-core issues",
+        "sql_query": "SELECT base_url, SUM(count) AS count_sum FROM cwac_table WHERE organisation LIKE :organisation AND viewport_size LIKE :viewport_size GROUP BY base_url ORDER BY count_sum DESC;",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "count"
+    },
+    {
+        "report_type": "general",
+        "file_name": "focus_indicator_audit.csv",
+        "chart_name": "Focus indicator issues by Website",
+        "description": "<strong>Warning: This is an experimental test, all results should be manually checked. This test has a low false-positive rate, but a high false-negative rate.</strong> This test provides indicative information about whether the focus indicator can be visually detected by a machine algorithm. It also detects if a web page is continually animating. <strong>Low scores are good.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "Focus indicator issues",
+        "sql_query": "SELECT base_url, SUM(count) AS count_sum FROM cwac_table WHERE viewport_size LIKE :viewport_size GROUP BY base_url ORDER BY count_sum DESC;",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "count"
+    },
+    {
+        "report_type": "general",
+        "file_name": "reflow_audit.csv",
+        "chart_name": "Average x-axis overflow by Website",
+        "description": "<strong>Warning: This is an experimental test, all results should be manually checked. Failures of this test indicate, but do not confirm, potential <a href='https://www.w3.org/TR/WCAG21/#reflow'>WCAG 1.4.10 Reflow</a> failures.</strong> This test shows how much x-overflow occurs at a width of 320 CSS pixels. This is a potential indicator of WCAG 1.4.10 failures, and non-responsive design. <strong>Low scores are good.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "Average x-axis overflow (px)",
+        "sql_query": "SELECT base_url, AVG(overflow_amount_px) AS count_sum FROM cwac_table WHERE viewport_size LIKE :viewport_size GROUP BY base_url ORDER BY count_sum DESC;",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "overflow_amount_px"
+    },
+    {
+        "report_type": "general",
+        "file_name": "language_audit.csv",
+        "chart_name": "Flesch-Kincaid Grade Level by Website",
+        "description": "This test provides the Flesch-Kincaid Grade Level average for each website. Flesch-Kincaid scores are a way of estimating how easy it is to read a piece of text. For more information, visit <a href='https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests'>Flesch-Kincaid readability tests &mdash; Wikipedia</a> <strong>A score of ~8 or lower is recommended.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "Flesch-Kincaid Grade Level",
+        "sql_query": "SELECT base_url, AVG(flesch_kincaid_gl) AS gl_sum FROM cwac_table WHERE viewport_size LIKE :viewport_size GROUP BY base_url ORDER BY gl_sum DESC;",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "flesch_kincaid_gl"
+    },
+    {
+        "report_type": "general",
+        "file_name": "language_audit.csv",
+        "chart_name": "SMOG grade level by Website",
+        "description": "This test provides the Simple Measure of Gobbledygook (SMOG) grade level average for each website. SMOG grade levels are a way of estimating how easy it is to read a piece of text. For more information, visit <a href='https://en.wikipedia.org/wiki/SMOG'>SMOG &mdash; Wikipedia</a>. <strong>A score of ~8 or lower is recommended.</strong>",
+        "x_axis_title": "Website",
+        "y_axis_title": "SMOG score",
+        "sql_query": "SELECT base_url, AVG(smog_gl) AS sum FROM cwac_table WHERE viewport_size LIKE :viewport_size GROUP BY base_url ORDER BY sum DESC;",
+        "query_table_x_key": "base_url",
+        "query_table_y_key": "smog_gl"
+    }]
+}

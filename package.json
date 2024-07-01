@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+  },
+  "scripts": {
+    "postinstall": "npx @puppeteer/browsers install chrome@122.0.6261.39"
+  },
+  "dependencies": {
+    "axe-core": "^4.9.1",
+    "@mozilla/readability": "^0.5.0"
+  }
+}

@@ -1,0 +1,83 @@
+<section aria-labelledby="{{ include.uniqueID }}-heading">
+    <h3 id="{{ include.uniqueID }}-heading">{{ include.chartTitle }}</h3>
+
+    <p>{{ include.description }}</p>
+
+    {% if false and include.auditType == "axe_core_audit_template_aware" %}
+        <!-- if include.axe_core_percentile is a positive number -->
+        {% if include.axe_core_percentile >= 0 %}
+            <p>
+                In this test, your organisation scored better than {{ include.axe_core_percentile | round }}% of all organisations tested.
+            </p>
+        {% endif %}
+    {% endif %}
+
+    <details>
+        <summary>Chart: {{ include.chartTitle }}</summary>
+
+        <img width="100%" class="chart light-mode" src="data:image/svg+xml;base64,{{ include.chartImageLight }}"
+            alt="Chart: {{ include.chartTitle }}, accessible description is below">
+        <img width="100%" class="chart dark-mode" src="data:image/svg+xml;base64,{{ include.chartImageDark }}"
+            alt="Chart: {{ include.chartTitle }}, accessible description is below">
+    </details>
+
+    <details>
+        <summary>
+            Chart as table: {{ include.chartTitle }}
+        </summary>
+        <div class="details-content">
+            <div>
+                <fieldset id="{{ include.uniqueID }}-column-selector-fieldset">
+                    <legend>Show/hide table columns</legend>
+                </fieldset>
+            </div>
+            <div>
+                <label>
+                    Filter table by text
+                    <div>
+                        <input id="{{ include.uniqueID }}-filter-input" type="text">
+                    </div>
+                </label>
+            </div>
+            <details>
+                <summary>
+                    Filtering by text instructions
+                </summary>
+                <div class="details-content">
+                    <ul>
+                        <li>
+                            Use double quotes to search for an exact phrase e.g <code>"0"</code> will match
+                            <code>"0"</code> but not <code>"10"</code>
+                        </li>
+                        <li>
+                            Use a space to search for multiple words (uses an AND operator)
+                        </li>
+                        <li>
+                            Use basic less than and greater than expressions to filter columns, such as:
+                            <ul>
+                                <li>
+                                    <code>column_name&lt;10</code> will show rows where column_name is less than
+                                    10
+                                </li>
+                                <li>
+                                    <code>column_name&gt;10</code> will show rows where column_name is greater
+                                    than 10
+                                </li>
+                                <li>
+                                    <code>column_name=20</code> will show rows where column_name is equal to 20
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </details>
+            <button class="download-button" id="{{ include.uniqueID }}-download-button"><span aria-hidden="true">⬇</span> Download table as CSV</button>
+            <table id="{{ include.uniqueID }}-table">
+                <caption>{{ include.chartTitle }}</caption>
+            </table>
+        </div>
+    </details>
+    <button class="download-button" id="raw_data_{{ include.uniqueID }}_download">
+        <span aria-hidden="true">⬇</span> Download raw issue data for {{ include.chartTitle }} as CSV
+    </button>
+</section>
