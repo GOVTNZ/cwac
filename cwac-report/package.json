@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "eslint-plugin-jsdoc": "^39.6.4"
+  }
+}

@@ -1,0 +1,367 @@
+/* Variables for light and dark mode */
+:root {
+    --bg-color: white;
+    --text-color: black;
+    --status-background: rgb(240, 240, 240);
+    --link-color: black;
+    --link-visited-color: black;
+    --focus-outline-color: yellow;
+}
+
+.light-mode, .dark-mode {
+    display: none;
+}
+
+/* Prefers dark mode */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: rgb(35, 35, 35);
+        --text-color: white;
+        --status-background: rgb(24, 24, 24);
+        --link-color: white;
+        --link-visited-color: white;
+        --focus-outline-color: yellow;
+    }
+
+    footer svg {
+        filter: invert(100%);
+    }
+
+    .dark-mode {
+        display: block;
+    }
+}
+
+/* Prefers light mode */
+@media (prefers-color-scheme: light) {
+    .light-mode {
+        display: block;
+    }
+}
+
+/* if prefers-color-scheme is not supported, default to light mode */
+@media (prefers-color-scheme: no-preference) {
+    .light-mode {
+        display: block;
+    }
+}
+
+/* skip to main content link */
+.skip-to-main-content {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+.skip-to-main-content:focus {
+    clip: auto;
+    clip-path: initial;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    position: static;
+    width: auto;
+    text-decoration: underline;
+    padding: 0.9rem;
+    display: block;
+    color: #000 !important;
+    background-color: #fd0;
+    text-align: center;
+}
+
+/* SVG filter definition */
+svg.filters {
+    height: 0;
+    width: 0;
+    position: absolute;
+    overflow: hidden;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    word-break: break-word;
+}
+
+body {
+    font-family: sans-serif;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    font-size: 19px;
+    line-height: 1.5;
+}
+
+header, main, footer {
+    padding: 1rem;
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+header {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-bottom: 1px solid rgb(82, 82, 82);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+/* select the first child of header */
+#header-logo {
+    width: 100%;
+    max-width: 200px;
+}
+
+*:focus, *:focus:visited {
+    outline-offset: 0.2rem;
+    outline: 2px solid var(--text-color)
+}
+
+a {
+    color: var(--link-color);
+    text-underline-offset: 0.2rem;
+}
+
+a:visited {
+    color: var(--link-visited-color);
+}
+
+audio {
+    width: 100%;
+}
+
+h1:focus, h2:focus, h3:focus, h4:focus, h5:focus {
+    outline: none;
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 2rem;
+    margin-top: 2rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+h4 {
+    font-size: 1.25rem;
+}
+
+h5 {
+    font-size: 1rem;
+}
+
+header div {
+    margin: 1rem;
+}
+
+header img {
+    box-shadow: 5px 5px 0 #000;
+    width: 100%;
+}
+
+p, ul {
+    margin: 1rem 0;
+}
+
+section {
+    margin: 2rem 0;
+}
+
+dt {
+    font-weight: bold;
+}
+
+dd {
+    margin: 0 0 0 1rem;
+}
+
+dd+dt {
+    margin-top: 0.5rem;
+}
+
+li {
+    margin: 0 1.75rem;
+}
+
+li+li {
+    margin-top: 0.5rem;
+}
+
+footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+}
+
+.note {
+    margin-top: 1rem;
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    max-width: 80ch;
+    border-left: 4px solid var(--text-color);
+    background-color: var(--status-background);
+}
+
+.note {
+    margin: 1rem;
+}
+
+details {
+    border: 1px solid var(--text-color);
+}
+
+details + details {
+    margin-top: 1rem;
+}
+
+summary {
+    padding: 0.5rem;
+    font-weight: bold;
+    cursor: default;
+}
+
+details[open] summary {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+}
+
+.details-content {
+    padding: 1rem;
+}
+
+/*
+    If there'a CSS file with
+    no lobomoised owl selector, is it really a CSS file?
+*/
+.details-content > * + * {
+    margin: 1rem 0;
+}
+
+details *, .details-content * {
+    max-width: 100%;
+}
+
+footer div {
+    padding: 2rem;
+    flex-grow: 1;
+    text-align: center;
+}
+
+footer img {
+    width: 100%;
+}
+
+fieldset {
+    display: inline;
+    padding: 0.5rem;
+}
+
+fieldset ul {
+    list-style: none;
+}
+
+#dia-logo {
+    max-width: 15rem;
+}
+
+#govt-logo {
+    max-width: 18.8rem;
+}
+
+.chart {
+    margin-top: 2px;
+}
+
+@media screen and (max-width: 750px) {
+    header {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    main, header, footer {
+        padding: 1rem 0.25rem;
+    }
+
+    .details-content, summary {
+        padding: 0.25rem;
+    }
+
+    header div {
+        margin: 0.25rem;
+    }
+
+    fieldset ul li {
+        margin-left: 0;
+    }
+}
+
+/* print stylesheet */
+@media print {
+    /* Remove logo */
+    #header-logo {
+        display: none;
+    }
+
+    /* Set all text to black */
+    * {
+        color: black !important;
+    }
+}
+
+.table-scroll {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.download-button {
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 2px solid var(--bg-color);
+    background-color: var(--text-color);
+    color: var(--bg-color);
+}
+
+/* style tables with class .cwac-table */
+.cwac-table {
+    border-collapse: collapse;
+    border: 1px solid var(--text-color);
+    margin-top: 1rem;
+}
+
+.cwac-table th, .cwac-table td {
+    border: 1px solid var(--text-color);
+    padding: 0.5rem;
+}
+
+.cwac-table th {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    text-align: left;
+}
+
+.cwac-table caption {
+    font-weight: bold;
+    text-align: left;
+}
+
+.details-content {
+    padding: 1rem;
+}

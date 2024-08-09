@@ -1,0 +1,3 @@
+# FILE: .bandit
+[bandit]
+exclude = venv,github,git,.mypy_cache,.pytest_cache,.vscode,nltk_data,__pycache__,tests

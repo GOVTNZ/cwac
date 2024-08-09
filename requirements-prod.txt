@@ -1,0 +1,10 @@
+beautifulsoup4==4.12.3
+requests==2.32.3
+selenium==4.21.0
+lxml==5.2.2
+responses==0.25.2
+opencv-python==4.10.0.82
+numpy==1.26.4
+matplotlib==3.9.0
+pandas==2.2.2
+pyarrow==16.1.0

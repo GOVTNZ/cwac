@@ -1,0 +1,32 @@
+<footer>
+    <div>
+        <a href="https://www.dia.govt.nz/"><span class="visuallyhidden"><span lang="mi">Te Tari Taiwhenua</span> /
+        </span>{% include dia_logo_black.svg %}</a>
+    </div>
+    <div>
+        <a href="https://www.govt.nz"><span class="visuallyhidden"><span lang="mi">Te Kāwanatanga o Aotearoa</span> /
+        </span>{% include govt_logo_black.svg %}</a>
+    </div>
+</footer>
+<script type="module">
+    {% include a11ytable.js %}
+    {% include base642csv.js %}
+    {% for section in report_sections %}
+        {% assign index = forloop.index0 %}
+        {% include chart_section.js
+            uniqueID=index
+            chartTitle=section.chartTitle
+            description=section.description
+            auditType=section.auditType
+            organisation=section.organisation
+            tableData=section.tableData
+            rawData=section.rawData
+        %}
+    {% endfor %}
+</script>
+<script>
+    {% include base.js %}
+</script>
+</body>
+
+</html>
