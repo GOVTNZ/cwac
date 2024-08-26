@@ -8,7 +8,7 @@ python -m venv .venv
 source .venv/bin/activate
 
 echo "Installing Python dependencies..."
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 
 echo "Install mypy stubs..."
 mypy --install-types

@@ -156,7 +156,7 @@ class FocusIndicatorAudit:
         animation_result = self.wait_for_page_to_stop_animating()
 
         # If animations didn't finish, return failure data to
-        # TestManager
+        # AuditManager
         if not animation_result:
             return [
                 {

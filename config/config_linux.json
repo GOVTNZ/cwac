@@ -7,6 +7,8 @@
     "chrome_binary_location": "./chrome/linux-122.0.6261.39/chrome-linux64/chrome",
     "chrome_driver_location": "./drivers/chromedriver_linux_x64",
     "user_agent": "Mozilla/5.0 (compatible; CWACbot/1.0; +https://www.digital.govt.nz/centralised-web-accessibility-checker/)",
+    "user_agent_product_token": "CWACbot",
+    "follow_robots_txt": true,
     "script_timeout": 15,
     "page_load_timeout": 10,
     "delay_between_page_loads": 0.4,

@@ -1,6 +1,6 @@
 """Crawler.
 
-Crawls specified websites and tests them using TestManager
+Crawls specified websites and tests them using AuditManager
 """
 
 import importlib
@@ -9,6 +9,7 @@ import posixpath
 import random
 import time
 import urllib
+import urllib.robotparser
 from queue import SimpleQueue
 from typing import Any
 
@@ -28,6 +29,9 @@ from src.output import CSVWriter
 
 # disable too-many-branches
 # pylint: disable=R0912
+
+# disable too-many-statements
+# pylint: disable=R0915
 
 
 class Crawler:
@@ -203,6 +207,35 @@ class Crawler:
                 return False
         return True
 
+    def handle_base_element(self, url: str) -> str:
+        """Handle the base element for relative URLs."""
+        base_element = url
+        try:
+            base_element = self.browser.get_base_uri()
+        except Exception:
+            logging.exception("Failed to get base element %s", url)
+            return url
+
+        # Check that the base_element has same domain as base_url
+        if not src.filters.url_filter_not_same_domain(base_element, url):
+            logging.info(
+                "get_links skipped due to equality of: %s %s",
+                base_element,
+                url,
+            )
+            return url
+
+        # Check that the protocol is equal between base_element and url
+        if not src.filters.url_filter_same_protocol(base_element, url):
+            logging.info(
+                "get_links skipped due to different protocol of: %s %s",
+                base_element,
+                url,
+            )
+            return url
+
+        return base_element
+
     def get_links(self, base_url: str, url: str) -> list[str]:
         """Get a list of (viable) links on a page.
 
@@ -222,10 +255,14 @@ class Crawler:
 
         all_a_elements = soup.find_all("a", href=True)
 
+        # Handles if <base> element is manipulating relative URLs
+        # otherwise, it is simply the 'url' value.
+        base_uri = self.handle_base_element(url)
+
         for new_url in all_a_elements:
             # Compiles the full URL
             href = new_url.get("href").strip()
-            href = urllib.parse.urljoin(url, href)
+            href = urllib.parse.urljoin(base_uri, href)
 
             # Run a range of filters on the URL
             if not self.url_filter.run_url_filters(href):
@@ -329,8 +366,97 @@ class Crawler:
             return False
         return status_code is not None
 
+    def fetch_robots_txt(self, robots_txt_url: str) -> str:
+        """Fetches a robots.txt file from a domain.
+
+        This is a custom implementation as the standard library's
+        urllib.robotparser.RobotFileParser does not appear to handle
+        large file problems, non-UTF-8 chars, or Content-Type checks.
+
+        Args:
+            robots_txt_url (str): URL to fetch robots.txt from
+
+        Returns:
+            str: robots.txt file
+        """
+        # Fetch the robots.txt file
+        try:
+            logging.info("Fetching robots.txt %s", robots_txt_url)
+            response = requests.get(robots_txt_url, headers={"User-Agent": config.user_agent}, timeout=10)
+            # Check Content-Type is text/plain (in a safe way)
+            is_content_type_set = "Content-Type" in response.headers
+            if is_content_type_set and response.headers["Content-Type"] != "text/plain":
+                raise ValueError(
+                    f"robots.txt has invalid Content-Type {robots_txt_url} {response.headers['Content-Type']}"
+                )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            logging.error("Failed to fetch robots.txt %s", robots_txt_url)
+            raise exc
+
+        logging.info("Fetched robots.txt %s", robots_txt_url)
+
+        robots_txt_content = response.text
+
+        # If the response is > 500 KB
+        if len(robots_txt_content) > 1024 * 500:
+            logging.warning("robots.txt file is too large (>500 KB) on %s", robots_txt_url)
+            raise ValueError(f"robots.txt file is too large (>500 KB) on {robots_txt_url}")
+
+        # Remove any non-UTF-8 characters
+        file = robots_txt_content.encode("utf-8", errors="ignore").decode("utf-8")
+
+        return file
+
+    def is_url_allowed_by_robots_txt(self, url: str) -> bool:
+        """Checks if a URL's robots.txt allows CWAC.
+
+        Args:
+            url (str): URL to check
+
+        Returns:
+            bool: True if URL is allowed by robots.txt, else False (True if config disables robots.txt checks)
+        """
+        if not config.follow_robots_txt:
+            return True
+
+        # Get the protocol/domain of the URL
+        protocol, domain = urllib.parse.urlparse(url)[:2]
+
+        # If the domain is in config.robots_txt_cache, use that
+        if domain in config.robots_txt_cache:
+            robot_parser = config.robots_txt_cache[domain]
+            logging.info("Using cached robots.txt for %s", domain)
+            result = robot_parser.can_fetch(config.user_agent_product_token, url)
+            logging.info("robots.txt result for %s was %s", url, "allow" if result else "disallow")
+            return result
+
+        # Use urllib.robotparser to parse the robots.txt file
+        robot_parser = urllib.robotparser.RobotFileParser()
+
+        # Fetch the robots.txt file
+        try:
+            robots_txt = self.fetch_robots_txt(f"{protocol}://{domain}/robots.txt")
+            robot_parser.parse(robots_txt.splitlines())
+        except (requests.exceptions.RequestException, ValueError):
+            robot_parser.parse("")
+            config.robots_txt_cache[domain] = robot_parser
+            logging.exception("Failed to fetch or parse robots.txt - default to allow! %s", domain)
+            return True
+
+        # Cache the robotparser object
+        config.robots_txt_cache[domain] = robot_parser
+
+        # Check if the URL is allowed by robots.txt
+        result = robot_parser.can_fetch(config.user_agent_product_token, url)
+
+        # Log the outcome
+        logging.info("robots.txt result for %s was %s", url, "allow" if result else "disallow")
+
+        return result
+
     def crawl(self, site_data: dict[str, Any], base_url: str) -> None:
-        """Crawls a domain and executes the TestManager.
+        """Crawls a domain and executes the AuditManager.
 
         Loads a webpage, and runs a set of tests on that page. It also
         scrapes the links out of the page, and navigates to new pages,
@@ -377,6 +503,11 @@ class Crawler:
             try:
                 url = self.url_sanitise(url)
             except ValueError:
+                continue
+
+            # Check if URL is allowed by robots.txt
+            if not self.is_url_allowed_by_robots_txt(url):
+                logging.info("URL disallowed by robots.txt %s", url)
                 continue
 
             # Run filter_by_header function

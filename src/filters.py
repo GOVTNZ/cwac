@@ -82,6 +82,7 @@ def url_filter_filetype(url: urllib.parse.ParseResult) -> bool:
     """
     disallowed_file_types = {
         ".xml",
+        ".gif",
         ".csv",
         ".xls",
         ".xlsx",
@@ -91,8 +92,10 @@ def url_filter_filetype(url: urllib.parse.ParseResult) -> bool:
         ".wma",
         ".flv",
         ".ppt",
+        ".py",
         ".pptx",
         ".jpg",
+        ".jpeg",
         ".png",
         ".avi",
         ".mov",
@@ -126,9 +129,14 @@ def url_filter_filetype(url: urllib.parse.ParseResult) -> bool:
         ".eot",
         ".svg",
         ".srt",
+        ".wav",
+        ".brf",
+        ".txt",
     }
 
-    return not url.path.endswith(tuple(disallowed_file_types))
+    lowercase_path = url.path.lower()
+
+    return not lowercase_path.endswith(tuple(disallowed_file_types))
 
 
 def url_filter_not_same_domain(url_a: str, url_b: str) -> bool:
@@ -222,6 +230,26 @@ def process_url_headers(url: str) -> dict[Any, Any]:
         output["final_url"] = final_url
 
     return output
+
+
+def url_filter_same_protocol(url_a: str, url_b: str) -> bool:
+    """Filter url_a if url_b has different protocol.
+
+    Args:
+        url_a (str): A url to compare with url_b
+        url_b (str): A url to compare with url_a
+
+    Returns:
+        bool: True if url_b is within domain of url_a, else False
+    """
+    try:
+        parsed_a = urllib.parse.urlparse(url_a)
+        parsed_b = urllib.parse.urlparse(url_b)
+    except Exception as e:
+        logging.error("Failed to parse URL: %s", e)
+        return False
+
+    return parsed_a.scheme == parsed_b.scheme
 
 
 class URLFilter:

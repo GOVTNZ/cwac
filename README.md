@@ -38,8 +38,7 @@ A Python virtual environment ensures that CWAC's dependencies aren't installed o
 
 ### Step 3: Install Python libraries
 - In a terminal, `cd` to the `cwac` directory.
-- Run `pip install -r requirements-dev.txt` to install all required Python libraries.
-- Or, if you're building for production, run `pip install -r requirements-prod.txt`
+- Run `pip install -r requirements.txt` to install all required Python libraries.
 
 ### Step 4: Setting up pre-commit hooks (OPTIONAL - this is for development purposes and contributing)
 To set up CWAC for development, you must first install all required pre-commit hooks. This isn't necessary if you just want to run CWAC.
@@ -134,6 +133,10 @@ Field descriptions:
   - a valid path to a `chromedriver` executable (version must match the version of Chrome for Testing)
 - `user_agent`
   - the user agent string CWAC will use for all network requests
+- `user_agent_product_token`
+  - the product token (should match the one in `user_agnet` used for robots.txt matching)
+- `follow_robots_txt`
+  - a bool, determines if robots.txt directives should be followed by CWAC
 - `script_timeout`
   - the number of seconds before JavaScript execution will timeout
 - `page_load_timeout`
@@ -216,11 +219,17 @@ To chain two instances of CWAC where one test will run after the other in sequen
 python cwac.py config_a.json && python cwac.py config_b.json
 ```
 
-#### Generating HTML reports
-View the README.md in the `./cwac-report/` folder for HTML report generation instructions.
-
 ### Results storage
-Test results are stored within the `./results/` folder.
+The raw test results are stored within the `./results/` folder.
+
+### Exporting reports from the raw data
+You can either use the raw data stored in teh `./results/` folder directly, or you can use a data exporting feature which auto-generates leaderboards, and runs an algorithm which attempts to de-duplicate axe-core issues.
+
+The CWAC data exporter is in the file `export_report_data.py`, and its configuration is in `export_report_data_config.json`.
+
+To use the CWAC data exporter, first modify `export_report_data_config.json` to specify where it should import data from within the `./results/` folder. Set `input_results_folder_name` to a valid folder name found within `./results/`. Then, set `output_report_name` to specify the name of the output folder that will be generated within `./reports/`.
+
+You can then run `export_report_data.py` and it will generate various leaderboard CSVs etc and the output will be placed within `./reports/{output_folder_name}/`.
 
 ## Checking CWAC's source code
 

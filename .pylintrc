@@ -19,3 +19,7 @@ ignore-docstrings=yes
 
 # Ignore the .venv folder
 ignore-patterns=.venv
+
+[MESSAGES CONTROL]
+# disable broad except
+disable=W0703

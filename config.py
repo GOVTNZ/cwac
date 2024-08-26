@@ -26,6 +26,8 @@ class Config:
     browser: str
     chrome_binary_location: str
     user_agent: str
+    user_agent_product_token: str
+    follow_robots_txt: bool
     script_timeout: int
     page_load_timeout: int
     delay_between_page_loads: int
@@ -93,6 +95,11 @@ class Config:
             raise ValueError("base_urls_nocrawl_path must be within base_urls folder")
 
         self.config["url_lookup"] = self.import_url_lookup_files()
+
+        # global variable to store robots.txt data
+        # the Crawler queries this and populates it
+        # if no entry is found for a website.
+        self.config["robots_txt_cache"] = {}
 
         # nocrawl_mode changes max_links_per_domain = 1
         if self.config["nocrawl_mode"]:

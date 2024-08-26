@@ -1,18 +1,20 @@
 {
-    "audit_name": "test",
+    "audit_name": "audit_name_here",
     "headless": true,
     "max_links_per_domain": 5,
-    "thread_count": 4,
+    "thread_count": 8,
     "browser": "chrome",
     "chrome_binary_location": "./chrome/mac_arm-122.0.6261.39/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
     "chrome_driver_location": "./drivers/chromedriver_mac_arm64",
     "user_agent": "Mozilla/5.0 (compatible; CWACbot/1.0; +https://www.digital.govt.nz/centralised-web-accessibility-checker/)",
+    "user_agent_product_token": "CWACbot",
+    "follow_robots_txt": true,
     "script_timeout": 15,
     "page_load_timeout": 10,
-    "delay_between_page_loads": 0.4,
-    "delay_between_viewports": 0.5,
-    "delay_after_page_load": 0.5,
-    "only_allow_https": true,
+    "delay_between_page_loads": 0.1,
+    "delay_between_viewports": 0.1,
+    "delay_after_page_load": 0.1,
+    "only_allow_https": false,
     "perform_header_check": true,
     "nocrawl_mode": false,
     "shuffle_base_urls": true,
@@ -33,7 +35,7 @@
         },
         "language_audit": {
             "class_name": "LanguageAudit",
-            "enabled": false,
+            "enabled": true,
             "run_sentiment_analysis": false
         },
         "reflow_audit": {
@@ -44,8 +46,8 @@
         },
         "focus_indicator_audit": {
             "class_name": "FocusIndicatorAudit",
-            "enabled": false,
-            "max_tab_key_presses": 15
+            "enabled": true,
+            "max_tab_key_presses": 5
         },
         "screenshot_audit": {
             "class_name": "ScreenshotAudit",

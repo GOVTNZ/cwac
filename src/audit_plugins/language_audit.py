@@ -22,9 +22,6 @@ from config import config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
-# pylint: disable=unreachable
-raise RuntimeError("LanguageAudit cannot be used until https://github.com/nltk/nltk/issues/3266 is resolved.")
-
 # Download Natural Language Toolkit data
 nltk_dir = os.getcwd() + "/nltk_data/"
 nltk.download("punkt", download_dir=nltk_dir, quiet=True)

@@ -147,6 +147,19 @@ class Browser:
             doctype_string = "<!DOCTYPE html>"
         return doctype_string
 
+    def get_base_uri(self) -> str:
+        """Returns document.baseURI of current page.
+
+        Returns:
+            str: base URI of current page.
+        """
+        try:
+            return self.driver.execute_script("return document.baseURI")
+        except Exception as exc:
+            logging.exception("TimeoutException when getting base URI")
+            self.safe_restart()
+            raise exc
+
     def get_page_source(self) -> str:
         """Return the browser's page source.
 

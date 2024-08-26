@@ -109,7 +109,7 @@ class AxeCoreAudit:
                 expanded_results.append(results_dict)
 
         # If a website has no axe-core issues, provide default data
-        if len(axe_core_results["violations"]) == 0:
+        if len(expanded_results) == 0:
             expanded_results.append(
                 {
                     "audit_type": AxeCoreAudit.audit_type,
