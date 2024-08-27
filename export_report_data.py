@@ -29,13 +29,13 @@ class DataExporter:
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
         self.iterate_export_formats()
-    
+
     def get_num_unique_pages_scanned(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Returns a DF with num of unique pages scanned for each base_url
-        
+        """Returns a DF with num of unique pages scanned for each base_url.
+
         Args:
             df (pd.DataFrame): The input DataFrame
-            
+
         Returns:
             pd.DataFrame: The resulting DataFrame
         """
@@ -145,7 +145,7 @@ class DataExporter:
 
     def export_raw_data(self, input_filename: str, output_filename: str) -> None:
         """Export the raw data from the input_filename to the output_filename.
-        
+
         Args:
             input_filename (str): The input filename.
             output_filename (str): The output filename.

@@ -21,7 +21,6 @@ from typing import Any, Union
 
 from config import config
 from src.audit_plugins.default_audit import DefaultAudit
-from src.audit_plugins.screenshot_audit import ScreenshotAudit
 from src.browser import Browser
 
 
@@ -99,6 +98,8 @@ class ReflowAudit:
 
         # Run a ScreenshotAudit if the page overflows
         if config.audit_plugins["reflow_audit"]["screenshot_failures"] and overflow_amount > 0:
+            from src.audit_plugins.screenshot_audit import ScreenshotAudit  # pylint: disable=import-outside-toplevel
+
             screenshot_audit = ScreenshotAudit(
                 browser=self.browser,
                 url=self.url,
