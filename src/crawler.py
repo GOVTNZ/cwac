@@ -33,6 +33,9 @@ from src.output import CSVWriter
 # disable too-many-statements
 # pylint: disable=R0915
 
+# disable too-many-locals
+# pylint: disable=R0914
+
 
 class Crawler:
     """Crawls URLs and initiates tests on the pages."""
@@ -262,7 +265,12 @@ class Crawler:
         for new_url in all_a_elements:
             # Compiles the full URL
             href = new_url.get("href").strip()
-            href = urllib.parse.urljoin(base_uri, href)
+            try:
+                href = urllib.parse.urljoin(base_uri, href)
+            except ValueError as exc:
+                # Log base_uri, href, and the exception
+                logging.exception("Failed to join URL %s %s %s", base_uri, href, exc)
+                continue
 
             # Run a range of filters on the URL
             if not self.url_filter.run_url_filters(href):
@@ -322,24 +330,18 @@ class Crawler:
                 viewport_size=self.browser.get_window_size(),
             )
 
-    def are_url_headers_acceptable(self, base_url: str, parent_url: str, url: str) -> bool:
+    def are_url_headers_acceptable(self, base_url: str, parent_url: str, url: str, status_code: int) -> bool:
         """Check if the URL has acceptable headers.
 
         Args:
+            base_url (str): base URL - homepage of website specified
+            parent_url (str): parent URL of url
             url (str): URL to check
+            status_code (int): status code of the rul
 
         Returns:
             bool: True if URL has acceptable headers, else False
         """
-        # process_url_headers returns a dict with
-        # status_code and final_url after redirects
-        # status_code is None if an error occurred
-        url_data = src.filters.process_url_headers(url)
-
-        # Unpack the dict
-        status_code = url_data["status_code"]
-        url = url_data["final_url"]
-
         if status_code is None:
             status_code = -1
 
@@ -510,14 +512,17 @@ class Crawler:
                 logging.info("URL disallowed by robots.txt %s", url)
                 continue
 
-            # Run filter_by_header function
-            # which checks header info i.e. Content-Type and status code
-            # which returns a 'resolved' URL after redirects or None
-            # if the URL is invalid
-            if config.perform_header_check and not self.are_url_headers_acceptable(
-                base_url=base_url, parent_url=parent_url, url=url
-            ):
-                continue
+            # process_url_headers returns a dict with
+            # status_code and final_url after redirects
+            # status_code is None if an error occurred
+            if config.perform_header_check:
+                url_data = src.filters.process_url_headers(url)
+                url_status_code = url_data["status_code"]
+                url = url_data["final_url"]
+                if not self.are_url_headers_acceptable(
+                    base_url=base_url, parent_url=parent_url, url=url, status_code=url_status_code
+                ):
+                    continue
 
             if not self.url_filter.run_url_filters(url):
                 continue

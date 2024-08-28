@@ -285,8 +285,14 @@ class URLFilter:
         Args:
             url (str): The URL to run filtration on
         """
+        try:
+            parsed_url = urllib.parse.urlparse(url)
+        except Exception as e:
+            logging.error("Failed to parse URL: %s", e)
+            return False
+
         for filter_name, filter_func in self.url_filters.items():
-            if not filter_func(urllib.parse.urlparse(url)):
+            if not filter_func(parsed_url):
                 logging.info("%s filter rejected %s", filter_name, url)
                 return False
         return True
