@@ -95,12 +95,24 @@ class DataExporter:
         # leaderboard_df["rank"] = leaderboard_df["rank"].astype(int)
 
         # Add percentile column
-        # leaderboard_df["percentile"] = (leaderboard_df["average_count"].rank(pct=True) * 100).round(2)
+        leaderboard_df["percentile"] = (leaderboard_df["average_count"].rank(pct=True) * 100).round(2)
 
         # Rename columns to be more descriptive
-        # leaderboard_df = leaderboard_df.rename(
-        #     columns={"count": "num_issues", "average_count": "average_issues_per_page"}
-        # )
+        leaderboard_df = leaderboard_df.rename(
+            columns={"count": "num_issues", "average_count": "average_num_issues_per_page"}
+        )
+
+        # Reorder so num_issues and average_num_issues_per_page are next to each other
+        leaderboard_df = leaderboard_df[
+            [
+                "organisation",
+                "base_url",
+                "num_pages_scanned",
+                "num_issues",
+                "average_num_issues_per_page",
+                "percentile",
+            ]
+        ]
 
         return leaderboard_df
 

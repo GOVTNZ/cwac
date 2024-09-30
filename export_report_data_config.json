@@ -19,21 +19,21 @@
             "export_type": "leaderboard",
             "input_filename": "focus_indicator_audit.csv",
             "output_filename": "focus_indicator_audit_leaderboard.csv",
-            "query": "SELECT base_url, SUM(count) as count FROM cwac_table GROUP BY base_url ORDER BY count DESC"
+            "query": "SELECT organisation, base_url, SUM(count) as count FROM cwac_table GROUP BY base_url ORDER BY count DESC"
         },
         {
             "enabled": true,
             "export_type": "leaderboard",
             "input_filename": "reflow_audit.csv",
             "output_filename": "reflow_audit_leaderboard.csv",
-            "query": "SELECT base_url, AVG(overflow_amount_px) AS overflow_amount_px FROM cwac_table GROUP BY base_url ORDER BY overflow_amount_px DESC;"
+            "query": "SELECT organisation, base_url, AVG(overflow_amount_px) AS overflow_amount_px FROM cwac_table GROUP BY base_url ORDER BY overflow_amount_px DESC;"
         },
         {
             "enabled": true,
             "export_type": "leaderboard",
             "input_filename": "language_audit.csv",
             "output_filename": "language_audit_leaderboard.csv",
-            "query": "SELECT base_url, AVG(smog_gl) AS smog_grade_level FROM cwac_table GROUP BY base_url ORDER BY smog_grade_level DESC"
+            "query": "SELECT organisation, base_url, AVG(smog_gl) AS smog_grade_level FROM cwac_table GROUP BY base_url ORDER BY smog_grade_level DESC"
         },
         {
             "enabled": true,
