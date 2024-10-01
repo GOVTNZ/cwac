@@ -84,8 +84,8 @@ From time to time, it might make sense to update the version of Chrome for Testi
 
 To do this:
 1. Visit [Chrome for Testing - GitHub](https://github.com/GoogleChromeLabs/chrome-for-testing)
-2. Open the API endpoint `known-good-versions-with-downloads.json` in a JSON viewer
-3. Find an entry in the JSON for the desired version of Chrome for Testing
+2. Open the API endpoint `last-known-good-versions-with-downloads.json` in a JSON viewer (Firefox has one built-in)
+3. Find the entry for the latest stable version of Chrome for Testing
 4. Download the `chromedriver` that matches the version of Chrome for Testing you want to use
 5. Place the `chromedriver` executable into the `/drivers/` folder in `cwac`, with a unique filename
 6. Open `package.json` and change the Chrome for Testing version number, ensuring it matches the `chromedriver` version
