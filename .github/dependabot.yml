@@ -9,11 +9,4 @@ updates:
     schedule:
       interval: "daily"
     requirements:
-      - file: "requirements-dev.txt"
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    requirements:
-      - file: "requirements-prod.txt"
-
+      - file: "requirements.txt"
