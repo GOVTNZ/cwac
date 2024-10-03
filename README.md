@@ -256,6 +256,7 @@ By default, CWAC has 6 plugins:
 - `ReflowAudit` - a plugin that gives an indicative test for WCAG 1.4.10 Reflow
 - `FocusIndicatorAudit` - a plugin that presses the tab key and detects if pixels changed after pressing tab, which can be an indicative test for WCAG 2.4.7 Focus Visible.
 - `ScreenshotAudit` - a plugin that simply takes screenshots of each web page tested and saves it to a folder in the results directory.
+- `ElementAudit` - a plugin that reports all instances of elements that match a CSS selector.
 
 The code for each plugin is located in `/src/audit_plugins/`
 
@@ -289,6 +290,11 @@ The format of `audit_plugin` entries requires a snake case name as the key, and 
         "class_name": "FocusIndicatorAudit",
         "enabled": true,
         "max_tab_key_presses": 15
+    },
+    "element_audit": {
+        "class_name": "ElementAudit",
+        "target_element_css_selector": "input:not([type="search"])",
+        "enabled": true
     }
 }
 ```

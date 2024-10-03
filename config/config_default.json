@@ -1,7 +1,7 @@
 {
     "audit_name": "audit_name_here",
     "headless": true,
-    "max_links_per_domain": 5,
+    "max_links_per_domain": 50,
     "thread_count": 8,
     "browser": "chrome",
     "chrome_binary_location": "./chrome/mac_arm-122.0.6261.39/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
@@ -11,21 +11,20 @@
     "follow_robots_txt": true,
     "script_timeout": 15,
     "page_load_timeout": 10,
-    "delay_between_page_loads": 0.1,
+    "delay_between_page_loads": 0.2,
     "delay_between_viewports": 0.1,
     "delay_after_page_load": 0.1,
-    "only_allow_https": false,
+    "only_allow_https": true,
     "perform_header_check": true,
     "nocrawl_mode": false,
     "shuffle_base_urls": true,
     "base_urls_crawl_path" : "./base_urls/crawl/",
     "base_urls_nocrawl_path": "./base_urls/nocrawl/",
-    "check_for_broken_internal_links": true,
+    "check_for_broken_internal_links": false,
     "filter_to_organisations": [],
-    "filter_to_domains": [],
+    "filter_to_domains": ["www.digital.govt.nz"],
     "viewport_sizes": {
-        "small": {"width": 320, "height": 450},
-        "medium": {"width": 1280, "height": 800}
+        "small": {"width": 320, "height": 450}
     },
     "audit_plugins": {
         "axe_core_audit": {
@@ -40,17 +39,22 @@
         },
         "reflow_audit": {
             "class_name": "ReflowAudit",
-            "enabled": true,
+            "enabled": false,
             "viewport_to_test": "small",
             "screenshot_failures": false
         },
         "focus_indicator_audit": {
             "class_name": "FocusIndicatorAudit",
-            "enabled": true,
+            "enabled": false,
             "max_tab_key_presses": 5
         },
         "screenshot_audit": {
             "class_name": "ScreenshotAudit",
+            "enabled": true
+        },
+        "element_audit": {
+            "class_name": "ElementAudit",
+            "target_element_css_selector": "input:not([type='search'])",
             "enabled": true
         }
     }

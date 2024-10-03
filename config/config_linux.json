@@ -1,7 +1,7 @@
 {
-    "audit_name": "test",
+    "audit_name": "audit_name_here",
     "headless": true,
-    "max_links_per_domain": 5,
+    "max_links_per_domain": 50,
     "thread_count": 4,
     "browser": "chrome",
     "chrome_binary_location": "./chrome/linux-122.0.6261.39/chrome-linux64/chrome",
@@ -51,6 +51,11 @@
         },
         "screenshot_audit": {
             "class_name": "ScreenshotAudit",
+            "enabled": true
+        },
+        "element_audit": {
+            "class_name": "ElementAudit",
+            "target_element_css_selector": "input:not([type='search'])",
             "enabled": true
         }
     }
