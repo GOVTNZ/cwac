@@ -5,12 +5,12 @@ selenium==4.25.0
 lxml==5.3.0
 responses==0.25.2
 pre-commit==3.8.0
-bandit==1.7.8
+bandit==1.7.10
 mypy==1.11.1
 pylint==3.3.1
 flake8==7.1.1
 flake8-simplify==0.21.0
-black==24.4.2
+black==24.8.0
 pydocstyle==6.3.0
 opencv-python==4.10.0.82
 numpy==1.26.4
