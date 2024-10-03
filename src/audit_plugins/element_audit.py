@@ -1,9 +1,8 @@
 """ElementAudit plugin.
 
 This plugin can be used to detect certain HTML elements
-on web pages. It is currently configured to detect all
-<input> elements on a page. The element this plugin detects
-can be customised by changing the target_element variable.
+on web pages. The element this plugin detects
+can be customised in the config file using a CSS selector.
 """
 
 import logging
