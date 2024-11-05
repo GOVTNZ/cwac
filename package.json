@@ -5,7 +5,7 @@
     "postinstall": "npx @puppeteer/browsers install chrome@122.0.6261.39"
   },
   "dependencies": {
-    "axe-core": "^4.10.0",
+    "axe-core": "^4.10.2",
     "@mozilla/readability": "^0.5.0"
   }
 }
