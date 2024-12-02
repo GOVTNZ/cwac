@@ -6,18 +6,20 @@ can be customised in the config file using a CSS selector.
 """
 
 import logging
-import selenium.common.exceptions as sel_exceptions
+#import selenium.common.exceptions as sel_exceptions
 
 from typing import Any, Union, List
+from bs4 import BeautifulSoup
 
 from config import config
-from src.audit_manager import AuditManager
+#from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
-from bs4 import BeautifulSoup
+
 
 class ElementAudit:
     """element audit."""
+ # pylint: disable=too-many-instance-attributes
 
     audit_type = "ElementAudit"
 
@@ -44,14 +46,14 @@ class ElementAudit:
         try:
             page_source = self.browser.get_page_source()
         except Exception as exc:
-            logging.error(f"Error getting page source: {exc}")
+            logging.error("Error getting page source: %s", exc)
             return False
 
         # Try to parse using BeautifulSoup
         try:
             soup = BeautifulSoup(page_source, "lxml")
         except Exception as exc:
-            logging.error(f"Error parsing page source: {exc}")
+            logging.error("Error parsing page source: %s", exc)
             return False
         
         # Find all elements of the target type (css selector)
@@ -62,9 +64,7 @@ class ElementAudit:
         # For each element found, create a row of data
         for element in elements:
             # get element outer html
-            element_data = {
-                "element_html": element.prettify()
-            }
+            element_data = {"element_html": element.prettify()}
             found_elements.append(element_data)
 
         # Get page information from DefaultAudit

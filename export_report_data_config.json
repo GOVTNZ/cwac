@@ -1,69 +1,68 @@
 {
-    "input_results_folder_name": "source_folder",
-    "output_report_name": "09-2024",
+    "input_results_folder_name": "results_folder_name_here",
     "export_formats": [
         {
             "enabled": true,
             "export_type": "generate_axe_core_template_aware_file",
             "input_filename": "axe_core_audit.csv",
-            "output_filename": "axe_core_audit_template_aware.csv"
+            "output_filename": "[output_report_name]_axe_core_audit_template_aware.csv"
         },
         {
             "enabled": true,
             "export_type": "axe_core_template_aware_leaderboard",
             "input_filename": "axe_core_audit.csv",
-            "output_filename": "axe_core_audit_leaderboard.csv"
+            "output_filename": "[output_report_name]_axe_core_audit_leaderboard.csv"
         },
         {
             "enabled": true,
             "export_type": "leaderboard",
             "input_filename": "focus_indicator_audit.csv",
-            "output_filename": "focus_indicator_audit_leaderboard.csv",
+            "output_filename": "[output_report_name]_focus_indicator_audit_leaderboard.csv",
             "query": "SELECT organisation, base_url, SUM(count) as count FROM cwac_table GROUP BY base_url ORDER BY count DESC"
         },
         {
             "enabled": true,
             "export_type": "leaderboard",
             "input_filename": "reflow_audit.csv",
-            "output_filename": "reflow_audit_leaderboard.csv",
+            "output_filename": "[output_report_name]_reflow_audit_leaderboard.csv",
             "query": "SELECT organisation, base_url, AVG(overflow_amount_px) AS overflow_amount_px FROM cwac_table GROUP BY base_url ORDER BY overflow_amount_px DESC;"
         },
         {
             "enabled": true,
             "export_type": "leaderboard",
             "input_filename": "language_audit.csv",
-            "output_filename": "language_audit_leaderboard.csv",
+            "output_filename": "[output_report_name]_language_audit_leaderboard.csv",
             "query": "SELECT organisation, base_url, AVG(smog_gl) AS smog_grade_level FROM cwac_table GROUP BY base_url ORDER BY smog_grade_level DESC"
         },
         {
             "enabled": true,
             "export_type": "raw_data",
             "input_filename": "axe_core_audit.csv",
-            "output_filename": "axe_core_audit.csv"
+            "output_filename": "[output_report_name]_axe_core_audit.csv"
         },
         {
             "enabled": true,
             "export_type": "raw_data",
             "input_filename": "axe_core_audit_template_aware.csv",
-            "output_filename": "axe_core_audit_template_aware.csv"
+            "output_filename": "[output_report_name]_axe_core_audit_template_aware.csv"
         },
         {
             "enabled": true,
             "export_type": "raw_data",
             "input_filename": "focus_indicator_audit.csv",
-            "output_filename": "focus_indicator_audit.csv"
+            "output_filename": "[output_report_name]_focus_indicator_audit.csv"
         },
         {
             "enabled": true,
             "export_type": "raw_data",
             "input_filename": "reflow_audit.csv",
-            "output_filename": "reflow_auditt.csv"
+            "output_filename": "[output_report_name]_reflow_auditt.csv"
         },
         {
             "enabled": true,
             "export_type": "raw_data",
             "input_filename": "language_audit.csv",
-            "output_filename": "language_audit.csv"
+            "output_filename": "[output_report_name]_language_audit.csv"
         }
     ]
 }

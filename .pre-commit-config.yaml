@@ -1,6 +1,6 @@
 default_stages: [commit, push]
 default_language_version:
-  python: python3.12.4
+  python: python3.13
 repos:
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
@@ -8,7 +8,7 @@ repos:
       - id: isort
         args: ["."]
   - repo: https://github.com/psf/black
-    rev: 24.4.2
+    rev: 24.10.0
     hooks:
     - id: black
       args: [
@@ -16,7 +16,7 @@ repos:
       ]
       types: ['python']
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.1.1
     hooks:
     - id: flake8
       args: [
@@ -41,7 +41,7 @@ repos:
           --convention=google
         ]
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.8
+    rev: 1.7.10
     hooks:
       - id: bandit
         args: [
