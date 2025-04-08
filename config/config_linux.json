@@ -1,8 +1,8 @@
 {
-    "audit_name": "audit_name_here",
+    "audit_name": "april_test_scan1",
     "headless": true,
     "max_links_per_domain": 50,
-    "thread_count": 4,
+    "thread_count": 5,
     "browser": "chrome",
     "chrome_binary_location": "./chrome/linux-122.0.6261.39/chrome-linux64/chrome",
     "chrome_driver_location": "./drivers/chromedriver_linux_x64",
@@ -11,9 +11,9 @@
     "follow_robots_txt": true,
     "script_timeout": 15,
     "page_load_timeout": 10,
-    "delay_between_page_loads": 0.4,
-    "delay_between_viewports": 0.5,
-    "delay_after_page_load": 0.5,
+    "delay_between_page_loads": 1,
+    "delay_between_viewports": 0.3,
+    "delay_after_page_load": 0.3,
     "only_allow_https": true,
     "perform_header_check": true,
     "nocrawl_mode": false,
@@ -24,39 +24,34 @@
     "filter_to_organisations": [],
     "filter_to_domains": [],
     "viewport_sizes": {
-        "small": {"width": 320, "height": 450},
-        "medium": {"width": 1280, "height": 800}
+    "small": {"width": 320, "height": 450},
+    "medium": {"width": 1280, "height": 800}
     },
     "audit_plugins": {
-        "axe_core_audit": {
-            "class_name": "AxeCoreAudit",
-            "best-practice": false,
-            "enabled": true
-        },
-        "language_audit": {
-            "class_name": "LanguageAudit",
-            "enabled": false,
-            "run_sentiment_analysis": false
-        },
-        "reflow_audit": {
-            "class_name": "ReflowAudit",
-            "enabled": true,
-            "viewport_to_test": "small",
-            "screenshot_failures": false
-        },
-        "focus_indicator_audit": {
-            "class_name": "FocusIndicatorAudit",
-            "enabled": false,
-            "max_tab_key_presses": 15
-        },
-        "screenshot_audit": {
-            "class_name": "ScreenshotAudit",
-            "enabled": true
-        },
-        "element_audit": {
-            "class_name": "ElementAudit",
-            "target_element_css_selector": "input:not([type='search'])",
-            "enabled": true
-        }
+    "axe_core_audit": {
+    "class_name": "AxeCoreAudit",
+    "best-practice": false,
+    "enabled": true
+    },
+    "language_audit": {
+    "class_name": "LanguageAudit",
+    "enabled": true,
+    "run_sentiment_analysis": false
+    },
+    "reflow_audit": {
+    "class_name": "ReflowAudit",
+    "enabled": true,
+    "viewport_to_test": "small",
+    "screenshot_failures": false
+    },
+    "focus_indicator_audit": {
+    "class_name": "FocusIndicatorAudit",
+    "enabled": false,
+    "max_tab_key_presses": 10
+    },
+    "screenshot_audit": {
+    "class_name": "ScreenshotAudit",
+    "enabled": false
     }
-}
+    }
+    }
