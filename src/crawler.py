@@ -387,7 +387,7 @@ class Crawler:
             response = requests.get(robots_txt_url, headers={"User-Agent": config.user_agent}, timeout=10)
             # Check Content-Type is text/plain (in a safe way)
             is_content_type_set = "Content-Type" in response.headers
-            if is_content_type_set and response.headers["Content-Type"] != "text/plain":
+            if is_content_type_set and "text/plain" not in response.headers["Content-Type"]:
                 raise ValueError(
                     f"robots.txt has invalid Content-Type {robots_txt_url} {response.headers['Content-Type']}"
                 )
