@@ -385,13 +385,11 @@ class Crawler:
         try:
             logging.info("Fetching robots.txt %s", robots_txt_url)
             response = requests.get(robots_txt_url, headers={"User-Agent": config.user_agent}, timeout=10)
-            # Check Content-Type is text/plain (in a safe way)
-            is_content_type_set = "Content-Type" in response.headers
-            if is_content_type_set and "text/plain" not in response.headers["Content-Type"]:
-                raise ValueError(
-                    f"robots.txt has invalid Content-Type {robots_txt_url} {response.headers['Content-Type']}"
-                )
             response.raise_for_status()
+            if "Content-Type" in response.headers and "text/plain" not in response.headers.get("Content-Type", "").lower():
+                raise ValueError(
+                    f"{robots_txt_url} has invalid Content-Type {response.headers['Content-Type']}"
+                )
         except requests.exceptions.RequestException as exc:
             logging.error("Failed to fetch robots.txt %s", robots_txt_url)
             raise exc
