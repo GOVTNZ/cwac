@@ -54,7 +54,7 @@ class AxeCoreAudit:
         """Load axe.min.js into a string."""
         if not AuditManager.axe_core_js:
             try:
-                with open("./node_modules/axe-core/axe.min.js", encoding="utf-8") as file:
+                with open("./node_modules/axe-core/axe.min.js", encoding="utf-8-sig") as file:
                     logging.info("Reading axe.min.js")
                     axe_min_js = file.read()
             except FileNotFoundError:

@@ -165,8 +165,8 @@ class DataExporter:
             output_filename (str): The output filename.
         """
         with (
-            open(self.input_path + input_filename, "r", encoding="utf-8") as input_file,
-            open(self.output_path + output_filename, "w", encoding="utf-8") as output_file,
+            open(self.input_path + input_filename, "r", encoding="utf-8-sig") as input_file,
+            open(self.output_path + output_filename, "w", encoding="utf-8-sig") as output_file,
         ):
             output_file.write(input_file.read())
 
@@ -238,7 +238,7 @@ class DataExporter:
 
     def import_config_file(self) -> dict[str, Any]:
         """Import export_report_data_config.json."""
-        with open("export_report_data_config.json", "r", encoding="utf-8") as file:
+        with open("export_report_data_config.json", "r", encoding="utf-8-sig") as file:
             config = cast(dict[str, Any], json.load(file))
         return config
 

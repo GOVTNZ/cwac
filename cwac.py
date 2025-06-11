@@ -141,7 +141,7 @@ class CWAC:
             if filename.endswith(".csv"):
                 with open(
                     os.path.join(folder_path, filename),
-                    encoding="utf-8",
+                    encoding="utf-8-sig",
                     newline="",
                 ) as file:
                     reader = csv.reader(file)

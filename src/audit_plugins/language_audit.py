@@ -168,11 +168,11 @@ class LanguageAudit:
         """
         # Read Readability.js
         path_1 = "./node_modules/@mozilla/readability/Readability.js"
-        with open(path_1, "r", encoding="utf-8") as file:
+        with open(path_1, "r", encoding="utf-8-sig") as file:
             readability_js = file.read()
 
         path_2 = "./node_modules/@mozilla/readability/Readability-readerable.js"
-        with open(path_2, "r", encoding="utf-8") as file:
+        with open(path_2, "r", encoding="utf-8-sig") as file:
             readability_js += file.read()
 
         # JavaScript to execute Readability

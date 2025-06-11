@@ -67,7 +67,7 @@ class ScreenshotAudit:
         #     + self.audit_id
         #     + ".html",
         #     "w",
-        #     encoding="utf-8",
+        #     encoding="utf-8-sig",
         # ) as file:
         #     file.write(source)
 
