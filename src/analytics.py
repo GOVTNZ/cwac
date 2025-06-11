@@ -26,12 +26,10 @@ class Analytics:
         # Store the full set of base_urls
         self.base_urls: set[str] = set()
 
-    def init_pages_scanned(self, base_url: str) -> None:
-        """Init self.pages_scanned dict.
-
-        With the list of base_urls with an empty set as its value.
-        """
+    def add_base_url(self, base_url: str) -> None:
+        """Add base url in preparation of it being scanned."""
         self.pages_scanned[base_url] = set()
+        self.base_urls.add(base_url)
 
     def is_url_in_pages_scanned(self, url: str, base_url: str) -> bool:
         """Return True if the url has been scanned previously for the given base_url."""
