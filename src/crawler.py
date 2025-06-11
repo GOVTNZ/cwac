@@ -7,6 +7,7 @@ import importlib
 import logging
 import posixpath
 import random
+import re
 import time
 import urllib
 import urllib.robotparser
@@ -387,7 +388,9 @@ class Crawler:
             response = requests.get(robots_txt_url, headers={"User-Agent": config.user_agent}, timeout=10)
             # Check Content-Type is text/plain (in a safe way)
             is_content_type_set = "Content-Type" in response.headers
-            if is_content_type_set and response.headers["Content-Type"] != "text/plain":
+            if is_content_type_set and not re.search(
+                "^text/plain(?:;|$)", response.headers["Content-Type"], re.IGNORECASE
+            ):
                 raise ValueError(
                     f"robots.txt has invalid Content-Type {robots_txt_url} {response.headers['Content-Type']}"
                 )
