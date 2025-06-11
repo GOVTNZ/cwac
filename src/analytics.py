@@ -31,17 +31,17 @@ class Analytics:
         self.pages_scanned[base_url] = set()
         self.base_urls.add(base_url)
 
-    def is_url_in_pages_scanned(self, url: str, base_url: str) -> bool:
+    def is_url_in_pages_scanned(self, base_url: str, url: str) -> bool:
         """Return True if the url has been scanned previously for the given base_url."""
         with config.lock:
             return url in self.pages_scanned[base_url]
 
-    def add_page_scanned(self, url: str, base_url: str) -> None:
+    def add_page_scanned(self, base_url: str, url: str) -> None:
         """Log that a page has been scanned.
 
         Args:
-            url (str): The specific URL that was tested
             base_url (str): The base URL that the tested URL came from
+            url (str): The specific URL that was tested
         """
         with config.lock:
             self.total_pages_scanned += 1

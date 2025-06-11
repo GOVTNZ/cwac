@@ -534,7 +534,7 @@ class Crawler:
                 continue
 
             # Check that page has not been scanned before
-            if self.analytics.is_url_in_pages_scanned(url, base_url):
+            if self.analytics.is_url_in_pages_scanned(base_url, url):
                 logging.info("URL has been scanned before %s for %s", url, base_url)
                 continue
 
@@ -547,7 +547,7 @@ class Crawler:
             test_success = audit_manager.run_audits()
 
             if test_success:
-                self.analytics.add_page_scanned(url, base_url)
+                self.analytics.add_page_scanned(base_url, url)
                 test_failures = 0
                 pages_scanned += 1
             else:
