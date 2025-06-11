@@ -12,7 +12,9 @@ import sqlite3
 import pandas as pd
 
 from datetime import date
+
 today = str(date.today())
+
 
 class DataExporter:
     """Outputs CSV data from ./results/ to ./reports/."""
@@ -176,13 +178,11 @@ class DataExporter:
                 print(f"Skipping {export_format['export_type']} for {export_format['output_filename']}")
                 continue
 
-            #print(f"Exporting {export_format['export_type']} to {export_format['output_filename']}")
+            # print(f"Exporting {export_format['export_type']} to {export_format['output_filename']}")
             print(f"Exporting {export_format['export_type']} to {self.config['output_report_name']}")
 
             # Perform string subs for output filename (include output_report_name in all files)
-            export_format["output_filename"] = export_format["output_filename"].replace(
-                "[output_report_name]", today
-            )
+            export_format["output_filename"] = export_format["output_filename"].replace("[output_report_name]", today)
             # Check if export_format["input_filename"] exists
             if "input_filename" in export_format:
                 if not os.path.exists(self.input_path + export_format["input_filename"]):
