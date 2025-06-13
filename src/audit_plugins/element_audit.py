@@ -6,20 +6,23 @@ can be customised in the config file using a CSS selector.
 """
 
 import logging
-#import selenium.common.exceptions as sel_exceptions
+
+# import selenium.common.exceptions as sel_exceptions
 
 from typing import Any, Union, List
 from bs4 import BeautifulSoup
 
 from config import config
-#from src.audit_manager import AuditManager
+
+# from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
 
 class ElementAudit:
     """element audit."""
- # pylint: disable=too-many-instance-attributes
+
+    # pylint: disable=too-many-instance-attributes
 
     audit_type = "ElementAudit"
 
@@ -55,7 +58,7 @@ class ElementAudit:
         except Exception as exc:
             logging.error("Error parsing page source: %s", exc)
             return False
-        
+
         # Find all elements of the target type (css selector)
         elements = soup.select(self.target_element)
 
