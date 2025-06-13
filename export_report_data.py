@@ -62,7 +62,7 @@ class DataExporter:
 
         return url_count_df
 
-    def generate_axe_core_leaderboard(self):
+    def generate_axe_core_leaderboard(self) -> pd.DataFrame:
         """Generates the axe-core leaderboard dataframe."""
         # Generate the SQL query for the axe-core template aware report
         query = self.generate_axe_core_template_aware_query()
