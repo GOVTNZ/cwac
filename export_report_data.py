@@ -183,10 +183,11 @@ class DataExporter:
             # Perform string subs for output filename (include output_report_name in all files)
             export_format["output_filename"] = export_format["output_filename"].replace("[output_report_name]", today)
             # Check if export_format["input_filename"] exists
-            if "input_filename" in export_format:
-                if not os.path.exists(self.input_path + export_format["input_filename"]):
-                    print(f"WARNING: File {self.input_path + export_format['input_filename']} does not exist.")
-                    continue
+            if "input_filename" in export_format and not os.path.exists(
+                self.input_path + export_format["input_filename"]
+            ):
+                print(f"WARNING: File {self.input_path + export_format['input_filename']} does not exist.")
+                continue
 
             if export_format["export_type"] == "leaderboard":
                 output_df = self.generate_leaderboard(
