@@ -6,7 +6,7 @@ can be customised in the config file using a CSS selector.
 """
 
 import logging
-from typing import Any, List, Union
+from typing import Any, Union
 
 from bs4 import BeautifulSoup
 
