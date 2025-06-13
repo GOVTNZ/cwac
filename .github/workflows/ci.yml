@@ -14,6 +14,19 @@ concurrency:
 permissions: {}
 
 jobs:
+  black:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: psf/black@stable
+        with:
+          version: 24.8.0
+          options: '--line-length=120'
   install:
     permissions:
       contents: read # to fetch (actions/checkout)
