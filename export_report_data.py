@@ -165,9 +165,11 @@ class DataExporter:
             input_filename (str): The input filename.
             output_filename (str): The output filename.
         """
-        with open(self.input_path + input_filename, "r", encoding="utf-8") as input_file:
-            with open(self.output_path + output_filename, "w", encoding="utf-8") as output_file:
-                output_file.write(input_file.read())
+        with (
+            open(self.input_path + input_filename, "r", encoding="utf-8") as input_file,
+            open(self.output_path + output_filename, "w", encoding="utf-8") as output_file,
+        ):
+            output_file.write(input_file.read())
 
     def iterate_export_formats(self) -> None:
         """Iterate through the export formats."""
