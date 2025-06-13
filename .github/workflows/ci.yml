@@ -63,6 +63,20 @@ jobs:
         with:
           requirements-files: "requirements.txt"
           configuration: "--check-only --diff --profile black"
+  mypy:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: mypy .
   install:
     permissions:
       contents: read # to fetch (actions/checkout)
