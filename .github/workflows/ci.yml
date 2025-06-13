@@ -55,6 +55,14 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: flake8 --max-line-length 120 .
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: isort/isort-action@v1
+        with:
+          requirements-files: "requirements.txt"
+          configuration: "--check-only --diff --profile black"
   install:
     permissions:
       contents: read # to fetch (actions/checkout)
