@@ -14,6 +14,20 @@ concurrency:
 permissions: {}
 
 jobs:
+  bandit:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: bandit -r .
   black:
     permissions:
       contents: read # to fetch (actions/checkout)
