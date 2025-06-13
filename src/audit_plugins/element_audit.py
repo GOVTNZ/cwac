@@ -6,17 +6,19 @@ can be customised in the config file using a CSS selector.
 """
 
 import logging
+from typing import Any, List, Union
 
-# import selenium.common.exceptions as sel_exceptions
-
-from typing import Any, Union, List
 from bs4 import BeautifulSoup
 
 from config import config
-
 # from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
+
+# import selenium.common.exceptions as sel_exceptions
+
+
+
 
 
 class ElementAudit:

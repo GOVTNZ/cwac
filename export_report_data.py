@@ -8,10 +8,9 @@ To configure the export, edit export_report_data_config.json.
 import json
 import os
 import sqlite3
+from datetime import date
 
 import pandas as pd
-
-from datetime import date
 
 today = str(date.today())
 
