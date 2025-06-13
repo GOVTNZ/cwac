@@ -41,6 +41,20 @@ jobs:
         with:
           version: 24.8.0
           options: '--line-length=120 --check --diff'
+  flake8:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: flake8 --max-line-length 120 .
   install:
     permissions:
       contents: read # to fetch (actions/checkout)
