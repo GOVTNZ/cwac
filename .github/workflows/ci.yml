@@ -26,7 +26,7 @@ jobs:
       - uses: psf/black@stable
         with:
           version: 24.8.0
-          options: '--line-length=120'
+          options: '--line-length=120 --check --diff'
   install:
     permissions:
       contents: read # to fetch (actions/checkout)
