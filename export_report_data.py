@@ -9,7 +9,7 @@ import json
 import os
 import sqlite3
 from datetime import date
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 
@@ -239,7 +239,7 @@ class DataExporter:
     def import_config_file(self) -> dict[str, Any]:
         """Import export_report_data_config.json."""
         with open("export_report_data_config.json", "r", encoding="utf-8") as file:
-            config = json.load(file)
+            config = cast(dict[str, Any], json.load(file))
         return config
 
     def template_aware_algorithm(self, input_df: pd.DataFrame, groupby_cols: list[str]) -> pd.DataFrame:
