@@ -9,6 +9,7 @@ import json
 import os
 import sqlite3
 from datetime import date
+from typing import Any
 
 import pandas as pd
 
@@ -229,7 +230,7 @@ class DataExporter:
         audit_df = pd.read_csv(self.input_path + input_filename)
         return audit_df
 
-    def import_config_file(self) -> dict:
+    def import_config_file(self) -> dict[str, Any]:
         """Import export_report_data_config.json."""
         with open("export_report_data_config.json", "r", encoding="utf-8") as file:
             config = json.load(file)
