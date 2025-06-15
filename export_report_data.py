@@ -26,7 +26,6 @@ class DataExporter:
         # assert the input_path exists
         if not os.path.exists(self.input_path):
             raise FileNotFoundError(f"Input path {self.input_path} does not exist.")
-        self.axe_core_df = None
         # create ouptut folder if it doesn't exist
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
@@ -44,7 +43,7 @@ class DataExporter:
         # Create a new sqlite3 connection to count how many pages scanned
         page_count_conn = sqlite3.connect(":memory:")
 
-        # Get a sqlite3 db of self.axe_core_df (it has all unique urls scanned)
+        # Get a sqlite3 db of the data frame as it should have all the unique urls scanned
         df.to_sql("cwac_table", page_count_conn, index=False)
 
         # Query how many unique 'url' values each 'base_url' has
@@ -303,9 +302,6 @@ class DataExporter:
 
         # Read the CSV file into a DataFrame
         data_frame = pd.read_csv(file_path)
-
-        # Update instance variable that holds axe-core data
-        self.axe_core_df = data_frame
 
         # Get original column order for later use
         original_column_order = data_frame.columns
