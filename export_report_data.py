@@ -27,7 +27,6 @@ class DataExporter:
         if not os.path.exists(self.input_path):
             raise FileNotFoundError(f"Input path {self.input_path} does not exist.")
         self.axe_core_df = None
-        self.axe_core_template_aware_df = None
         # create ouptut folder if it doesn't exist
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
@@ -62,7 +61,7 @@ class DataExporter:
 
         return url_count_df
 
-    def generate_axe_core_leaderboard(self) -> pd.DataFrame:
+    def generate_axe_core_leaderboard(self, df: pd.DataFrame) -> pd.DataFrame:
         """Generates the axe-core leaderboard dataframe."""
         # Generate the SQL query for the axe-core template aware report
         query = self.generate_axe_core_template_aware_query()
@@ -71,13 +70,13 @@ class DataExporter:
         leaderboard_conn = sqlite3.connect(":memory:")
 
         # Write the data to the in-memory database
-        self.axe_core_template_aware_df.to_sql("cwac_table", leaderboard_conn, index=False)
+        df.to_sql("cwac_table", leaderboard_conn, index=False)
 
         # Run query with conn.execute
         leaderboard = leaderboard_conn.execute(query).fetchall()
 
         # Convert the result to a DataFrame
-        url_count_df = self.get_num_unique_pages_scanned(self.axe_core_template_aware_df)
+        url_count_df = self.get_num_unique_pages_scanned(df)
 
         # Convert results to DataFrame
         leaderboard_df = pd.DataFrame(leaderboard, columns=["organisation", "base_url", "count"])
@@ -172,6 +171,8 @@ class DataExporter:
             output_file.write(input_file.read())
 
     def iterate_export_formats(self) -> None:
+        axe_core_template_aware_df: pd.DataFrame | None = None
+
         """Iterate through the export formats."""
         for export_format in self.config["export_formats"]:
             # if 'enabled' is False, skip the export format
@@ -212,12 +213,18 @@ class DataExporter:
             if export_format["export_type"] == "generate_axe_core_template_aware_file":
                 # Run the axe-core template-aware algorithm
                 # to generate the template-aware CSV
-                self.axe_core_template_aware_df = self.run_axe_core_audit_template_aware()
+                axe_core_template_aware_df = self.run_axe_core_audit_template_aware()
                 continue
 
             if export_format["export_type"] == "axe_core_template_aware_leaderboard":
+                if axe_core_template_aware_df is None:
+                    raise Exception(
+                        "The generate_axe_core_template_aware_file export must happen before"
+                        " the axe_core_template_aware_leaderboard export can run"
+                    )
+
                 # Generate the axe-core leaderboard
-                leaderboard_df = self.generate_axe_core_leaderboard()
+                leaderboard_df = self.generate_axe_core_leaderboard(axe_core_template_aware_df)
                 # Write the leaderboard to a CSV file
                 leaderboard_df.to_csv(
                     self.output_path + export_format["output_filename"],
