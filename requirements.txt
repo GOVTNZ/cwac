@@ -13,7 +13,7 @@ flake8==7.1.1
 flake8-simplify==0.21.0
 black==24.8.0
 pydocstyle==6.3.0
-opencv-python==4.10.0.82
+opencv-python==4.11.0.86
 numpy==1.26.4
 pandas==2.2.2
 pandas-stubs==2.2.2.240909
