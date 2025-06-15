@@ -7,7 +7,7 @@ import logging
 import platform
 import time
 import traceback
-from typing import Any, Union
+from typing import Any, Union, cast
 
 import selenium
 from selenium import webdriver
@@ -154,7 +154,7 @@ class Browser:
             str: base URI of current page.
         """
         try:
-            return self.driver.execute_script("return document.baseURI")
+            return cast(str, self.driver.execute_script("return document.baseURI"))
         except Exception as exc:
             logging.exception("TimeoutException when getting base URI")
             self.safe_restart()
