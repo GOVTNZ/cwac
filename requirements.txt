@@ -4,7 +4,7 @@ requests==2.32.3
 types-requests==2.32.4.20250611
 selenium==4.25.0
 lxml==5.3.0
-responses==0.25.2
+responses==0.25.7
 pre-commit==3.8.0
 bandit==1.7.10
 mypy==1.16.0
