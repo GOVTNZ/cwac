@@ -1,7 +1,6 @@
 """Analytics for the scan."""
 
 import time
-import urllib.parse
 
 import src.output
 from config import config
@@ -27,33 +26,26 @@ class Analytics:
         # Store the full set of base_urls
         self.base_urls: set[str] = set()
 
-    def init_pages_scanned(self, url: str) -> None:
-        """Init self.pages_scanned dict.
+    def add_base_url(self, base_url: str) -> None:
+        """Add base url in preparation of it being scanned."""
+        self.pages_scanned[base_url] = set()
+        self.base_urls.add(base_url)
 
-        With the list of base_urls with an empty set as its value.
-        """
-        domain = urllib.parse.urlparse(url).netloc
-        self.pages_scanned[domain] = set()
-
-    def is_url_in_pages_scanned(self, url: str) -> bool:
-        """Return True if the url has been scanned previously."""
+    def is_url_in_pages_scanned(self, base_url: str, url: str) -> bool:
+        """Return True if the url has been scanned previously for the given base_url."""
         with config.lock:
-            domain = urllib.parse.urlparse(url).netloc
-            return url in self.pages_scanned[domain]
+            return url in self.pages_scanned[base_url]
 
-    def add_page_scanned(self, url: str) -> None:
+    def add_page_scanned(self, base_url: str, url: str) -> None:
         """Log that a page has been scanned.
 
         Args:
-            url (str): The speciifc URL that was tested
+            base_url (str): The base URL that the tested URL came from
+            url (str): The specific URL that was tested
         """
         with config.lock:
             self.total_pages_scanned += 1
-            domain = urllib.parse.urlparse(url).netloc
-            if domain in self.pages_scanned:
-                self.pages_scanned[domain].add(url)
-            else:
-                self.pages_scanned[domain] = {url}
+            self.pages_scanned.setdefault(base_url, set()).add(url)
 
             # Output a progress bar
             src.output.print_progress_bar(
@@ -62,15 +54,14 @@ class Analytics:
                 start_time=self.start_time,
             )
 
-    def record_test_failure(self, url: str) -> None:
+    def record_test_failure(self, base_url: str) -> None:
         """Record a test failure.
 
         Used to adjust est_num_pages_in_test when tests fail.
         """
         with config.lock:
             # Get how many pages were successfully scanned
-            domain = urllib.parse.urlparse(url).netloc
-            self.est_num_pages_in_test -= max(0, config.max_links_per_domain - len(self.pages_scanned[domain]))
+            self.est_num_pages_in_test -= max(0, config.max_links_per_domain - len(self.pages_scanned[base_url]))
 
             # Output a progress bar
             src.output.print_progress_bar(

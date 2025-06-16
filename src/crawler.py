@@ -535,8 +535,8 @@ class Crawler:
                 continue
 
             # Check that page has not been scanned before
-            if self.analytics.is_url_in_pages_scanned(url):
-                logging.info("URL has been scanned before %s", url)
+            if self.analytics.is_url_in_pages_scanned(base_url, url):
+                logging.info("URL has been scanned before %s for %s", url, base_url)
                 continue
 
             # Write to audit_log.csv
@@ -548,13 +548,13 @@ class Crawler:
             test_success = audit_manager.run_audits()
 
             if test_success:
-                self.analytics.add_page_scanned(url)
+                self.analytics.add_page_scanned(base_url, url)
                 test_failures = 0
                 pages_scanned += 1
             else:
                 test_failures += 1
                 if test_failures >= 3:
-                    self.analytics.record_test_failure(url)
+                    self.analytics.record_test_failure(base_url)
                     logging.error("Too many sequential test failures, skipping %s", url)
                     return
 

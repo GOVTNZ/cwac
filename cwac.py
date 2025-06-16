@@ -157,10 +157,7 @@ class CWAC:
                         # Make the URL lowercase
                         dict_row["url"] = self.lowercase_url(dict_row["url"])
 
-                        CWAC.analytics.init_pages_scanned(dict_row["url"])
-
-                        # Add the base_url to analytics.base_urls
-                        CWAC.analytics.base_urls.add(dict_row["url"])
+                        CWAC.analytics.add_base_url(dict_row["url"])
 
                         url_queue.put(dict_row)
 
