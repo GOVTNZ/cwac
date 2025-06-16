@@ -79,13 +79,13 @@ class DataExporter:
         url_count_df = self.get_num_unique_pages_scanned(df)
 
         # Convert results to DataFrame
-        leaderboard_df = pd.DataFrame(leaderboard, columns=["organisation", "base_url", "count"])
+        leaderboard_df = pd.DataFrame(leaderboard, columns=["organisation", "base_url", "num_issues"])
 
         # Add the 'num_pages_scanned' column to the leaderboard_df
         leaderboard_df = pd.merge(leaderboard_df, url_count_df, on="base_url")
 
         # Add a column of 'count' / 'num_pages_scanned' to the DataFrame
-        leaderboard_df["average_count"] = (leaderboard_df["count"] / leaderboard_df["num_pages_scanned"]).round(2)
+        leaderboard_df["average_count"] = (leaderboard_df["num_issues"] / leaderboard_df["num_pages_scanned"]).round(2)
 
         # Sort df on 'average_count' in descending order
         leaderboard_df = leaderboard_df.sort_values(by="average_count", ascending=False)
@@ -100,9 +100,7 @@ class DataExporter:
         leaderboard_df["percentile"] = (leaderboard_df["average_count"].rank(pct=True) * 100).round(2)
 
         # Rename columns to be more descriptive
-        leaderboard_df = leaderboard_df.rename(
-            columns={"count": "num_issues", "average_count": "average_num_issues_per_page"}
-        )
+        leaderboard_df = leaderboard_df.rename(columns={"average_count": "average_num_issues_per_page"})
 
         # Reorder so num_issues and average_num_issues_per_page are next to each other
         leaderboard_df = leaderboard_df[
@@ -265,7 +263,7 @@ class DataExporter:
         grouped_df = no_zero_count_df.groupby(groupby_cols)
 
         # Generate the aggregation dictionary
-        agg_dict = {"count": "sum"}
+        agg_dict = {"num_items": "sum"}
 
         # Add in 'first' for all other columns
         for col in input_df.columns:
