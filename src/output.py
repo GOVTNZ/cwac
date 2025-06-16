@@ -48,7 +48,7 @@ class CSVWriter:
         Returns:
             list[dict[Any, Any]]: list of dictionaries
         """
-        with self.get_file_lock(path), open(path, "r", encoding="utf-8") as csvfile:
+        with self.get_file_lock(path), open(path, "r", encoding="utf-8-sig") as csvfile:
             reader = csv.DictReader(csvfile)
             rows = list(reader)
         return rows
@@ -88,7 +88,7 @@ class CSVWriter:
         with self.get_file_lock(path):
             file_exists = False if overwrite else os.path.exists(path)
             file_mode = "w" if overwrite else "a"
-            with open(path, file_mode, encoding="utf-8") as csvfile:
+            with open(path, file_mode, encoding="utf-8-sig") as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=keys)
                 if not file_exists:
                     writer.writeheader()

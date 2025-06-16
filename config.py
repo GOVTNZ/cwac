@@ -83,7 +83,7 @@ class Config:
         )
 
         # Write self.config to the results folder for reference
-        with open(f"{folder_path}/config.json", "w", encoding="utf-8") as file:
+        with open(f"{folder_path}/config.json", "w", encoding="utf-8-sig") as file:
             json.dump(self.config, file, indent=4)
 
         # Ensure base_url_crawl_path is within base_urls folder
@@ -165,7 +165,7 @@ class Config:
                 raise ValueError("config_filename must be alphanumeric, underscores, and hyphens")
         else:
             config_filename = "config_default.json"
-        with open("./config/" + config_filename, "r", encoding="utf-8") as file:
+        with open("./config/" + config_filename, "r", encoding="utf-8-sig") as file:
             # Write the config file to the results folder
             return json.load(file)
 
@@ -209,7 +209,7 @@ class Config:
             if filename.endswith(".csv"):
                 with open(
                     os.path.join(self.config["base_urls_crawl_path"], filename),
-                    encoding="utf-8",
+                    encoding="utf-8-sig",
                     newline="",
                 ) as file:
                     reader = csv.reader(file)
