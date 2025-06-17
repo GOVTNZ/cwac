@@ -11,7 +11,7 @@ mypy==1.16.1
 pylint==3.3.7
 flake8==7.2.0
 flake8-simplify==0.22.0
-black==24.8.0
+black==25.1.0
 pydocstyle==6.3.0
 opencv-python==4.11.0.86
 numpy==1.26.4
