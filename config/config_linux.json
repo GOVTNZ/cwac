@@ -1,5 +1,5 @@
 {
-    "audit_name": "april_test_scan1",
+    "audit_name": "audit_name_here",
     "headless": true,
     "max_links_per_domain": 50,
     "thread_count": 5,
@@ -24,34 +24,39 @@
     "filter_to_organisations": [],
     "filter_to_domains": [],
     "viewport_sizes": {
-    "small": {"width": 320, "height": 450},
-    "medium": {"width": 1280, "height": 800}
+        "small": {"width": 320, "height": 450},
+        "medium": {"width": 1280, "height": 800}
     },
     "audit_plugins": {
-    "axe_core_audit": {
-    "class_name": "AxeCoreAudit",
-    "best-practice": false,
-    "enabled": true
-    },
-    "language_audit": {
-    "class_name": "LanguageAudit",
-    "enabled": true,
-    "run_sentiment_analysis": false
-    },
-    "reflow_audit": {
-    "class_name": "ReflowAudit",
-    "enabled": true,
-    "viewport_to_test": "small",
-    "screenshot_failures": false
-    },
-    "focus_indicator_audit": {
-    "class_name": "FocusIndicatorAudit",
-    "enabled": false,
-    "max_tab_key_presses": 10
-    },
-    "screenshot_audit": {
-    "class_name": "ScreenshotAudit",
-    "enabled": false
+        "axe_core_audit": {
+            "class_name": "AxeCoreAudit",
+            "best-practice": false,
+            "enabled": true
+        },
+        "language_audit": {
+            "class_name": "LanguageAudit",
+            "enabled": true,
+            "run_sentiment_analysis": false
+        },
+        "reflow_audit": {
+            "class_name": "ReflowAudit",
+            "enabled": true,
+            "viewport_to_test": "small",
+            "screenshot_failures": false
+        },
+        "focus_indicator_audit": {
+            "class_name": "FocusIndicatorAudit",
+            "enabled": false,
+            "max_tab_key_presses": 10
+        },
+        "screenshot_audit": {
+            "class_name": "ScreenshotAudit",
+            "enabled": false
+        },
+        "element_audit": {
+            "class_name": "ElementAudit",
+            "target_element_css_selector": "input:not([type='search'])",
+            "enabled": false
+        }
     }
-    }
-    }
+}
