@@ -216,7 +216,7 @@ class DataExporter:
 
             if export_format["export_type"] == "axe_core_template_aware_leaderboard":
                 if axe_core_template_aware_df is None:
-                    raise Exception(
+                    raise ValueError(
                         "The generate_axe_core_template_aware_file export must happen before"
                         " the axe_core_template_aware_leaderboard export can run"
                     )
