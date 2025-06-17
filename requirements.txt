@@ -1,4 +1,4 @@
-beautifulsoup4==4.12.3
+beautifulsoup4==4.13.4
 types-beautifulsoup4==4.12.0.20240907
 requests==2.32.4
 types-requests==2.32.4.20250611
