@@ -13,7 +13,7 @@ from typing import Any, cast
 
 import pandas as pd
 
-today = str(date.today())
+TODAY = str(date.today())
 
 
 class DataExporter:
@@ -182,7 +182,7 @@ class DataExporter:
             print(f"Exporting {export_format['export_type']} to {self.config['output_report_name']}")
 
             # Perform string subs for output filename (include output_report_name in all files)
-            export_format["output_filename"] = export_format["output_filename"].replace("[output_report_name]", today)
+            export_format["output_filename"] = export_format["output_filename"].replace("[output_report_name]", TODAY)
             # Check if export_format["input_filename"] exists
             if "input_filename" in export_format and not os.path.exists(
                 self.input_path + export_format["input_filename"]
