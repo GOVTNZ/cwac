@@ -169,7 +169,7 @@ class FocusIndicatorAudit:
                         "Hide failure (SC 2.2.2) (Level A)."
                     ),
                     "html": "",
-                    "num_items": 1,
+                    "num_issues": 1,
                     "helpUrl": ("https://www.w3.org/WAI/WCAG21/" "Understanding/pause-stop-hide.html"),
                 }
             ]
@@ -233,7 +233,7 @@ class FocusIndicatorAudit:
                     **result_template,
                     "description": "All tab presses had a focus indicator",
                     "html": "",
-                    "num_items": 0,
+                    "num_issues": 0,
                     "helpUrl": ("https://www.w3.org/WAI/WCAG22/" "Understanding/focus-visible.html"),
                 }
             ]
@@ -246,7 +246,7 @@ class FocusIndicatorAudit:
                     **result_template,
                     "description": (f"Tab key press #{result['tab_press']}" f" did not show a focus indicator"),
                     "html": result["html"],
-                    "num_items": 1,
+                    "num_issues": 1,
                     "helpUrl": ("https://www.w3.org/WAI/WCAG22/" "Understanding/focus-visible.html"),
                 }
             )

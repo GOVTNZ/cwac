@@ -147,9 +147,11 @@ class DataExporter:
         # Merge the url_count_df with the leaderboard_df
         leaderboard_df = pd.merge(leaderboard_df, url_count_df, on="base_url")
 
-        # Add average issue count per page (if it has a 'count' column)
-        if "count" in leaderboard_df.columns:
-            leaderboard_df["average_count"] = (leaderboard_df["count"] / leaderboard_df["num_pages_scanned"]).round(2)
+        # Add average issue count per page (if it has a 'num_issues' column)
+        if "num_issues" in leaderboard_df.columns:
+            leaderboard_df["average_count"] = (
+                leaderboard_df["num_issues"] / leaderboard_df["num_pages_scanned"]
+            ).round(2)
             # Sort by 'average_count'
             leaderboard_df = leaderboard_df.sort_values(by="average_count", ascending=False)
 
@@ -254,16 +256,16 @@ class DataExporter:
             pd.DataFrame: The grouped and aggregated dataframe.
         """
         # Collect all rows where count is 0
-        zero_count_rows = input_df[input_df["count"] == 0]
+        zero_count_rows = input_df[input_df["num_issues"] == 0]
 
         # Remove the zero count rows from the input_df
-        no_zero_count_df = input_df[input_df["count"] != 0]
+        no_zero_count_df = input_df[input_df["num_issues"] != 0]
 
         # Group the data
         grouped_df = no_zero_count_df.groupby(groupby_cols)
 
         # Generate the aggregation dictionary
-        agg_dict = {"num_items": "sum"}
+        agg_dict = {"num_issues": "sum"}
 
         # Add in 'first' for all other columns
         for col in input_df.columns:
@@ -280,7 +282,7 @@ class DataExporter:
         agg_df = pd.concat([agg_df, zero_count_rows])
 
         # Sort the data
-        agg_df = agg_df.sort_values(by="count", ascending=False)
+        agg_df = agg_df.sort_values(by="num_issues", ascending=False)
 
         return agg_df
 
@@ -327,18 +329,18 @@ class DataExporter:
         query = """
              SELECT organisation, base_url, COUNT(*) as num_count
                     FROM cwac_table
-                    WHERE count > 0
+                    WHERE num_issues > 0
                     AND "best-practice" = 'No'
                     GROUP BY base_url
                     UNION
-                    SELECT organisation, base_url, count
+                    SELECT organisation, base_url, num_issues
                     FROM cwac_table
-                    WHERE count = 0
+                    WHERE num_issues = 0
                     AND "best-practice" = 'No'
                     AND base_url NOT IN (
                         SELECT base_url
                         FROM cwac_table
-                        WHERE count > 0
+                        WHERE num_issues > 0
                         AND "best-practice" = 'No'
                         GROUP BY base_url
                     )

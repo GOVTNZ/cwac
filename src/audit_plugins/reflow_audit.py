@@ -124,7 +124,7 @@ class ReflowAudit:
             "audit_type": ReflowAudit.audit_type,
             "url": self.url,
             "overflows": overflow_amount > 0,
-            "num_items": 1 if overflow_amount > 0 else 0,
+            "num_issues": 1 if overflow_amount > 0 else 0,
             "overflow_amount_px": overflow_amount,
         }
 
