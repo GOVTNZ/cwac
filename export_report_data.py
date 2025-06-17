@@ -169,9 +169,9 @@ class DataExporter:
             output_file.write(input_file.read())
 
     def iterate_export_formats(self) -> None:
+        """Iterate through the export formats."""
         axe_core_template_aware_df: pd.DataFrame | None = None
 
-        """Iterate through the export formats."""
         for export_format in self.config["export_formats"]:
             # if 'enabled' is False, skip the export format
             if not export_format["enabled"]:

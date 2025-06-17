@@ -44,7 +44,6 @@ class ElementAudit:
             list[Any]: rows of test data
             bool: False if test fails, else a list of results
         """
-
         # Scrape the page source of the loaded browser
         try:
             page_source = self.browser.get_page_source()
