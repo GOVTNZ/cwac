@@ -188,7 +188,7 @@ class LanguageAudit:
 
         # Execute JavaScript
         try:
-            content = self.browser.driver.execute_script(final_js)  # type: ignore
+            content = self.browser.driver.execute_script(final_js)
         except Exception:  # pylint: disable=broad-except
             logging.exception("WebDriver exception for Readability")
             return ""
