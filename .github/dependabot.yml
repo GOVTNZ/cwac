@@ -23,3 +23,7 @@ updates:
         update-types:
           - minor
           - patch
+      production:
+        update-types:
+          - minor
+          - patch
