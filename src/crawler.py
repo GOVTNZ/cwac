@@ -66,7 +66,9 @@ class Crawler:
             with config.lock:
                 site_data = self.url_queue.get()
 
-            logging.info("Starting test %s", site_data["url"])
+            logging.info(
+                "Starting to test %s for %s, %s", site_data["url"], site_data["organisation"], site_data["sector"]
+            )
 
             # Crawl the url (the crawler also initiates tests)
             self.crawl(site_data, site_data["url"])
