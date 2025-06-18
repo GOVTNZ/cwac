@@ -7,6 +7,7 @@ import urllib.parse
 from typing import Any, Type
 
 import selenium
+from selenium.webdriver.common.by import By
 
 import src.output
 from config import config
@@ -138,6 +139,32 @@ class AuditManager:
 
         return status
 
+    def check_for_details_elements(self) -> None:
+        """Check if there are <details> elements that should be opened so their contents are audited."""
+        details = self.browser.driver.find_elements(By.TAG_NAME, "details")
+
+        if len(details) == 0:
+            return
+
+        plural = ""
+        if len(details) != 1:
+            plural = "s"
+
+        if not config.force_open_details_elements:
+            logging.info("ignoring %i <details> element%s", len(details), plural)
+            return
+
+        logging.info("opening %i <details> element%s", len(details), plural)
+
+        # Open all <details> elements
+        for detail in details:
+            if not detail.get_attribute("open"):
+                try:
+                    self.browser.driver.execute_script("arguments[0].setAttribute('open', '')", detail)
+                except Exception:  # pylint: disable=broad-except
+                    logging.warning("Could not open <details> element titled '%s'", detail.text)
+                    continue
+
     def run_audits(self) -> bool:
         """Iterate through registered audits and runs them.
 
@@ -199,6 +226,8 @@ class AuditManager:
                         audit["kwargs"]["url"],
                     )
                     continue
+
+                self.check_for_details_elements()
 
                 # Inject the audit ID
                 audit["kwargs"]["audit_id"] = audit_id

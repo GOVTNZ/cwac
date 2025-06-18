@@ -165,6 +165,8 @@ Field descriptions:
   - Defines which URLs will be scanned when `nocrawl_mode` is `true`
   - a path to a folder that contains CSV files (as many as you like). The CSV files **must** have only one header: url.
   - CWAC will take the URL, and look it up within `base_urls_crawl_path` CSVs to determine the URL's organisation,sector automatically, otherwise 'Unknown' will be specified and a warning is put in the scan's log.
+- `force_open_details_elements`
+  - a boolean value that controls if `<details>` are explicitly marked as `open` before auditing
 - `filter_to_organisations`
   - a list of strings that can be used to restrict a CWAC scan to particular organisations. The organisations are specified in CSVs within the `base_urls` folder
   - e.g. ["Ministry of Social Development", "Department of Internal Affairs"]
