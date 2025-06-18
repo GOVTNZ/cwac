@@ -476,7 +476,7 @@ class Crawler:
             site_data (SiteData): contains info about the site
             base_url (str): the first url to crawl
         """
-        logging.info("Starting crawl %s", base_url)
+        logging.info("Starting to crawl %s", base_url)
 
         # Create an AuditManager instance
         audit_manager = AuditManager(browser=self.browser, analytics=self.analytics)
