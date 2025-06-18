@@ -139,8 +139,8 @@ class AuditManager:
 
         return status
 
-    def ensure_details_are_open(self) -> None:
-        """Ensure that <details> elements are open so their contents are audited."""
+    def check_for_details_elements(self) -> None:
+        """Check if there are <details> elements that should be opened so their contents are audited."""
         details = self.browser.driver.find_elements(By.TAG_NAME, "details")
 
         if len(details) == 0:
@@ -149,6 +149,11 @@ class AuditManager:
         plural = ""
         if len(details) != 1:
             plural = "s"
+
+        if not config.force_open_details_elements:
+            logging.info("ignoring %i <details> element%s", len(details), plural)
+            return
+
         logging.info("opening %i <details> element%s", len(details), plural)
 
         # Open all <details> elements
@@ -222,7 +227,7 @@ class AuditManager:
                     )
                     continue
 
-                self.ensure_details_are_open()
+                self.check_for_details_elements()
 
                 # Inject the audit ID
                 audit["kwargs"]["audit_id"] = audit_id

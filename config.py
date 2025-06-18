@@ -45,6 +45,7 @@ class Config:
     viewport_sizes: dict[str, dict[str, int]]
     audit_plugins: dict[str, dict[str, Any]]
     check_for_broken_internal_links: bool
+    force_open_details_elements: bool
 
     # Threading lock (shared amongst all threads)
     lock = threading.RLock()
