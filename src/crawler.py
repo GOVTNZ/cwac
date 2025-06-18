@@ -12,7 +12,7 @@ import time
 import urllib
 import urllib.robotparser
 from queue import SimpleQueue
-from typing import Any
+from typing import Any, Literal
 
 import requests
 import selenium.common.exceptions
@@ -37,6 +37,8 @@ from src.output import CSVWriter
 # disable too-many-locals
 # pylint: disable=R0914
 
+type SiteData = dict[Literal["organisation", "url", "sector"], str]
+
 
 class Crawler:
     """Crawls URLs and initiates tests on the pages."""
@@ -44,7 +46,7 @@ class Crawler:
     def __init__(
         self,
         browser: Browser,
-        url_queue: SimpleQueue[dict[Any, Any]],
+        url_queue: SimpleQueue[SiteData],
         analytics: Analytics,
     ) -> None:
         """Initialise various vars."""
@@ -461,7 +463,7 @@ class Crawler:
 
         return result
 
-    def crawl(self, site_data: dict[str, Any], base_url: str) -> None:
+    def crawl(self, site_data: SiteData, base_url: str) -> None:
         """Crawls a domain and executes the AuditManager.
 
         Loads a webpage, and runs a set of tests on that page. It also
@@ -469,7 +471,7 @@ class Crawler:
         effectively crawling the website.
 
         Args:
-            site_data (dict[str, Any]): contains info about the site
+            site_data (SiteData): contains info about the site
             base_url (str): the first url to crawl
         """
         logging.info("Starting crawl %s", base_url)
