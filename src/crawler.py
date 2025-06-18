@@ -12,7 +12,7 @@ import time
 import urllib
 import urllib.robotparser
 from queue import SimpleQueue
-from typing import Any, cast
+from typing import Any
 
 import requests
 import selenium.common.exceptions
@@ -431,7 +431,7 @@ class Crawler:
 
         # If the domain is in config.robots_txt_cache, use that
         if domain in config.robots_txt_cache:
-            robot_parser = cast(urllib.robotparser.RobotFileParser, config.robots_txt_cache[domain])
+            robot_parser = config.robots_txt_cache[domain]
             logging.info("Using cached robots.txt for %s", domain)
             result = robot_parser.can_fetch(config.user_agent_product_token, url)
             logging.info("robots.txt result for %s was %s", url, "allow" if result else "disallow")

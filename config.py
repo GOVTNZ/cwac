@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import threading
+import urllib.robotparser
 from typing import Any
 from urllib import parse
 
@@ -47,6 +48,11 @@ class Config:
 
     # Threading lock (shared amongst all threads)
     lock = threading.RLock()
+
+    # global variable to store robots.txt data
+    # the Crawler queries this and populates it
+    # if no entry is found for a website.
+    robots_txt_cache: dict[str, urllib.robotparser.RobotFileParser]
 
     def __init__(self) -> None:
         """Read config.json into self.config."""
