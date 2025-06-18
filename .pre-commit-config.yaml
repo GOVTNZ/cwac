@@ -1,4 +1,4 @@
-default_stages: [commit, push]
+default_stages: [pre-commit, pre-push]
 default_language_version:
   python: python3.13
 repos:
@@ -36,7 +36,7 @@ repos:
     rev: 6.3.0
     hooks:
       - id: pydocstyle
-        name: pydocstyle --convention==google
+        name: pydocstyle --convention=google
         args: [
           --convention=google
         ]
