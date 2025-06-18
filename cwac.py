@@ -10,14 +10,14 @@ import logging
 import os
 import random
 from queue import SimpleQueue
-from typing import Any
+from typing import cast
 from urllib.parse import urlparse, urlunparse
 
 import src.verify
 from config import config
 from src.analytics import Analytics
 from src.browser import Browser
-from src.crawler import Crawler
+from src.crawler import Crawler, SiteData
 from src.output import output_init_message
 
 
@@ -25,7 +25,7 @@ class CWAC:
     """Main CWAC class."""
 
     # Global queue of URLs to scan
-    url_queue: SimpleQueue[dict[Any, Any]]
+    url_queue: SimpleQueue[SiteData]
 
     # Global anaytics for the scan
     analytics = Analytics()
@@ -52,7 +52,7 @@ class CWAC:
             result.result()
         logging.info("All threads complete")
 
-    def should_skip_row(self, row: dict[Any, Any]) -> bool:
+    def should_skip_row(self, row: SiteData) -> bool:
         """Check if a row being imported should be skipped.
 
         Checks if a URL/Organisation should be included
@@ -61,7 +61,7 @@ class CWAC:
         filter_to_domains.
 
         Args:
-            row (dict[Any, Any]): a row from a CSV
+            row (SiteData): a row from a CSV
 
         Returns:
             bool: True if the row should be skipped, False otherwise
@@ -102,11 +102,11 @@ class CWAC:
         modified = parsed._replace(scheme=parsed.scheme.lower(), netloc=parsed.netloc.lower())
         return urlunparse(modified)
 
-    def shuffle_queue(self, queue: SimpleQueue[Any]) -> None:
+    def shuffle_queue(self, queue: SimpleQueue[SiteData]) -> None:
         """Shuffle a SimpleQueue.
 
         Args:
-            queue (SimpleQueue[dict[Any, Any]]): the queue to shuffle
+            queue (SimpleQueue[SiteData]): the queue to shuffle
         """
         # Convert queue to list
         queue_list = []
@@ -120,7 +120,7 @@ class CWAC:
         for item in queue_list:
             queue.put(item)
 
-    def import_base_urls(self) -> SimpleQueue[dict[Any, Any]]:
+    def import_base_urls(self) -> SimpleQueue[SiteData]:
         """Import target URLs for crawl mode.
 
         This function reads all CSVs in config.base_urls_crawl_path
@@ -135,7 +135,7 @@ class CWAC:
             folder_path = config.base_urls_nocrawl_path
             config.max_links_per_domain = 1
 
-        url_queue: SimpleQueue[dict[Any, Any]] = SimpleQueue()
+        url_queue: SimpleQueue[SiteData] = SimpleQueue()
 
         for filename in os.listdir(folder_path):
             if filename.endswith(".csv"):
@@ -147,7 +147,7 @@ class CWAC:
                     reader = csv.reader(file)
                     header = next(reader)
                     for row in reader:
-                        dict_row = dict(zip(header, row))
+                        dict_row = cast(SiteData, dict(zip(header, row)))
                         if self.should_skip_row(dict_row):
                             continue
 
