@@ -36,7 +36,7 @@ repos:
     rev: 6.3.0
     hooks:
       - id: pydocstyle
-        name: pydocstyle --convention==google
+        name: pydocstyle --convention=google
         args: [
           --convention=google
         ]
