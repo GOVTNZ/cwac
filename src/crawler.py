@@ -550,9 +550,9 @@ class Crawler:
                 [
                     {
                         "organisation": site_data["organisation"],
-                        "sector": site_data["sector"],
                         "base_url": site_data["url"],
                         "url": url,
+                        "sector": site_data["sector"],
                     }
                 ]
             )
