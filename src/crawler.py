@@ -546,7 +546,16 @@ class Crawler:
 
             # Write to audit_log.csv
             csv_writer = CSVWriter()
-            csv_writer.add_rows([{"url": url}])
+            csv_writer.add_rows(
+                [
+                    {
+                        "organisation": site_data["organisation"],
+                        "base_url": site_data["url"],
+                        "url": url,
+                        "sector": site_data["sector"],
+                    }
+                ]
+            )
             csv_writer.write_csv_file(f"./results/{config.audit_name}/audit_log.csv")
 
             self.register_audit_plugins(audit_manager, url, site_data)
