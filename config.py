@@ -26,6 +26,7 @@ class Config:
     thread_count: int
     browser: str
     chrome_binary_location: str
+    chrome_driver_location: str
     user_agent: str
     user_agent_product_token: str
     follow_robots_txt: bool
