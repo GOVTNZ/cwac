@@ -17,5 +17,5 @@ opencv-python==4.11.0.86
 numpy==1.26.4
 pandas==2.3.0
 pandas-stubs==2.2.2.240909
-pyarrow==16.1.0
+pyarrow==20.0.0
 nltk==3.9.1
