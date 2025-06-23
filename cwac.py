@@ -105,6 +105,10 @@ class CWAC:
     def shuffle_queue(self, queue: SimpleQueue[SiteData]) -> None:
         """Shuffle a SimpleQueue.
 
+        As part of the shuffling, a basic effort is made to avoid having sites
+        with the same network location be placed consecutively, though this is
+        not guaranteed to be the same avoided as that could be impossible.
+
         Args:
             queue (SimpleQueue[SiteData]): the queue to shuffle
         """
@@ -116,9 +120,32 @@ class CWAC:
         # Shuffle the list
         random.shuffle(queue_list)
 
+        last_netloc = None
+        skipped_item = None
+
         # Iterate through the list and add back to queue
         for item in queue_list:
+            current_netloc = urlparse(item["url"]).netloc
+
+            # If it looks like the net location of the last item we saw is
+            # the same as the net location of the current item, skip adding
+            # it to the queue until after the next item in the hopes that
+            # that will have a different net location
+            if skipped_item is None and last_netloc == current_netloc:
+                skipped_item = item
+                continue
+
             queue.put(item)
+            last_netloc = current_netloc
+
+            # add the skipped item to the queue
+            if skipped_item is not None:
+                queue.put(skipped_item)
+                skipped_item = None
+
+        # ensure that the last item is added, even if its consecutive
+        if skipped_item is not None:
+            queue.put(skipped_item)
 
     def import_base_urls(self) -> SimpleQueue[SiteData]:
         """Import target URLs for crawl mode.
