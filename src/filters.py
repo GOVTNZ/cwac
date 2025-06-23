@@ -205,13 +205,23 @@ def process_url_headers(url: str) -> dict[Any, Any]:
     timeout = (10, 10)
     output = {"status_code": -1, "final_url": url}
     final_url = None
+    method = "head"
 
     # Try to get the headers 2 times
     for i in range(3):
         try:
             # Set the user agent string
             ua_string = {"User-Agent": config.user_agent}
-            headers = requests.head(url, headers=ua_string, timeout=timeout, allow_redirects=True)
+            headers = requests.request(method, url, headers=ua_string, timeout=timeout, allow_redirects=True)
+            if headers.status_code == 405:
+                method = "get"
+                logging.warning(
+                    "%s does not support HEAD requests, retrying with GET (status code %i)",
+                    url,
+                    headers.status_code,
+                )
+                continue
+
             final_url = headers.url
             logging.info("%s has status code %i", url, headers.status_code)
             break
