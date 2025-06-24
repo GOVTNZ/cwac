@@ -147,6 +147,36 @@ class CWAC:
         if skipped_item is not None:
             queue.put(skipped_item)
 
+    def import_base_urls_without_head_support(self) -> set[str]:
+        """Import base urls that don't support HEAD requests.
+
+        Returns:
+            set[str]: a list of base urls that don't support HEAD requests
+        """
+        folder_path = config.base_urls_nohead_path
+        base_urls = set()
+
+        for filename in os.listdir(folder_path):
+            if filename.endswith(".csv"):
+                with open(
+                    os.path.join(folder_path, filename),
+                    encoding="utf-8-sig",
+                    newline="",
+                ) as file:
+                    reader = csv.reader(file)
+                    header = next(reader)
+                    for row in reader:
+                        dict_row = cast(dict[str, str], dict(zip(header, row)))
+
+                        # Strip whitespace from URL
+                        dict_row["url"] = dict_row["url"].strip()
+
+                        # Make the URL lowercase
+                        dict_row["url"] = self.lowercase_url(dict_row["url"])
+
+                        base_urls.add(dict_row["url"])
+        return base_urls
+
     def import_base_urls(self) -> SimpleQueue[SiteData]:
         """Import target URLs for crawl mode.
 
@@ -161,6 +191,8 @@ class CWAC:
         if config.nocrawl_mode:
             folder_path = config.base_urls_nocrawl_path
             config.max_links_per_domain = 1
+
+        headless_base_urls = self.import_base_urls_without_head_support()
 
         url_queue: SimpleQueue[SiteData] = SimpleQueue()
 
@@ -183,6 +215,8 @@ class CWAC:
 
                         # Make the URL lowercase
                         dict_row["url"] = self.lowercase_url(dict_row["url"])
+
+                        dict_row["supports_head"] = dict_row["url"] not in headless_base_urls
 
                         CWAC.analytics.add_base_url(dict_row["url"])
 
