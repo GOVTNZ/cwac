@@ -494,6 +494,7 @@ class Crawler:
 
         # Filter and sanitise the initial URL
         if not self.url_filter.run_url_filters(base_url):
+            self.record_pages_scanned(site_data, pages_scanned)
             logging.error("base_url was filtered out! %s", base_url)
             return
 
@@ -569,6 +570,7 @@ class Crawler:
                 test_failures += 1
                 if test_failures >= 3:
                     self.analytics.record_test_failure(base_url)
+                    self.record_pages_scanned(site_data, pages_scanned)
                     logging.error("Too many sequential test failures, skipping %s", url)
                     return
 
@@ -581,7 +583,24 @@ class Crawler:
                     queue.push((url, new_link, depth + 1))
 
         self.analytics.record_test_failure(base_url)
+        self.record_pages_scanned(site_data, pages_scanned)
         logging.info("Crawl exhausted all links %s", base_url)
+
+    def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
+        """Record the number of pages that were scanned for the site."""
+        with config.lock:
+            csv_writer = src.output.CSVWriter()
+            csv_writer.add_rows(
+                [
+                    {
+                        "organisation": site_data["organisation"],
+                        "base_url": site_data["url"],
+                        "number_of_pages": pages_scanned,
+                        "sector": site_data["sector"],
+                    }
+                ]
+            )
+            csv_writer.write_csv_file(f"./results/{config.audit_name}/pages_scanned.csv")
 
 
 class RandomQueue:
