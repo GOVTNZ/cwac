@@ -166,7 +166,7 @@ Field descriptions:
   - a path to a folder that contains CSV files (as many as you like). The CSV files **must** have only one header: url.
   - CWAC will take the URL, and look it up within `base_urls_crawl_path` CSVs to determine the URL's organisation,sector automatically, otherwise 'Unknown' will be specified and a warning is put in the scan's log.
 - `base_urls_nohead_path`
-  - Defines which URLs that don't support HEAD requests 
+  - Defines which URLs don't support HEAD requests 
   - a path to a folder that contains CSV files (as many as you like). The CSV files **must** have only one header: url.
   - In cases where a HEAD request would be made CWAC will instead make a GET request
 - `force_open_details_elements`
