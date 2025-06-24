@@ -12,7 +12,7 @@ import time
 import urllib
 import urllib.robotparser
 from queue import SimpleQueue
-from typing import Any, Literal
+from typing import Any, TypedDict
 
 import requests
 import selenium.common.exceptions
@@ -37,7 +37,14 @@ from src.output import CSVWriter
 # disable too-many-locals
 # pylint: disable=R0914
 
-type SiteData = dict[Literal["organisation", "url", "sector"], str]
+
+class SiteData(TypedDict):
+    """Holds data for a site that should be crawled and audited."""
+
+    organisation: str
+    url: str
+    sector: str
+    supports_head: bool
 
 
 class Crawler:
@@ -302,7 +309,7 @@ class Crawler:
         self,
         audit_manager: AuditManager,
         new_link: str,
-        site_data: dict[Any, Any],
+        site_data: SiteData,
     ) -> None:
         """Register audit plugins with AuditManager.
 
@@ -523,7 +530,7 @@ class Crawler:
             # status_code and final_url after redirects
             # status_code is None if an error occurred
             if config.perform_header_check:
-                url_data = src.filters.process_url_headers(url)
+                url_data = src.filters.process_url_headers(url, supports_head_requests=site_data["supports_head"])
                 url_status_code = url_data["status_code"]
                 url = url_data["final_url"]
                 if not self.are_url_headers_acceptable(

@@ -41,6 +41,7 @@ class Config:
     shuffle_base_urls: bool
     base_urls_crawl_path: str
     base_urls_nocrawl_path: str
+    base_urls_nohead_path: str
     filter_to_organisations: list[str]
     filter_to_domains: list[str]
     viewport_sizes: dict[str, dict[str, int]]
@@ -101,6 +102,10 @@ class Config:
         # Ensure base_url_nocrawl_path is within base_urls folder
         if not self.is_path_subdir(self.config["base_urls_nocrawl_path"], "./base_urls"):
             raise ValueError("base_urls_nocrawl_path must be within base_urls folder")
+
+        # Ensure base_urls_nohead_path is within base_urls folder
+        if not self.is_path_subdir(self.config["base_urls_nohead_path"], "./base_urls"):
+            raise ValueError("base_urls_nohead_path must be within base_urls folder")
 
         self.config["url_lookup"] = self.import_url_lookup_files()
 

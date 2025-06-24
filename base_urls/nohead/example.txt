@@ -1,0 +1,13 @@
+# Place URLs in CSV files within /base_urls/nohead/
+# and the CWAC will avoid making HEAD requests to
+# those websites if they are listed in /base_urls/crawl/
+
+# You can place multiple CSV files into the /base_urls/nohead/ folder
+# and they will all be loaded.
+
+# Below is an example of the expected format of CSV files:
+
+url
+https://www.put-target-domain-name-here.govt.nz/
+https://www.put-another-target-domain-name-here.govt.nz/
+https://www.put-yet-another-target-domain-name-here.govt.nz/

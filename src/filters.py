@@ -187,7 +187,7 @@ def url_filter_by_header_content_type(url: str, headers: dict[Any, Any]) -> bool
     return True
 
 
-def process_url_headers(url: str) -> dict[Any, Any]:
+def process_url_headers(url: str, supports_head_requests: bool = True) -> dict[Any, Any]:
     """Process a URL by handling the headers.
 
     It does the following:
@@ -197,6 +197,7 @@ def process_url_headers(url: str) -> dict[Any, Any]:
 
     Args:
         url (str): A URL to filter
+        supports_head_requests (bool): whether the URL supports HEAD requests
 
     Returns:
         dict[Any, Any]]: A dict of status_code, final_url
@@ -207,13 +208,22 @@ def process_url_headers(url: str) -> dict[Any, Any]:
     final_url = None
     method = "head"
 
+    if not supports_head_requests:
+        method = "get"
+        logging.info(
+            "%s is marked as not supporting HEAD requests, using GET instead to check headers",
+            url,
+        )
+
     # Try to get the headers 2 times
     for i in range(3):
         try:
             # Set the user agent string
             ua_string = {"User-Agent": config.user_agent}
             headers = requests.request(method, url, headers=ua_string, timeout=timeout, allow_redirects=True)
-            if headers.status_code == 405:
+
+            # this response does not really make sense, but if it does happen we might as well skip remaining retries
+            if headers.status_code == 405 and method != "get":
                 method = "get"
                 logging.warning(
                     "%s does not support HEAD requests, retrying with GET (status code %i)",
