@@ -96,7 +96,7 @@ class Config:
         with open(f"{folder_path}/config.json", "w", encoding="utf-8-sig") as file:
             json.dump(self.config, file, indent=4)
 
-        self.__automatically_configure()
+        self.__resolve_automatic_settings()
 
         # Ensure base_url_crawl_path is within base_urls folder
         if not self.is_path_subdir(self.config["base_urls_crawl_path"], "./base_urls"):
@@ -123,8 +123,13 @@ class Config:
             logging.info("nocrawl_mode is True, using nocrawl_path_to_audit_log")
             self.config["max_links_per_domain"] = 1
 
-    def __automatically_configure(self) -> None:
-        """Automatically configure supported options that are marked with 'auto'."""
+    def __resolve_automatic_settings(self) -> None:
+        """Resolve configuration settings which are set to 'auto'.
+
+        If a value cannot be automatically determined for a particular setting,
+        such as because the OS or arch is not supported, then an error will be
+        raised requesting the option be set manually in the config file
+        """
         info = platform.uname()
 
         if self.chrome_binary_location == "auto":
