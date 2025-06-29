@@ -5,6 +5,7 @@ import datetime
 import json
 import logging
 import os
+import platform
 import re
 import sys
 import threading
@@ -95,6 +96,8 @@ class Config:
         with open(f"{folder_path}/config.json", "w", encoding="utf-8-sig") as file:
             json.dump(self.config, file, indent=4)
 
+        self.__automatically_configure()
+
         # Ensure base_url_crawl_path is within base_urls folder
         if not self.is_path_subdir(self.config["base_urls_crawl_path"], "./base_urls"):
             raise ValueError("base_urls_crawl_path must be within base_urls folder")
@@ -119,6 +122,33 @@ class Config:
             logging.info("nocrawl_mode True config.json, max_links_per_domain = 1")
             logging.info("nocrawl_mode is True, using nocrawl_path_to_audit_log")
             self.config["max_links_per_domain"] = 1
+
+    def __automatically_configure(self) -> None:
+        """Automatically configure supported options that are marked with 'auto'."""
+        info = platform.uname()
+
+        if self.chrome_binary_location == "auto":
+            if info.system == "Linux" and info.machine == "x86_64":
+                self.chrome_binary_location = "./chrome/linux-122.0.6261.39/chrome-linux64/chrome"
+            elif info.system == "Darwin" and info.machine == "arm64":
+                # pylint: disable-next=line-too-long
+                self.chrome_binary_location = "./chrome/mac_arm-122.0.6261.39/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"  # noqa: E501
+            else:
+                raise ValueError(
+                    f"chrome_binary_location cannot be automatically determined for {info.system} {info.machine} "
+                    f"- please set chrome_binary_location manually"
+                )
+
+        if self.chrome_driver_location == "auto":
+            if info.system == "Linux" and info.machine == "x86_64":
+                self.chrome_driver_location = "./drivers/chromedriver_linux_x64"
+            elif info.system == "Darwin" and info.machine == "arm64":
+                self.chrome_driver_location = "./drivers/chromedriver_mac_arm64"
+            else:
+                raise ValueError(
+                    f"chrome_driver_location cannot be automatically determined for {info.system} {info.machine} "
+                    f"- please set chrome_driver_location manually"
+                )
 
     def sanitise_string(self, string: str) -> str:
         """Sanitise a string for use in a folder/filename.

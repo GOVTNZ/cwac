@@ -69,15 +69,17 @@ Chrome for Testing is a specific version of Chrome used for testing purposes.
 
 An instance of Chrome for Testing should be in the `cwac/chrome/` directory.
 
-Depending on your OS/architecture, Chrome for Testing will have different folder names and executable paths.
+By default, CWAC will attempt to automatically determine the paths for Chrome for Testing and the Chrome driver based on your OS and architecture.
 
-You must specify the correct path to Chrome for Testing for CWAC to work within CWAC's configuration files.
-
-To do this:
+If the paths cannot be determined automatically, you can pass them manually by:
 1. Look inside the `cwac/chrome/` directory. Note the folder name for the version of Chrome for Testing that was downloaded i.e. `mac_arm-114.0.5735.90`
 2. Open `cwac/config/`. For every config file in this directory e.g. `config_default.json`, modify the value of `chrome_binary_location` so the correct binary path is specified. For example:
    - the value of `chrome_binary_location` for an ARM-based Mac could be: `./chrome/mac_arm-114.0.5735.90/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`
    - for Linux x64, the `chrome_binary_location` could be: `./chrome/linux-114.0.5735.90/chrome-linux64/chrome`
+
+> [!NOTE]
+> 
+> Pull requests improving the automatic detection to cover additional OSs and architectures are welcome
 
 #### Updating Chrome for Testing (optional)
 From time to time, it might make sense to update the version of Chrome for Testing that CWAC uses.
@@ -90,7 +92,7 @@ To do this:
 5. Place the `chromedriver` executable into the `/drivers/` folder in `cwac`, with a unique filename
 6. Open `package.json` and change the Chrome for Testing version number, ensuring it matches the `chromedriver` version
 7. Run `npm install` to install the newly specified version of Chrome for Testing in `package.json`
-8. Modify the CWAC configuration file i.e. `/config/config_default.json` and ensure it specifies the correct `chrome_binary_location` and `chrome_driver_location`
+8. Modify the CWAC [`Config#__automatically_configure`](./config.py) function to return the paths to the new binary and driver
 9. Note: the `chromedriver` executable may need to have `chmod +x` run on it in order to give it execution permissions
 10. macOS might come up with an error stating "chromedriver_mac_arm64” can’t be opened because Apple cannot check it for malicious software.". This is fixed by running `xattr -d com.apple.quarantine <name-of-executable>`
 
@@ -129,8 +131,10 @@ Field descriptions:
   - can be either "chrome" or "firefox"
 - `chrome_binary_location`
   - a valid path to a Chrome for Testing executable
+  - if set to `auto`, CWAC will attempt to determine the path based on your OS and architecture
 - `chrome_driver_location`
   - a valid path to a `chromedriver` executable (version must match the version of Chrome for Testing)
+  - if set to `auto`, CWAC will attempt to determine the path based on your OS and architecture
 - `user_agent`
   - the user agent string CWAC will use for all network requests
 - `user_agent_product_token`
@@ -202,7 +206,7 @@ Once the configuration files are set up, CWAC can be run by executing:
 python cwac.py
 ```
 
-CWAC will execute using `./config/config_default.json` as its configuration source, which by default works for macOS.
+CWAC will execute using `./config/config_default.json` as its configuration source.
 
 CWAC also supports specifying configuration file names as a singular command line argument. Configuration files must be located in the `./config/` directory.
 
@@ -213,7 +217,7 @@ python cwac.py config_custom.json
 
 This will cause CWAC to load `./config/config_custom.json` instead of `config_default.json`.
 
-If you want to run CWAC on Linux, this can be done easily by using the pre-built config for Linux: 
+There is a slightly modified Linux-based pre-built config that can be used:
 ```
 python cwac.py config_linux.json
 ```
