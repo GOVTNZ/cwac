@@ -57,7 +57,7 @@
             "enabled": true,
             "export_type": "raw_data",
             "input_filename": "reflow_audit.csv",
-            "output_filename": "[output_report_name]_reflow_auditt.csv"
+            "output_filename": "[output_report_name]_reflow_audit.csv"
         },
         {
             "enabled": true,
