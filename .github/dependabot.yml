@@ -24,6 +24,16 @@ updates:
           - minor
           - patch
       production:
+        exclude-patterns:
+          - bandit
+          - black
+          - flake8
+          - flake8-simplify
+          - isort
+          - mypy
+          - pre-commit
+          - pylint
+          - pydocstyle
         update-types:
           - minor
           - patch
