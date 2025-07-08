@@ -2,7 +2,7 @@ beautifulsoup4==4.13.4
 types-beautifulsoup4==4.12.0.20250516
 requests==2.32.4
 types-requests==2.32.4.20250611
-selenium==4.33.0
+selenium==4.34.2
 lxml==6.0.0
 responses==0.25.7
 pre-commit==4.2.0
@@ -13,9 +13,9 @@ flake8==7.3.0
 flake8-simplify==0.22.0
 black==25.1.0
 pydocstyle==6.3.0
-opencv-python==4.11.0.86
+opencv-python==4.12.0.88
 numpy==2.0.2
-pandas==2.3.0
+pandas==2.3.1
 pandas-stubs==2.2.2.240909
 pyarrow==20.0.0
 nltk==3.9.1
