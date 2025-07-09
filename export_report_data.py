@@ -8,6 +8,7 @@ To configure the export, edit export_report_data_config.json.
 import json
 import os
 import sqlite3
+import sys
 from typing import Any, cast
 
 import pandas as pd
@@ -19,8 +20,11 @@ class DataExporter:
     def __init__(self) -> None:
         """Init vars."""
         self.config = self.import_config_file()
-        self.input_path = "./results/" + self.config["input_results_folder_name"] + "/"
-        self.output_path = "./reports/" + self.config["input_results_folder_name"] + "/"
+
+        input_results_folder_name = self.__determine_results_folder_name()
+
+        self.input_path = "./results/" + input_results_folder_name + "/"
+        self.output_path = "./reports/" + input_results_folder_name + "/"
         # assert the input_path exists
         if not os.path.exists(self.input_path):
             raise FileNotFoundError(f"Input path {self.input_path} does not exist.")
@@ -28,6 +32,11 @@ class DataExporter:
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
         self.iterate_export_formats()
+
+    def __determine_results_folder_name(self) -> str:
+        if len(sys.argv) <= 1:
+            raise ValueError("First argument is required and should be the name of a folder in ./results/")
+        return sys.argv[1]
 
     # noinspection PyDefaultArgument
     def sort_with_default(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:

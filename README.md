@@ -231,9 +231,7 @@ You can either use the raw data stored in teh `./results/` folder directly, or y
 
 The CWAC data exporter is in the file `export_report_data.py`, and its configuration is in `export_report_data_config.json`.
 
-To use the CWAC data exporter, first modify `export_report_data_config.json` to specify where it should import data from within the `./results/` folder. Set `input_results_folder_name` to a valid folder name found within `./results/`.
-
-You can then run `export_report_data.py` and it will generate various leaderboard CSVs etc and the output will be placed within `./reports/{input_results_folder_name}/`.
+To use the CWAC data exporter, run `python export_report_data.py` passing it the name of a folder in the `./results/` folder, and it will generate various leaderboard CSVs etc and the output will be placed within `./reports/`.
 
 ## Checking CWAC's source code
 
