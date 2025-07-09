@@ -8,12 +8,9 @@ To configure the export, edit export_report_data_config.json.
 import json
 import os
 import sqlite3
-from datetime import date
 from typing import Any, cast
 
 import pandas as pd
-
-TODAY = str(date.today())
 
 
 class DataExporter:
@@ -191,8 +188,6 @@ class DataExporter:
             # print(f"Exporting {export_format['export_type']} to {export_format['output_filename']}")
             print(f"Exporting {export_format['export_type']} to {self.output_path}")
 
-            # Perform string subs for output filename (include output_report_name in all files)
-            export_format["output_filename"] = export_format["output_filename"].replace("[output_report_name]", TODAY)
             # Check if export_format["input_filename"] exists
             if "input_filename" in export_format and not os.path.exists(
                 self.input_path + export_format["input_filename"]
