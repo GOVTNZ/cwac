@@ -90,11 +90,10 @@ To do this:
 3. Find the entry for the latest stable version of Chrome for Testing
 4. Download the `chromedriver` that matches the version of Chrome for Testing you want to use
 5. Place the `chromedriver` executable into the `/drivers/` folder in `cwac`, with a unique filename
-6. Open `package.json` and change the Chrome for Testing version number, ensuring it matches the `chromedriver` version
-7. Run `npm install` to install the newly specified version of Chrome for Testing in `package.json`
-8. Modify the CWAC [`Config#__automatically_configure`](./config.py) function to return the paths to the new binary and driver
-9. Note: the `chromedriver` executable may need to have `chmod +x` run on it in order to give it execution permissions
-10. macOS might come up with an error stating "chromedriver_mac_arm64” can’t be opened because Apple cannot check it for malicious software.". This is fixed by running `xattr -d com.apple.quarantine <name-of-executable>`
+6. Update the `chromeVersion` config property in `package.json`, ensuring it matches the `chromedriver` version
+7. Run `npm install` to install the newly specified version of Chrome for Testing
+8. Note: the `chromedriver` executable may need to have `chmod +x` run on it in order to give it execution permissions
+9. macOS might come up with an error stating "chromedriver_mac_arm64” can’t be opened because Apple cannot check it for malicious software.". This is fixed by running `xattr -d com.apple.quarantine <name-of-executable>`
 
 ## Troubleshooting
 
