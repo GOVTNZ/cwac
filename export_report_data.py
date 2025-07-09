@@ -32,6 +32,19 @@ class DataExporter:
             os.makedirs(self.output_path)
         self.iterate_export_formats()
 
+    # noinspection PyDefaultArgument
+    def sort_with_default(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+        """Sort the data frame by the given columns in descending order followed by default columns for consistency."""
+        ascending = [False] * len(columns) + [True, True, True]
+        columns = list(
+            filter(
+                lambda key: key in df.columns,
+                columns + ["organisation", "base_url", "url"],
+            )
+        )
+
+        return df.sort_values(by=columns, ascending=ascending[0 : len(columns)])
+
     def get_num_unique_pages_scanned(self, df: pd.DataFrame) -> pd.DataFrame:
         """Returns a DF with num of unique pages scanned for each base_url.
 
@@ -86,9 +99,6 @@ class DataExporter:
 
         # Add a column of 'count' / 'num_pages_scanned' to the DataFrame
         leaderboard_df["average_count"] = (leaderboard_df["num_issues"] / leaderboard_df["num_pages_scanned"]).round(2)
-
-        # Sort df on 'average_count' in descending order
-        leaderboard_df = leaderboard_df.sort_values(by="average_count", ascending=False)
 
         # Add rank column
         # leaderboard_df["rank"] = leaderboard_df["average_count"].rank(method="dense", ascending=True)
@@ -152,8 +162,6 @@ class DataExporter:
             leaderboard_df["average_count"] = (
                 leaderboard_df["num_issues"] / leaderboard_df["num_pages_scanned"]
             ).round(2)
-            # Sort by 'average_count'
-            leaderboard_df = leaderboard_df.sort_values(by="average_count", ascending=False)
 
         return leaderboard_df
 
@@ -198,6 +206,8 @@ class DataExporter:
                     input_df=self.import_audit_csv_to_df(export_format["input_filename"]),
                 )
 
+                output_df = self.sort_with_default(output_df, ["average_count"])
+
                 # Write leaderboard to CSV
                 output_df.to_csv(
                     self.output_path + export_format["output_filename"],
@@ -225,6 +235,8 @@ class DataExporter:
 
                 # Generate the axe-core leaderboard
                 leaderboard_df = self.generate_axe_core_leaderboard(axe_core_template_aware_df)
+                leaderboard_df = self.sort_with_default(leaderboard_df, ["average_num_issues_per_page"])
+
                 # Write the leaderboard to a CSV file
                 leaderboard_df.to_csv(
                     self.output_path + export_format["output_filename"],
@@ -281,9 +293,6 @@ class DataExporter:
         # Concatenate the zero count rows with the agg data
         agg_df = pd.concat([agg_df, zero_count_rows])
 
-        # Sort the data
-        agg_df = agg_df.sort_values(by="num_pages", ascending=False)
-
         return agg_df
 
     def run_axe_core_audit_template_aware(self) -> pd.DataFrame:
@@ -316,6 +325,8 @@ class DataExporter:
             input_df=data_frame,
             groupby_cols=["base_url", "id", "html", "viewport_size"],
         )
+
+        data_frame = self.sort_with_default(data_frame, ["num_pages"])
 
         # Write the data to CSV file with original column order
         data_frame.to_csv(
