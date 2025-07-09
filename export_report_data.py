@@ -273,7 +273,7 @@ class DataExporter:
                 agg_dict[col] = "first"
 
         # Aggregate the data
-        agg_df = grouped_df.agg(agg_dict)
+        agg_df = grouped_df.agg(agg_dict).rename(columns={"num_issues": "num_pages"})
 
         # Reset the index
         agg_df = agg_df.reset_index()
@@ -282,7 +282,7 @@ class DataExporter:
         agg_df = pd.concat([agg_df, zero_count_rows])
 
         # Sort the data
-        agg_df = agg_df.sort_values(by="num_issues", ascending=False)
+        agg_df = agg_df.sort_values(by="num_pages", ascending=False)
 
         return agg_df
 
@@ -305,7 +305,11 @@ class DataExporter:
         data_frame = pd.read_csv(file_path)
 
         # Get original column order for later use
-        original_column_order = data_frame.columns
+        original_column_order = list(data_frame.columns)
+
+        for i, _ in enumerate(original_column_order):
+            if original_column_order[i] == "num_issues":
+                original_column_order[i] = "num_pages"
 
         # Group and aggregate the data
         data_frame = self.template_aware_algorithm(
@@ -329,18 +333,18 @@ class DataExporter:
         query = """
              SELECT organisation, base_url, COUNT(*) as num_count
                     FROM cwac_table
-                    WHERE num_issues > 0
+                    WHERE num_pages > 0
                     AND "best-practice" = 'No'
                     GROUP BY base_url
                     UNION
-                    SELECT organisation, base_url, num_issues
+                    SELECT organisation, base_url, num_pages
                     FROM cwac_table
-                    WHERE num_issues = 0
+                    WHERE num_pages = 0
                     AND "best-practice" = 'No'
                     AND base_url NOT IN (
                         SELECT base_url
                         FROM cwac_table
-                        WHERE num_issues > 0
+                        WHERE num_pages > 0
                         AND "best-practice" = 'No'
                         GROUP BY base_url
                     )
