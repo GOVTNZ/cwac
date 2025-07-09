@@ -10,6 +10,8 @@ __pycache__/
 results/*
 .coverage
 *.log
+config/
+!config/config_default.json
 !/drivers/.gitkeep
 .vscode/
 /base_urls/crawl/*

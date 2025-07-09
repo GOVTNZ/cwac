@@ -217,11 +217,6 @@ python cwac.py config_custom.json
 
 This will cause CWAC to load `./config/config_custom.json` instead of `config_default.json`.
 
-There is a slightly modified Linux-based pre-built config that can be used:
-```
-python cwac.py config_linux.json
-```
-
 This feature can be useful if you want to chain, or concurrently run instances of CWAC with different configurations e.g. different viewports, different tests, different organisations, etc.
 
 To chain two instances of CWAC where one test will run after the other in sequence, use:
