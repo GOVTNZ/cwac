@@ -1,6 +1,5 @@
 {
     "input_results_folder_name": "input_results_folder_name",
-    "output_report_name": "output_report_name",
     "export_formats": [
         {
             "enabled": true,

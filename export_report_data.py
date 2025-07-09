@@ -23,7 +23,7 @@ class DataExporter:
         """Init vars."""
         self.config = self.import_config_file()
         self.input_path = "./results/" + self.config["input_results_folder_name"] + "/"
-        self.output_path = "./reports/" + self.config["output_report_name"] + "/"
+        self.output_path = "./reports/" + self.config["input_results_folder_name"] + "/"
         # assert the input_path exists
         if not os.path.exists(self.input_path):
             raise FileNotFoundError(f"Input path {self.input_path} does not exist.")
@@ -189,7 +189,7 @@ class DataExporter:
                 continue
 
             # print(f"Exporting {export_format['export_type']} to {export_format['output_filename']}")
-            print(f"Exporting {export_format['export_type']} to {self.config['output_report_name']}")
+            print(f"Exporting {export_format['export_type']} to {self.output_path}")
 
             # Perform string subs for output filename (include output_report_name in all files)
             export_format["output_filename"] = export_format["output_filename"].replace("[output_report_name]", TODAY)
