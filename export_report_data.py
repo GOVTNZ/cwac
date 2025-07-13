@@ -31,6 +31,7 @@ class DataExporter:
         # create ouptut folder if it doesn't exist
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
+        self.output_prefix = self.output_path + self.config["output_filename_prefix"]
         self.iterate_export_formats()
 
     def __determine_results_folder_name(self) -> str:
@@ -180,7 +181,7 @@ class DataExporter:
         """
         with (
             open(self.input_path + input_filename, "r", encoding="utf-8-sig") as input_file,
-            open(self.output_path + output_filename, "w", encoding="utf-8-sig") as output_file,
+            open(self.output_prefix + output_filename, "w", encoding="utf-8-sig") as output_file,
         ):
             output_file.write(input_file.read())
 
@@ -214,7 +215,7 @@ class DataExporter:
 
                 # Write leaderboard to CSV
                 output_df.to_csv(
-                    self.output_path + export_format["output_filename"],
+                    self.output_prefix + export_format["output_filename"],
                     index=False,
                 )
 
@@ -243,7 +244,7 @@ class DataExporter:
 
                 # Write the leaderboard to a CSV file
                 leaderboard_df.to_csv(
-                    self.output_path + export_format["output_filename"],
+                    self.output_prefix + export_format["output_filename"],
                     index=False,
                 )
 
