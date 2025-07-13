@@ -34,9 +34,20 @@ class DataExporter:
         self.iterate_export_formats()
 
     def __determine_results_folder_name(self) -> str:
-        if len(sys.argv) <= 1:
-            raise ValueError("First argument is required and should be the name of a folder in ./results/")
-        return sys.argv[1]
+        if len(sys.argv) > 1:
+            return sys.argv[1]
+
+        # if a specific results directory has not been provided, fallback to the
+        # results directory that most recently had a file added or removed
+        latest_result = max(
+            [d for d in os.listdir("./results") if os.path.isdir(f"./results/{d}")],
+            key=lambda d: os.path.getmtime(f"./results/{d}"),
+            default=None,
+        )
+        if latest_result is None:
+            raise ValueError("could not determine latest results folder - have you run an audit?")
+        print(f"Processing ./results/{latest_result}")
+        return latest_result
 
     # noinspection PyDefaultArgument
     def sort_with_default(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
