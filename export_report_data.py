@@ -7,9 +7,10 @@ To configure the export, edit export_report_data_config.json.
 
 import json
 import os
+import re
 import sqlite3
 import sys
-from typing import Any, cast
+from typing import Any, Callable, cast
 
 import pandas as pd
 
@@ -37,16 +38,20 @@ class DataExporter:
         if len(sys.argv) > 1:
             return sys.argv[1]
 
-        # if a specific results directory has not been provided, fallback to the
-        # results directory that most recently had a file added or removed
-        latest_result = max(
+        # get all the directories in the results folder, sorted naturally in
+        # ascending order so that the latest results will be the last item
+        convert: Callable[[str], int | str] = lambda text: int(text) if text.isdigit() else text
+        existing_results = sorted(
             [d for d in os.listdir("./results") if os.path.isdir(f"./results/{d}")],
-            key=lambda d: os.path.getmtime(f"./results/{d}"),
-            default=None,
+            key=lambda key: [convert(c) for c in re.split("([0-9]+)", key)],
         )
-        if latest_result is None:
+
+        if len(existing_results) == 0:
             raise ValueError("could not determine latest results folder - have you run an audit?")
+        latest_result = existing_results[-1]
+
         print(f"Processing ./results/{latest_result}")
+
         return latest_result
 
     # noinspection PyDefaultArgument
