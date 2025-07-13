@@ -2,7 +2,10 @@
   "devDependencies": {
   },
   "scripts": {
-    "postinstall": "npx @puppeteer/browsers install chrome@122.0.6261.39"
+    "postinstall": "npx @puppeteer/browsers install chrome@$npm_package_config_chromeVersion"
+  },
+  "config": {
+    "chromeVersion": "122.0.6261.39"
   },
   "dependencies": {
     "axe-core": "^4.10.2",

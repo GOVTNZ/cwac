@@ -133,11 +133,13 @@ class Config:
         info = platform.uname()
 
         if self.chrome_binary_location == "auto":
+            chrome_version = self.__determine_chrome_version()
+
             if info.system == "Linux" and info.machine == "x86_64":
-                self.chrome_binary_location = "./chrome/linux-122.0.6261.39/chrome-linux64/chrome"
+                self.chrome_binary_location = f"./chrome/linux-{chrome_version}/chrome-linux64/chrome"
             elif info.system == "Darwin" and info.machine == "arm64":
                 # pylint: disable-next=line-too-long
-                self.chrome_binary_location = "./chrome/mac_arm-122.0.6261.39/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"  # noqa: E501
+                self.chrome_binary_location = f"./chrome/mac_arm-{chrome_version}/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"  # noqa: E501
             else:
                 raise ValueError(
                     f"chrome_binary_location cannot be automatically determined for {info.system} {info.machine} "
@@ -154,6 +156,12 @@ class Config:
                     f"chrome_driver_location cannot be automatically determined for {info.system} {info.machine} "
                     f"- please set chrome_driver_location manually"
                 )
+
+    def __determine_chrome_version(self) -> str:
+        with open("package.json", "r", encoding="utf-8-sig") as file:
+            package_json = json.load(file)
+
+            return str(package_json["config"]["chromeVersion"])
 
     def sanitise_string(self, string: str) -> str:
         """Sanitise a string for use in a folder/filename.
