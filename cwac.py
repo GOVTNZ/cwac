@@ -13,6 +13,7 @@ from queue import SimpleQueue
 from typing import cast
 from urllib.parse import urlparse, urlunparse
 
+import src.logs
 import src.verify
 from config import config
 from src.analytics import Analytics
@@ -36,10 +37,11 @@ class CWAC:
         Args:
             thread_id (int): identifier for the thread
         """
-        browser = Browser(thread_id)
-        crawl = Crawler(browser=browser, url_queue=CWAC.url_queue, analytics=CWAC.analytics)
-        crawl.iterate_through_base_urls()
-        browser.close()
+        with src.logs.group_by_thread(f"./results/{config.audit_name}/logs", f"{config.audit_name}_"):
+            browser = Browser(thread_id)
+            crawl = Crawler(browser=browser, url_queue=CWAC.url_queue, analytics=CWAC.analytics)
+            crawl.iterate_through_base_urls()
+            browser.close()
 
     def spawn_threads(self) -> None:
         """Create a number of threads to speed up execution.
