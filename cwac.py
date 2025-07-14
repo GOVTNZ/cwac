@@ -37,7 +37,7 @@ class CWAC:
         Args:
             thread_id (int): identifier for the thread
         """
-        with src.logs.group_by_thread(f"./results/{config.audit_name}/logs", f"{config.audit_name}_"):
+        with src.logs.group_by_thread(f"./results/{config.audit_name}/logs/threads", f"{config.audit_name}_"):
             browser = Browser(thread_id)
             crawl = Crawler(browser=browser, url_queue=CWAC.url_queue, analytics=CWAC.analytics)
             crawl.iterate_through_base_urls()
