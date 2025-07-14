@@ -13,6 +13,8 @@ import urllib.robotparser
 from typing import Any
 from urllib import parse
 
+from src import logs
+
 
 class Config:
     """A global config class used throughout CWAC.
@@ -66,23 +68,18 @@ class Config:
 
         # Configure logging
         log_filename = self.config["audit_name"]
-        log_format = (
-            "[{%(asctime)s} %(levelname)-7s %(filename)10s : %(lineno)-4s] %(funcName)30s %(message)s %(threadName)s"
-        )
 
         # Create the results folder
         folder_path = "./results/" + log_filename + "/"
         os.makedirs(folder_path, exist_ok=True)
 
-        # Log timestamp format (ISO 8601)
-        log_date_format = "%Y-%m-%dT%H:%M:%S%z"
-
         logging.basicConfig(
-            filename=f"./{folder_path}/{log_filename}.log",
-            format=log_format,
-            filemode="w",
             level=logging.INFO,
-            datefmt=log_date_format,
+            handlers=[
+                logs.create_file_log_handler(
+                    f"./{folder_path}/{log_filename}.log",
+                )
+            ],
         )
 
         # Write self.config to the results folder for reference
