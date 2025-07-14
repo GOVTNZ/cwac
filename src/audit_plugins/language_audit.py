@@ -228,7 +228,7 @@ class LanguageAudit:
 
     def __get_document_lang(self) -> str:
         try:
-            return cast(str, self.browser.driver.execute_script("return document.documentElement.lang"))
+            return cast(str, self.browser.driver.execute_script("return document.documentElement.lang")).lower()
         except WebDriverException:
             logging.exception("Could not get document element language")
             return ""
