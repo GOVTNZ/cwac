@@ -11,12 +11,13 @@ This file has 3 main functions:
 import logging
 import math
 import os
-from typing import Any, Union
+from typing import Any, Union, cast
 
 import nltk  # type: ignore
 from bs4 import BeautifulSoup
 from nltk.corpus import cmudict  # type: ignore
 from nltk.sentiment import SentimentIntensityAnalyzer  # type: ignore
+from selenium.common import WebDriverException
 
 from config import config
 from src.audit_plugins.default_audit import DefaultAudit
@@ -54,6 +55,12 @@ class LanguageAudit:
             bool: if the audit fails
             list[dict[Any, Any]]: a list of audit result dicts
         """
+        lang = self.__get_document_lang()
+
+        if lang != "en" or not lang.startswith("en-"):
+            logging.warning("Test can only be run on English pages but lang for this page is %s: %s", lang, self.url)
+            return True
+
         # Scrape main content
         content = self.scrape_main_content()
 
@@ -218,6 +225,13 @@ class LanguageAudit:
         flat_output = self.sentence_ify(content[0]) + " " + flat_output
 
         return str(flat_output)
+
+    def __get_document_lang(self) -> str:
+        try:
+            return cast(str, self.browser.driver.execute_script("return document.documentElement.lang"))
+        except WebDriverException:
+            logging.exception("Could not get document element language")
+            return ""
 
     def count_syllables(self, word: str) -> int:
         """Count num of syllables in a word.
