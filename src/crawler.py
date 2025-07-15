@@ -598,7 +598,7 @@ class Crawler:
 
         self.analytics.record_test_failure(base_url)
         self.record_pages_scanned(site_data, pages_scanned)
-        if config.max_links_per_domain == 1:
+        if config.max_links_per_domain != 1:
             logging.info("Crawl exhausted all links %s", base_url)
 
     def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
