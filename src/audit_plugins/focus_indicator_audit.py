@@ -13,6 +13,7 @@ from typing import Any
 
 import cv2
 import numpy as np
+from selenium.common import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
@@ -121,6 +122,20 @@ class FocusIndicatorAudit:
             cv2.IMREAD_COLOR,
         )
 
+    def __find_main_content_element(self) -> Any | None:
+        try:
+            main_element = self.browser.driver.find_element(By.TAG_NAME, "main")
+            logging.info("Checking focus indication within <main> element")
+            return main_element
+        except WebDriverException:
+            logging.warning("Failed to find main element, falling back to body")
+
+        try:
+            return self.browser.driver.find_element(By.TAG_NAME, "body")
+        except Exception:  # pylint: disable=broad-except
+            logging.exception("Failed to find body element")
+            return None
+
     def run(self) -> list[dict[Any, Any]] | bool:
         """Run the audit.
 
@@ -182,11 +197,9 @@ class FocusIndicatorAudit:
             logging.exception("Failed to take screenshot")
             return False
 
-        # Find body element
-        try:
-            body = self.browser.driver.find_element(By.TAG_NAME, "body")
-        except Exception:  # pylint: disable=broad-except
-            logging.exception("Failed to find body element")
+        main_content = self.__find_main_content_element()
+
+        if main_content is None:
             return False
 
         # Store which # of tab key press has no focus indicator
@@ -199,11 +212,11 @@ class FocusIndicatorAudit:
 
         # Press tab a number of times possibly before running the actual audit
         # to help ensure we're actually interacting with a meaningful element
-        body.send_keys(*[Keys.TAB] * self.pre_num_tab_presses)
+        main_content.send_keys(*[Keys.TAB] * self.pre_num_tab_presses)
 
         # Repeatedly press the Tab key
         for i in range(self.max_num_tab_presses):
-            body.send_keys(Keys.TAB)
+            main_content.send_keys(Keys.TAB)
 
             time.sleep(0.1)
 
