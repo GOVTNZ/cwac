@@ -28,7 +28,8 @@ class FocusIndicatorAudit:
 
     def __init__(self, browser: Browser, **kwargs: Any) -> None:
         """Init variables."""
-        self.num_tab_presses = config.audit_plugins["focus_indicator_audit"]["max_tab_key_presses"]
+        self.pre_num_tab_presses = config.audit_plugins["focus_indicator_audit"]["pre_tab_key_presses"]
+        self.max_num_tab_presses = config.audit_plugins["focus_indicator_audit"]["max_tab_key_presses"]
         self.browser = browser
         self.url = kwargs["url"]
         self.site_data = kwargs["site_data"]
@@ -191,8 +192,17 @@ class FocusIndicatorAudit:
         # Store which # of tab key press has no focus indicator
         result_list = []
 
+        plural = ""
+        if self.pre_num_tab_presses != 1:
+            plural = "s"
+        logging.info("pre-tabbing %i time%s", self.pre_num_tab_presses, plural)
+
+        # Press tab a number of times possibly before running the actual audit
+        # to help ensure we're actually interacting with a meaningful element
+        body.send_keys(*[Keys.TAB] * self.pre_num_tab_presses)
+
         # Repeatedly press the Tab key
-        for i in range(self.num_tab_presses):
+        for i in range(self.max_num_tab_presses):
             body.send_keys(Keys.TAB)
 
             time.sleep(0.1)
