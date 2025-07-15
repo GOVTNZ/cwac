@@ -240,8 +240,12 @@ class CWAC:
         # Import base_urls into global varaiable
         CWAC.url_queue = self.import_base_urls()
 
+        things_to_scan = "websites"
+        if config.max_links_per_domain == 1:
+            things_to_scan = "pages"
+
         # Print the number of URLs to be scanned
-        num_websites_msg = f"Number of websites to be scanned: {CWAC.url_queue.qsize()}"
+        num_websites_msg = f"Number of {things_to_scan} to be scanned: {CWAC.url_queue.qsize()}"
         print(num_websites_msg)
         print("*" * 80)
         logging.info(num_websites_msg)

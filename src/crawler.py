@@ -481,7 +481,10 @@ class Crawler:
             site_data (SiteData): contains info about the site
             base_url (str): the first url to crawl
         """
-        logging.info("Starting crawl %s", base_url)
+        action = "crawl"
+        if config.max_links_per_domain == 1:
+            action = "audit"
+        logging.info("Starting %s of %s", action, base_url)
 
         # Create an AuditManager instance
         audit_manager = AuditManager(browser=self.browser, analytics=self.analytics)
@@ -581,6 +584,10 @@ class Crawler:
                     logging.error("Too many sequential test failures, skipping %s", url)
                     return
 
+            # don't bother getting links if we are only scanning one link per base url
+            if config.max_links_per_domain == 1:
+                break
+
             links = self.get_links(base_url, url)
 
             # Add all links to the queue
@@ -591,7 +598,8 @@ class Crawler:
 
         self.analytics.record_test_failure(base_url)
         self.record_pages_scanned(site_data, pages_scanned)
-        logging.info("Crawl exhausted all links %s", base_url)
+        if config.max_links_per_domain != 1:
+            logging.info("Crawl exhausted all links %s", base_url)
 
     def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
         """Record the number of pages that were scanned for the site."""
