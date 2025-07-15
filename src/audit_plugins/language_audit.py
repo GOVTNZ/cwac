@@ -57,7 +57,7 @@ class LanguageAudit:
         """
         lang = self.__get_document_lang()
 
-        if lang != "en" or not lang.startswith("en-"):
+        if lang != "en" and not lang.startswith("en-"):
             logging.warning("Test can only be run on English pages but lang for this page is %s: %s", lang, self.url)
             return True
 
