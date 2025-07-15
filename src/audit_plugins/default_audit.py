@@ -41,23 +41,10 @@ class DefaultAudit:
         Returns:
             list[dict[Any, Any]]: a list of audit result dicts
         """
-        # If nocrawl mode is True, site_data does not contain
-        # organisation, or sector so we will request it from the lookup
-        # function in config.py
-
-        # if organisation exists in site_data, use it
-        # otherwise, use the lookup function
-        org_data = config.lookup_organisation(self.site_data["url"])
-        if "organisation" not in self.site_data:
-            self.site_data["organisation"] = org_data["organisation"]
-
-        if "sector" not in self.site_data:
-            self.site_data["sector"] = org_data["sector"]
-
-        # If config.json specifies nocrawl_mode is True, then
+        # If we are not crawling pages for additional links, then
         # use the subdomain + domain as the base_url
         base_url = self.site_data["url"]
-        if config.nocrawl_mode:
+        if config.max_links_per_domain == 1:
             # Parse the url to get the subdomain and domain using urlparse
             # and then rejoin them to get the base_url
             parsed_url = urllib.parse.urlparse(base_url)

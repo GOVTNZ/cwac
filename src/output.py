@@ -134,7 +134,6 @@ def output_init_message() -> None:
     print_log(f"Headless: {config.headless}")
     print_log(f"Thread count: {config.thread_count}")
     print_log(f"Browser: {config.browser}")
-    print_log(f"Nocrawl mode: {config.nocrawl_mode}")
     print_log(f"Filter to orgs: {config.filter_to_organisations}")
     print_log(f"Filter to domains: {config.filter_to_domains}")
     print_log(f"Max links per domain: {config.max_links_per_domain}")
@@ -152,7 +151,6 @@ def output_init_message() -> None:
     print_log(f"Perform header checks: {config.perform_header_check}")
     print_log(f"Shuffle base urls: {config.shuffle_base_urls}")
     print_log(f"Base urls crawl path: {config.base_urls_crawl_path}")
-    print_log(f"Base urls nocrawl path: {config.base_urls_nocrawl_path}")
     print_log(f"Check for broken internal links: {config.check_for_broken_internal_links}")
     print_log("*" * 80)
 
