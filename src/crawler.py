@@ -581,6 +581,10 @@ class Crawler:
                     logging.error("Too many sequential test failures, skipping %s", url)
                     return
 
+            # don't bother getting links if we are only scanning one link per base url
+            if config.max_links_per_domain == 1:
+                break
+
             links = self.get_links(base_url, url)
 
             # Add all links to the queue
