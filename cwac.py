@@ -188,10 +188,6 @@ class CWAC:
         """
         folder_path = config.base_urls_crawl_path
 
-        if config.nocrawl_mode:
-            folder_path = config.base_urls_nocrawl_path
-            config.max_links_per_domain = 1
-
         headless_base_urls = self.import_base_urls_without_head_support()
 
         url_queue: SimpleQueue[SiteData] = SimpleQueue()

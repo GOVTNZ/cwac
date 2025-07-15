@@ -16,8 +16,6 @@ config/
 .vscode/
 /base_urls/crawl/*
 !/base_urls/crawl/example.txt
-/base_urls/nocrawl/*
-!/base_urls/nocrawl/example.txt
 /base_urls/nohead/*
 !/base_urls/nohead/example.txt
 /base_urls/store/*
