@@ -38,10 +38,8 @@ class Config:
     delay_after_page_load: int
     only_allow_https: bool
     perform_header_check: bool
-    nocrawl_mode: bool
     shuffle_base_urls: bool
     base_urls_crawl_path: str
-    base_urls_nocrawl_path: str
     base_urls_nohead_path: str
     filter_to_organisations: list[str]
     filter_to_domains: list[str]
@@ -102,10 +100,6 @@ class Config:
         if not self.is_path_subdir(self.config["base_urls_crawl_path"], "./base_urls"):
             raise ValueError("base_urls_crawl_path must be within base_urls folder")
 
-        # Ensure base_url_nocrawl_path is within base_urls folder
-        if not self.is_path_subdir(self.config["base_urls_nocrawl_path"], "./base_urls"):
-            raise ValueError("base_urls_nocrawl_path must be within base_urls folder")
-
         # Ensure base_urls_nohead_path is within base_urls folder
         if not self.is_path_subdir(self.config["base_urls_nohead_path"], "./base_urls"):
             raise ValueError("base_urls_nohead_path must be within base_urls folder")
@@ -116,12 +110,6 @@ class Config:
         # the Crawler queries this and populates it
         # if no entry is found for a website.
         self.config["robots_txt_cache"] = {}
-
-        # nocrawl_mode changes max_links_per_domain = 1
-        if self.config["nocrawl_mode"]:
-            logging.info("nocrawl_mode True config.json, max_links_per_domain = 1")
-            logging.info("nocrawl_mode is True, using nocrawl_path_to_audit_log")
-            self.config["max_links_per_domain"] = 1
 
     def __resolve_automatic_settings(self) -> None:
         """Resolve configuration settings which are set to 'auto'.
