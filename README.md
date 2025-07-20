@@ -10,9 +10,9 @@ CWAC is a tool that can scan hundreds of websites for accessibility issues, auto
 
 CWAC can be used as a mechanism to monitor the New Zealand Government's implementation of minimum accessibility standards and guidelines on its websites. The primary standard, is the [NZ Government Web Accessibility Standard](https://www.digital.govt.nz/standards-and-guidance/nz-government-web-standards/web-accessibility-standard-1-1/), which includes [Web Content Accessibility Guidelines (WCAG) 2.1](https://www.w3.org/TR/WCAG21/) Level AA conformance. CWAC enables the partial fulfillment of [Article 9 of the United Nations Convention on the Rights of Persons with Disabilities (CRPD)](https://www.un.org/development/desa/disabilities/convention-on-the-rights-of-persons-with-disabilities/article-9-accessibility.html).
 
-Provided a list of URLs, CWAC automatically crawls a specified number of pages per URL, and checks each page for automatically-identifiable accessibility issues. It then stores results in an easy-to-read CSV file.
+Provided a list of URLS to visit, CWAC will check each page for automatically-identifiable accessibility issues and store the results in an easy-to-read CSV file.
 
-CWAC can also crawl an explicitly-defined set of URLs without a crawler, which is useful for re-running tests to see changes in accessibility conformance over time.
+CWAC can also crawl each page as it goes to determine additional pages to check (up to a set max number per URL), respecting `robots.txt` and server signals when doing so. This makes it easy to check entire sites without knowing the all paths beforehand.
 
 CWAC is designed to be extensible, so new forms of web testing can be added over time. For instance, CWAC could also run [The Nu Html Checker](https://github.com/validator) on web pages. Or, it could theoretically check other website requirements, such as website data usage and performance, or the existence of a privacy or copyright statement.
 
