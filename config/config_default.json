@@ -47,6 +47,7 @@
         "focus_indicator_audit": {
             "class_name": "FocusIndicatorAudit",
             "enabled": false,
+            "root_element_css_selector": "main",
             "pre_tab_key_presses": 0,
             "max_tab_key_presses": 5
         },
