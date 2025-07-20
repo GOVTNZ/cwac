@@ -121,8 +121,8 @@ Field descriptions:
 - `headless`
   - a boolean that specifies whether the browsers will be headless, or not (browser windows will be invisible)
 - `max_links_per_domain`
-  - the maximum number of pages that will be tested for each URL specified in `base_urls_crawl_path`
-  - if set to 1 then pages will just be visited rather than crawled for additional links
+  - the maximum number of pages that will be tested for each URL specified in `base_urls_visit_path`
+  - if set to 1 then pages will just be visited without any crawling for additional links
 - `thread_count`
   - the number of browsers, and threads CWAC will use
   - a number equal to the number of CPU cores is most efficient
@@ -158,10 +158,10 @@ Field descriptions:
   - a boolean value that determines if CWAC will send a header-only request to each URL before loading the URL in a browser. This can prevent Chrome from loading garbage URLs, but it also slows down the crawler, and increases network requests.
 - `shuffle_base_urls`
   - before CWAC starts scanning websites, it will randomly shuffle the order of URLs it will scan
-- `base_urls_crawl_path`
+- `base_urls_visit_path`
   - Defines which URLs will be scanned
   - a path to a folder that contains CSV files (as many as you like). The CSV files **must** have the headers: organisation,url,sector.
-  - The entries in `base_urls_crawl_path` are extremely important, as these files are used to associate URLs with other information like their organisation, and sector
+  - The entries in `base_urls_visit_path` are extremely important, as these files are used to associate URLs with other information like their organisation, and sector
 - `base_urls_nohead_path`
   - Defines which URLs don't support HEAD requests 
   - a path to a folder that contains CSV files (as many as you like). The CSV files **must** have only one header: url.
@@ -173,7 +173,7 @@ Field descriptions:
   - e.g. ["Ministry of Social Development", "Department of Internal Affairs"]
   - partial string matches are included, e.g. "Internal" would match "Department of Internal Affairs"
 - `filter_to_domains`
-  - a list of strings of specific URLs to restrict a crawl to (these URLs *must* be specified within a CSV inside of `base_urls_crawl_path`)
+  - a list of strings of specific URLs to limit CWAC to (these URLs *must* be specified within a CSV inside of `base_urls_visit_path`)
   - e.g. ["https://msd.govt.nz/", "https://dia.govt.nz"]
   - partial string matches are included e.g. "dia.govt" matches "https://dia.govt.nz"
 - `viewport_sizes`

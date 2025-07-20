@@ -39,7 +39,7 @@ class Config:
     only_allow_https: bool
     perform_header_check: bool
     shuffle_base_urls: bool
-    base_urls_crawl_path: str
+    base_urls_visit_path: str
     base_urls_nohead_path: str
     filter_to_organisations: list[str]
     filter_to_domains: list[str]
@@ -96,9 +96,9 @@ class Config:
 
         self.__resolve_automatic_settings()
 
-        # Ensure base_url_crawl_path is within base_urls folder
-        if not self.is_path_subdir(self.config["base_urls_crawl_path"], "./base_urls"):
-            raise ValueError("base_urls_crawl_path must be within base_urls folder")
+        # Ensure base_urls_visit_path is within base_urls folder
+        if not self.is_path_subdir(self.config["base_urls_visit_path"], "./base_urls"):
+            raise ValueError("base_urls_visit_path must be within base_urls folder")
 
         # Ensure base_urls_nohead_path is within base_urls folder
         if not self.is_path_subdir(self.config["base_urls_nohead_path"], "./base_urls"):
@@ -237,7 +237,7 @@ class Config:
         }
 
     def import_url_lookup_files(self) -> dict[str, dict[str, str]]:
-        """Import all CSV files in base_urls_crawl_path.
+        """Import all CSV files in base_urls_visit_path.
 
         This data is primarily used for looking up the agency details
         given a URL by using the lookup_organisation() method.
@@ -249,10 +249,10 @@ class Config:
         """
         base_urls: dict[str, dict[str, str]] = {}
 
-        for filename in os.listdir(self.config["base_urls_crawl_path"]):
+        for filename in os.listdir(self.config["base_urls_visit_path"]):
             if filename.endswith(".csv"):
                 with open(
-                    os.path.join(self.config["base_urls_crawl_path"], filename),
+                    os.path.join(self.config["base_urls_visit_path"], filename),
                     encoding="utf-8-sig",
                     newline="",
                 ) as file:
@@ -261,7 +261,7 @@ class Config:
                     for row in reader:
                         if len(row) != 3:
                             raise ValueError(
-                                "crawl_path_to_audit_log CSV files must have 3 columns",
+                                "CSV files must have 3 columns",
                                 row,
                                 filename,
                             )

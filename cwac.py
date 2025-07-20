@@ -178,15 +178,15 @@ class CWAC:
         return base_urls
 
     def import_base_urls(self) -> SimpleQueue[SiteData]:
-        """Import target URLs for crawl mode.
+        """Import target URLs to visit and potentially crawl.
 
-        This function reads all CSVs in config.base_urls_crawl_path
+        This function reads all CSVs in config.base_urls_visit_path
         and returns a SimpleQueue of each row
 
         Returns:
             SimpleQueue: a SimpleQueue of URLs
         """
-        folder_path = config.base_urls_crawl_path
+        folder_path = config.base_urls_visit_path
 
         headless_base_urls = self.import_base_urls_without_head_support()
 

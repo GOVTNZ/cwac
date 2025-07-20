@@ -1,7 +1,7 @@
-# Place URLs in CSV files within /base_urls/crawl/
-# and CWAC will crawl those specified websites.
+# Place URLs in CSV files within /base_urls/visit/
+# and CWAC will visit those specified URls.
 
-# You can place multiple CSV files into the /base_urls/crawl/ folder
+# You can place multiple CSV files into the /base_urls/visit/ folder
 # and they will all be loaded.
 
 # Below is an example of the expected format of CSV files:
