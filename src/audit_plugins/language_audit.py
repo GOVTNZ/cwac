@@ -19,7 +19,6 @@ from selenium.common import WebDriverException
 
 from config import config
 from src.audit_plugins.default_audit import DefaultAudit
-from src.browser import Browser
 
 # Download Natural Language Toolkit data
 nltk_dir = os.getcwd() + "/nltk_data/"
@@ -33,18 +32,10 @@ dictionary = cmudict.dict()
 RUN_SENTIMENT_ANALYSIS = config.audit_plugins["language_audit"]["run_sentiment_analysis"]
 
 
-class LanguageAudit:
+class LanguageAudit(DefaultAudit):
     """Language analysis for web pages."""
 
     audit_type = "LanguageAudit"
-
-    def __init__(self, browser: Browser, **kwargs: Any) -> None:
-        """Init variables."""
-        self.browser = browser
-        self.url = kwargs["url"]
-        self.audit_id = kwargs["audit_id"]
-        self.page_id = kwargs["page_id"]
-        self.site_data = kwargs["site_data"]
 
     def run(self) -> list[dict[Any, Any]] | bool:
         """Run the audit.
@@ -90,13 +81,7 @@ class LanguageAudit:
                 output_rows[0][key] = str(value)
 
         # Get page information from DefaultAudit
-        default_audit_row = DefaultAudit(
-            browser=self.browser,
-            url=self.url,
-            site_data=self.site_data,
-            audit_id=self.audit_id,
-            page_id=self.page_id,
-        ).run()[0]
+        default_audit_row = super().run()[0]
 
         output_rows = [{**default_audit_row, **row} for row in output_rows]
 
