@@ -17,7 +17,7 @@
     "only_allow_https": true,
     "perform_header_check": true,
     "shuffle_base_urls": true,
-    "base_urls_crawl_path" : "./base_urls/crawl/",
+    "base_urls_visit_path" : "./base_urls/visit/",
     "base_urls_nohead_path": "./base_urls/nohead/",
     "check_for_broken_internal_links": true,
     "force_open_details_elements": true,

@@ -24,18 +24,14 @@ from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
 
-class ReflowAudit:
+class ReflowAudit(DefaultAudit):
     """Audit WCAG 1.4.10 Reflow."""
 
     audit_type = "ReflowAudit"
 
     def __init__(self, browser: Browser, **kwargs: Any) -> None:
         """Init variables."""
-        self.browser = browser
-        self.url = kwargs["url"]
-        self.site_data = kwargs["site_data"]
-        self.audit_id = kwargs["audit_id"]
-        self.page_id = kwargs["page_id"]
+        super().__init__(browser, **kwargs)
 
         # Provide warning if headless mode is not enabled
         if not config.headless:
@@ -86,16 +82,6 @@ class ReflowAudit:
             logging.exception("Failed to scroll to 100px %s", self.url, exc_info=True)
             return False
 
-        # Get page information from DefaultAudit
-        default_audit = DefaultAudit(
-            browser=self.browser,
-            url=self.url,
-            site_data=self.site_data,
-            audit_id=self.audit_id,
-            page_id=self.page_id,
-        )
-        default_audit_row = default_audit.run()[0]
-
         # Run a ScreenshotAudit if the page overflows
         if config.audit_plugins["reflow_audit"]["screenshot_failures"] and overflow_amount > 0:
             # pylint: disable=import-outside-toplevel
@@ -120,12 +106,13 @@ class ReflowAudit:
                 exc_info=True,
             )
 
-        ouput_row = {
-            "audit_type": ReflowAudit.audit_type,
-            "url": self.url,
-            "overflows": overflow_amount > 0,
-            "num_issues": 1 if overflow_amount > 0 else 0,
-            "overflow_amount_px": overflow_amount,
-        }
-
-        return [{**default_audit_row, **ouput_row}]
+        return [
+            {
+                **super().run()[0],
+                "audit_type": ReflowAudit.audit_type,
+                "url": self.url,
+                "overflows": overflow_amount > 0,
+                "num_issues": 1 if overflow_amount > 0 else 0,
+                "overflow_amount_px": overflow_amount,
+            }
+        ]
