@@ -14,8 +14,8 @@ config/
 !config/config_default.json
 !/drivers/.gitkeep
 .vscode/
-/base_urls/crawl/*
-!/base_urls/crawl/example.txt
+/base_urls/visit/*
+!/base_urls/visit/example.txt
 /base_urls/nohead/*
 !/base_urls/nohead/example.txt
 /base_urls/store/*
