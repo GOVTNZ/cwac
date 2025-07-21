@@ -9,7 +9,7 @@ changed, then the focus indicator is invisible.
 import logging
 import sys
 import time
-from typing import Any, Union
+from typing import Any
 
 import cv2
 import numpy as np
@@ -121,7 +121,7 @@ class FocusIndicatorAudit:
             cv2.IMREAD_COLOR,
         )
 
-    def run(self) -> Union[list[dict[Any, Any]], bool]:
+    def run(self) -> list[dict[Any, Any]] | bool:
         """Run the audit.
 
         Returns:

@@ -11,7 +11,7 @@ This file has 3 main functions:
 import logging
 import math
 import os
-from typing import Any, Union, cast
+from typing import Any, cast
 
 import nltk  # type: ignore
 from bs4 import BeautifulSoup
@@ -48,7 +48,7 @@ class LanguageAudit:
         self.page_id = kwargs["page_id"]
         self.site_data = kwargs["site_data"]
 
-    def run(self) -> Union[list[dict[Any, Any]], bool]:
+    def run(self) -> list[dict[Any, Any]] | bool:
         """Run the audit.
 
         Returns:
