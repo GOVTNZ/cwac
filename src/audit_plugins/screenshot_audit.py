@@ -3,7 +3,7 @@
 import contextlib
 import logging
 import os
-from typing import Any, Union
+from typing import Any
 
 import cv2
 import numpy as np
@@ -37,7 +37,7 @@ class ScreenshotAudit:
             cv2.IMREAD_COLOR,
         )
 
-    def run(self) -> Union[list[dict[Any, Any]], bool]:
+    def run(self) -> list[dict[Any, Any]] | bool:
         """Run the audit.
 
         Returns:

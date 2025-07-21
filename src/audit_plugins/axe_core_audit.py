@@ -6,7 +6,7 @@ This plugin uses axe-core to test a webpage.
 import hashlib
 import logging
 import sys
-from typing import Any, Union
+from typing import Any
 
 import selenium
 
@@ -129,7 +129,7 @@ class AxeCoreAudit:
 
         return expanded_results
 
-    def run(self) -> Union[list[Any], bool]:
+    def run(self) -> list[Any] | bool:
         """Run an axe-core on a specified URL.
 
         Returns:

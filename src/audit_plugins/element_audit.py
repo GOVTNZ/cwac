@@ -6,7 +6,7 @@ can be customised in the config file using a CSS selector.
 """
 
 import logging
-from typing import Any, Union
+from typing import Any
 
 from bs4 import BeautifulSoup
 
@@ -37,7 +37,7 @@ class ElementAudit:
         self.audit_id = kwargs["audit_id"]
         self.page_id = kwargs["page_id"]
 
-    def run(self) -> Union[list[Any], bool]:
+    def run(self) -> list[Any] | bool:
         """Run an element detection on a specified URL.
 
         Returns:

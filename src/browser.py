@@ -7,7 +7,7 @@ import logging
 import platform
 import time
 import traceback
-from typing import Any, Union, cast
+from typing import Any, cast
 
 import selenium
 from selenium import webdriver
@@ -16,10 +16,7 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 
 from config import config
 
-WebDriverType = Union[
-    selenium.webdriver.firefox.webdriver.WebDriver,
-    selenium.webdriver.chrome.webdriver.WebDriver,
-]
+WebDriverType = selenium.webdriver.firefox.webdriver.WebDriver | selenium.webdriver.chrome.webdriver.WebDriver
 
 
 class Browser:
