@@ -21,20 +21,16 @@ from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
 
-class FocusIndicatorAudit:
+class FocusIndicatorAudit(DefaultAudit):
     """Focus indiactor audit."""
 
     audit_type = "FocusIndicatorAudit"
 
     def __init__(self, browser: Browser, **kwargs: Any) -> None:
         """Init variables."""
+        super().__init__(browser, **kwargs)
         self.pre_num_tab_presses = config.audit_plugins["focus_indicator_audit"]["pre_tab_key_presses"]
         self.max_num_tab_presses = config.audit_plugins["focus_indicator_audit"]["max_tab_key_presses"]
-        self.browser = browser
-        self.url = kwargs["url"]
-        self.site_data = kwargs["site_data"]
-        self.audit_id = kwargs["audit_id"]
-        self.page_id = kwargs["page_id"]
 
     def wait_for_page_to_stop_animating(self) -> bool:
         """Wait for animations to finish on the page.
@@ -129,15 +125,8 @@ class FocusIndicatorAudit:
             list[dict[Any, Any]]: a list of audit result dicts
         """
         # Get page information from DefaultAudit
-        default_audit_row = DefaultAudit(
-            browser=self.browser,
-            url=self.url,
-            site_data=self.site_data,
-            audit_id=self.audit_id,
-            page_id=self.page_id,
-        ).run()[0]
-
-        result_template = {
+        common_properties = {
+            **super().run()[0],
             "audit_type": FocusIndicatorAudit.audit_type,
             "helpUrl": ("https://www.w3.org/WAI/WCAG22/" "Understanding/focus-visible.html"),
         }
@@ -161,8 +150,7 @@ class FocusIndicatorAudit:
         if not animation_result:
             return [
                 {
-                    **default_audit_row,
-                    **result_template,
+                    **common_properties,
                     "description": (
                         "Page never stopped animating. "
                         "FocusIndicatorAudit could not run as "
@@ -239,8 +227,7 @@ class FocusIndicatorAudit:
         if not result_list:
             return [
                 {
-                    **default_audit_row,
-                    **result_template,
+                    **common_properties,
                     "description": "All tab presses had a focus indicator",
                     "html": "",
                     "num_issues": 0,
@@ -252,8 +239,7 @@ class FocusIndicatorAudit:
         for result in result_list:
             final_results.append(
                 {
-                    **default_audit_row,
-                    **result_template,
+                    **common_properties,
                     "description": (f"Tab key press #{result['tab_press']}" f" did not show a focus indicator"),
                     "html": result["html"],
                     "num_issues": 1,
