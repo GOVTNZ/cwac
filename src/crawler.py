@@ -28,9 +28,7 @@ from src.audit_manager import AuditManager
 from src.browser import Browser
 from src.output import CSVWriter
 
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-statements
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-branches, too-many-statements, too-many-locals
 
 
 class SiteData(TypedDict):
