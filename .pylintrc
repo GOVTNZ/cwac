@@ -21,6 +21,5 @@ ignore-docstrings=yes
 ignore-patterns=.venv
 
 [MESSAGES CONTROL]
-# disable broad except
-disable=W0703
-fail-on=useless-suppression
+disable=broad-exception-caught
+fail-on=useless-suppression, use-symbolic-message-instead
