@@ -51,11 +51,6 @@ class Config:
     # Threading lock (shared amongst all threads)
     lock = threading.RLock()
 
-    # global variable to store robots.txt data
-    # the Crawler queries this and populates it
-    # if no entry is found for a website.
-    robots_txt_cache: dict[str, urllib.robotparser.RobotFileParser]
-
     def __init__(self) -> None:
         """Read config.json into self.config."""
         self.config = self.read_config()
@@ -109,7 +104,7 @@ class Config:
         # global variable to store robots.txt data
         # the Crawler queries this and populates it
         # if no entry is found for a website.
-        self.config["robots_txt_cache"] = {}
+        self.robots_txt_cache: dict[str, urllib.robotparser.RobotFileParser] = {}
 
     def __resolve_automatic_settings(self) -> None:
         """Resolve configuration settings which are set to 'auto'.
