@@ -17,7 +17,7 @@ Disclaimer:
 import logging
 import sys
 import time
-from typing import Any, Union
+from typing import Any
 
 from config import config
 from src.audit_plugins.default_audit import DefaultAudit
@@ -45,7 +45,7 @@ class ReflowAudit:
                 "To enable headless mode, set headless to true in config.json."
             )
 
-    def run(self) -> Union[list[dict[Any, Any]], bool]:
+    def run(self) -> list[dict[Any, Any]] | bool:
         """Run the test.
 
         WCAG 1.4.10 Reflow is partially tested by zooming
