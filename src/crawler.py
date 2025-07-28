@@ -473,9 +473,11 @@ class Crawler:
     def crawl(self, site_data: SiteData, base_url: str) -> None:
         """Crawls a domain and executes the AuditManager.
 
-        Loads a webpage, and runs a set of tests on that page. It also
-        scrapes the links out of the page, and navigates to new pages,
-        effectively crawling the website.
+        Loads a webpage, and runs a set of tests on that page. If
+        configured to visit more than one link per domain, it also
+        scrapes new links out of the page which are then navigated
+        to for further testing and scraping, effectively crawling
+        the website.
 
         Args:
             site_data (SiteData): contains info about the site
@@ -483,7 +485,7 @@ class Crawler:
         """
         action = "crawl"
         if config.max_links_per_domain == 1:
-            action = "audit"
+            action = "visit"
         logging.info("Starting %s of %s", action, base_url)
 
         # Create an AuditManager instance
