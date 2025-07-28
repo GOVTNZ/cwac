@@ -235,7 +235,7 @@ def process_url_headers(url: str, supports_head_requests: bool = True) -> dict[A
             final_url = headers.url
             logging.info("%s has status code %i", url, headers.status_code)
             break
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Failed to get headers; attempt: %d, %s", i + 1, url)
             if i == 2:
                 logging.error("Giving up on headers check; attempt: %d, %s", i + 1, url)

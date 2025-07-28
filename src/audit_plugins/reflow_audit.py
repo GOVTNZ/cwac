@@ -82,7 +82,7 @@ class ReflowAudit:
         try:
             self.browser.driver.execute_script("window.scrollTo(100, 0);")
             overflow_amount = self.browser.driver.execute_script("return window.scrollX;")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Failed to scroll to 100px %s", self.url, exc_info=True)
             return False
 
@@ -113,7 +113,7 @@ class ReflowAudit:
         # Reset scroll position
         try:
             self.browser.driver.execute_script("window.scrollTo(0, 0);")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception(
                 "Failed to reset scroll position after test %s",
                 self.url,

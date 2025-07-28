@@ -171,7 +171,7 @@ class AuditManager:
             if not detail.get_attribute("open"):
                 try:
                     self.browser.driver.execute_script("arguments[0].setAttribute('open', '')", detail)
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-exception-caught
                     logging.warning("Could not open <details> element titled '%s'", detail.text)
                     continue
 
@@ -283,7 +283,7 @@ class AuditManager:
                         )
                     continue
 
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-exception-caught
                     logging.exception(
                         "Unhandled exception %s %s",
                         audit_name,
@@ -348,7 +348,7 @@ class AuditManager:
                     self.browser.driver.refresh()
                     # Give browser time to adjust to viewport size
                     time.sleep(config.delay_between_viewports)
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-exception-caught
                     logging.exception("Failed to refresh page")
                     self.browser.safe_restart()
                     break
