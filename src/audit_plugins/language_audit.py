@@ -6,8 +6,6 @@ This file has 3 main functions:
  - performs sentiment analysis on the text
 """
 
-# pylint: disable=too-many-branches
-
 import logging
 import math
 import os
