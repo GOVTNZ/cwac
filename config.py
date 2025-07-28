@@ -176,15 +176,6 @@ class Config:
             self.unique_id += 1
             return str(self.unique_id)
 
-    def __setattr__(self, attr_name: str, attr_value: Any) -> None:
-        """Set a config value (not saved to disk).
-
-        Args:
-            attr_name (str): attribute name
-            attr_value (Any): attribute value
-        """
-        self.__dict__[attr_name] = attr_value
-
     def __getattr__(self, name: str) -> Any:
         """Get attribute from config dict.
 
