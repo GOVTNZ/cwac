@@ -365,7 +365,7 @@ class Crawler:
                     "status_code": status_code,
                 }
             )
-            if config.check_for_broken_internal_links:
+            if config.record_unexpected_response_codes:
                 csv_writer.write_csv_file(f"./results/{config.audit_name}/bad_response_codes.csv")
 
             return False
