@@ -13,8 +13,10 @@ from typing import Any
 
 import cv2
 import numpy as np
+from selenium.common import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webelement import WebElement
 
 from config import config
 from src.audit_plugins.default_audit import DefaultAudit
@@ -24,10 +26,13 @@ from src.browser import Browser
 class FocusIndicatorAudit:
     """Focus indiactor audit."""
 
+    # pylint: disable=too-many-instance-attributes
+
     audit_type = "FocusIndicatorAudit"
 
     def __init__(self, browser: Browser, **kwargs: Any) -> None:
         """Init variables."""
+        self.root_element_css_selector = config.audit_plugins["focus_indicator_audit"]["root_element_css_selector"]
         self.pre_num_tab_presses = config.audit_plugins["focus_indicator_audit"]["pre_tab_key_presses"]
         self.max_num_tab_presses = config.audit_plugins["focus_indicator_audit"]["max_tab_key_presses"]
         self.browser = browser
@@ -121,6 +126,23 @@ class FocusIndicatorAudit:
             cv2.IMREAD_COLOR,
         )
 
+    def __find_root_content_element(self) -> WebElement | None:
+        try:
+            preferred_element = self.browser.driver.find_element(By.CSS_SELECTOR, self.root_element_css_selector)
+            logging.info("Checking focus indication within <%s> element", preferred_element.tag_name)
+            return preferred_element
+        except WebDriverException:
+            logging.warning(
+                "Failed to find any elements matching %s, falling back to body",
+                self.root_element_css_selector,
+            )
+
+        try:
+            return self.browser.driver.find_element(By.TAG_NAME, "body")
+        except Exception:  # pylint: disable=broad-except
+            logging.exception("Failed to find body element")
+            return None
+
     def run(self) -> list[dict[Any, Any]] | bool:
         """Run the audit.
 
@@ -182,11 +204,9 @@ class FocusIndicatorAudit:
             logging.exception("Failed to take screenshot")
             return False
 
-        # Find body element
-        try:
-            body = self.browser.driver.find_element(By.TAG_NAME, "body")
-        except Exception:  # pylint: disable=broad-except
-            logging.exception("Failed to find body element")
+        root_element = self.__find_root_content_element()
+
+        if root_element is None:
             return False
 
         # Store which # of tab key press has no focus indicator
@@ -199,11 +219,11 @@ class FocusIndicatorAudit:
 
         # Press tab a number of times possibly before running the actual audit
         # to help ensure we're actually interacting with a meaningful element
-        body.send_keys(*[Keys.TAB] * self.pre_num_tab_presses)
+        root_element.send_keys(*[Keys.TAB] * self.pre_num_tab_presses)
 
         # Repeatedly press the Tab key
         for i in range(self.max_num_tab_presses):
-            body.send_keys(Keys.TAB)
+            root_element.send_keys(Keys.TAB)
 
             time.sleep(0.1)
 

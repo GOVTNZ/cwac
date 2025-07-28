@@ -287,6 +287,7 @@ The format of `audit_plugin` entries requires a snake case name as the key, and 
     "focus_indicator_audit": {
         "class_name": "FocusIndicatorAudit",
         "enabled": true,
+        "root_element_css_selector": "main",
         "pre_tab_key_presses": 0,
         "max_tab_key_presses": 15
     },
