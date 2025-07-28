@@ -28,7 +28,7 @@ class ScreenshotAudit(DefaultAudit):
             cv2.IMREAD_COLOR,
         )
 
-    def run(self) -> list[dict[Any, Any]] | bool:
+    def run(self) -> list[dict[str, Any]] | bool:
         """Run the audit.
 
         Returns:

@@ -123,7 +123,7 @@ class AxeCoreAudit(DefaultAudit):
 
         return expanded_results
 
-    def run(self) -> list[Any] | bool:
+    def run(self) -> list[dict[str, Any]] | bool:
         """Run an axe-core on a specified URL.
 
         Returns:

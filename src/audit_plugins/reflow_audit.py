@@ -41,7 +41,7 @@ class ReflowAudit(DefaultAudit):
                 "To enable headless mode, set headless to true in config.json."
             )
 
-    def run(self) -> list[dict[Any, Any]] | bool:
+    def run(self) -> list[dict[str, Any]] | bool:
         """Run the test.
 
         WCAG 1.4.10 Reflow is partially tested by zooming

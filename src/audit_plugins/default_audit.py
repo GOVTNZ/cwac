@@ -14,7 +14,7 @@ from src.browser import Browser
 # Audit classes MUST implement:
 # def __init__(self, browser: Browser, **kwargs) -> None
 #   - accepts a browser, and kwargs
-# run(self) -> bool/list
+# run(self) -> list[dict[str, Any]] | bool
 #   - runs the actual audit
 #   - if audit is successful, returns a list of dictionaries
 #       which form CSV data rows
@@ -57,7 +57,7 @@ class DefaultAudit:
             "page_id": self.page_id,
         }
 
-    def run(self) -> list[dict[Any, Any]] | bool:
+    def run(self) -> list[dict[str, Any]] | bool:
         """Run the audit.
 
         Returns:

@@ -37,7 +37,7 @@ class LanguageAudit(DefaultAudit):
 
     audit_type = "LanguageAudit"
 
-    def run(self) -> list[dict[Any, Any]] | bool:
+    def run(self) -> list[dict[str, Any]] | bool:
         """Run the audit.
 
         Returns:

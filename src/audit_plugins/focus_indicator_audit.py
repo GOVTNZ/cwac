@@ -137,7 +137,7 @@ class FocusIndicatorAudit(DefaultAudit):
             logging.exception("Failed to find body element")
             return None
 
-    def run(self) -> list[dict[Any, Any]] | bool:
+    def run(self) -> list[dict[str, Any]] | bool:
         """Run the audit.
 
         Returns:

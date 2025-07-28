@@ -31,7 +31,7 @@ class ElementAudit(DefaultAudit):
         self.base_url = kwargs["site_data"]["url"]
         self.viewport_size = kwargs["viewport_size"]
 
-    def run(self) -> list[Any] | bool:
+    def run(self) -> list[dict[str, Any]] | bool:
         """Run an element detection on a specified URL.
 
         Returns:
