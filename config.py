@@ -104,7 +104,7 @@ class Config:
         if not self.is_path_subdir(self.config["base_urls_nohead_path"], "./base_urls"):
             raise ValueError("base_urls_nohead_path must be within base_urls folder")
 
-        self.config["url_lookup"] = self.import_url_lookup_files()
+        self.url_lookup = self.import_url_lookup_files()
 
         # global variable to store robots.txt data
         # the Crawler queries this and populates it
@@ -219,12 +219,12 @@ class Config:
         parsed_url = parse.urlparse(url)
         domain = parsed_url.netloc.lower()
 
-        if domain not in self.config["url_lookup"]:
+        if domain not in self.url_lookup:
             logging.warning("Agency data missing for: %s", url)
             return {"organisation": "Unknown", "sector": "Unknown"}
         return {
-            "organisation": self.config["url_lookup"][domain]["organisation"],
-            "sector": self.config["url_lookup"][domain]["sector"],
+            "organisation": self.url_lookup[domain]["organisation"],
+            "sector": self.url_lookup[domain]["sector"],
         }
 
     def import_url_lookup_files(self) -> dict[str, dict[str, str]]:
