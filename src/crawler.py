@@ -366,7 +366,7 @@ class Crawler:
                 }
             )
             if config.record_unexpected_response_codes:
-                csv_writer.write_csv_file(f"./results/{config.audit_name}/bad_response_codes.csv")
+                csv_writer.write_csv_file(f"./results/{config.audit_name}/unexpected_response_codes.csv")
 
             return False
         return status_code is not None
