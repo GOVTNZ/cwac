@@ -64,7 +64,7 @@ class ElementAudit(DefaultAudit):
             found_elements.append(element_data)
 
         # Get page information from DefaultAudit
-        default_audit_row = super().run()[0]
+        default_audit_row = self._default_audit_row
 
         # Add default_test_row to all results
         final_output = []

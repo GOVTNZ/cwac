@@ -146,7 +146,7 @@ class FocusIndicatorAudit(DefaultAudit):
         """
         # Get page information from DefaultAudit
         common_properties = {
-            **super().run()[0],
+            **self._default_audit_row,
             "audit_type": FocusIndicatorAudit.audit_type,
             "helpUrl": ("https://www.w3.org/WAI/WCAG22/" "Understanding/focus-visible.html"),
         }

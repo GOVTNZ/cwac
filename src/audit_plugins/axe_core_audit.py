@@ -144,7 +144,7 @@ class AxeCoreAudit(DefaultAudit):
             return False
 
         # Get page information from DefaultAudit
-        default_audit_row = super().run()[0]
+        default_audit_row = self._default_audit_row
 
         expanded_results = self.run_generate_expanded_results(axe_core_results)
 

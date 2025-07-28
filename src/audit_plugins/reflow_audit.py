@@ -108,7 +108,7 @@ class ReflowAudit(DefaultAudit):
 
         return [
             {
-                **super().run()[0],
+                **self._default_audit_row,
                 "audit_type": ReflowAudit.audit_type,
                 "url": self.url,
                 "overflows": overflow_amount > 0,

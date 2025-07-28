@@ -74,7 +74,7 @@ class ScreenshotAudit(DefaultAudit):
 
         return [
             {
-                **super().run()[0],
+                **self._default_audit_row,
                 "audit_type": ScreenshotAudit.audit_type,
                 "screenshot": self.audit_id + ".png",
             }

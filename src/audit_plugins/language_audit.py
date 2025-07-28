@@ -80,10 +80,7 @@ class LanguageAudit(DefaultAudit):
             for key, value in sentiment.items():
                 output_rows[0][key] = str(value)
 
-        # Get page information from DefaultAudit
-        default_audit_row = super().run()[0]
-
-        output_rows = [{**default_audit_row, **row} for row in output_rows]
+        output_rows = [{**self._default_audit_row, **row} for row in output_rows]
 
         return output_rows
 
