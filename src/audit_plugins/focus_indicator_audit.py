@@ -62,7 +62,7 @@ class FocusIndicatorAudit:
                 logging.info("Taking second screenshot %s #%i", self.url, i)
                 img_b_data = self.screenshot()
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-exception-caught
                 logging.exception("Failed to take screenshot")
                 return False
 
@@ -96,7 +96,7 @@ class FocusIndicatorAudit:
                 self.browser.driver.get_window_size()["width"],
                 scroll_height,
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Failed to get scroll height")
 
     def check_if_page_has_focus(self) -> bool:
@@ -111,7 +111,7 @@ class FocusIndicatorAudit:
         """
         try:
             return bool(self.browser.driver.execute_script("return document.hasFocus()"))
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Failed to check if page has focus")
             return False
 
@@ -139,7 +139,7 @@ class FocusIndicatorAudit:
 
         try:
             return self.browser.driver.find_element(By.TAG_NAME, "body")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Failed to find body element")
             return None
 
@@ -200,7 +200,7 @@ class FocusIndicatorAudit:
         # Take an initial page screenshot as the first 'reference' image
         try:
             reference_image = self.screenshot()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Failed to take screenshot")
             return False
 
@@ -234,7 +234,7 @@ class FocusIndicatorAudit:
             # Take a screenshot
             try:
                 current_image = self.screenshot()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-exception-caught
                 logging.exception("Failed to take screenshot")
                 continue
 
@@ -248,7 +248,7 @@ class FocusIndicatorAudit:
                 # Get the html of the element that has focus
                 try:
                     html = self.browser.driver.execute_script("return document.activeElement.outerHTML")
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-exception-caught
                     logging.exception("Failed to get html of focused element")
                     continue
                 result_list.append({"html": html[:100], "tab_press": i + 1})

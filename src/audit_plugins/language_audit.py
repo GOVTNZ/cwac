@@ -6,8 +6,6 @@ This file has 3 main functions:
  - performs sentiment analysis on the text
 """
 
-# pylint: disable=too-many-branches
-
 import logging
 import math
 import os
@@ -196,7 +194,7 @@ class LanguageAudit:
         # Execute JavaScript
         try:
             content = self.browser.driver.execute_script(final_js)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("WebDriver exception for Readability")
             return ""
 

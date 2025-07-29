@@ -28,14 +28,7 @@ from src.audit_manager import AuditManager
 from src.browser import Browser
 from src.output import CSVWriter
 
-# disable too-many-branches
-# pylint: disable=R0912
-
-# disable too-many-statements
-# pylint: disable=R0915
-
-# disable too-many-locals
-# pylint: disable=R0914
+# pylint: disable=too-many-branches, too-many-statements, too-many-locals
 
 
 class SiteData(TypedDict):
@@ -94,7 +87,7 @@ class Crawler:
         try:
             ua_string = {"User-Agent": config.user_agent}
             response = requests.get(url, headers=ua_string, timeout=(10, 10))
-        except Exception:  # pylint: disable=W0718
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Failed to get final URL %s", url)
 
         if response.url != url:

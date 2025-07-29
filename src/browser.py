@@ -78,7 +78,7 @@ class Browser:
                     logging.info("%i attempts failed to .get: %s", attempts + 1, url)
                     return False
                 self.safe_restart()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-exception-caught
                 logging.exception("Unhandled exception")
                 if attempts == self.num_retries - 1:
                     logging.info("%i attempts failed to .get: %s", attempts + 1, url)
@@ -115,7 +115,7 @@ class Browser:
             new_driver.set_window_size(**window_size)
             self.driver = new_driver
             self.last_url_req = ""
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Unhandled exception")
             self.safe_restart()
 
@@ -135,7 +135,7 @@ class Browser:
             document.doctype.systemId + '"' : '') + '>';"""
         try:
             doctype_string = self.driver.execute_script(doctype_js)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.error(
                 ("An error occurred while trying to get this website's doctype. Defaulting to html5 for %s"),
                 self.driver.current_url,
@@ -181,7 +181,7 @@ class Browser:
         logging.info("Refreshing browser")
         try:
             self.driver.refresh()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Error refreshing browser")
 
     def set_window_size(self, width: int, height: int) -> None:
@@ -217,7 +217,7 @@ class Browser:
             logging.exception("WebDriverException")
             self.safe_restart()
             return self.driver.get_window_size()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Unhandled exception")
             self.safe_restart()
             return self.viewport_size

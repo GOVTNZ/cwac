@@ -77,7 +77,7 @@ class ScreenshotAudit:
                 self.screenshot(),
                 [cv2.IMWRITE_PNG_COMPRESSION, 9],
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Failed to save screenshot")
             return False
 
