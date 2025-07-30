@@ -58,14 +58,14 @@ class Config:
         self.unique_id = 0
 
         # Sanitise audit_name
-        self.config["audit_name"] = self.sanitise_string(self.config["audit_name"])
+        self.config["audit_name"] = self.sanitise_string(self.audit_name)
 
         # Add a timestamp to the test name
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        self.config["audit_name"] = timestamp + "_" + self.config["audit_name"]
+        self.config["audit_name"] = timestamp + "_" + self.audit_name
 
         # Configure logging
-        log_filename = self.config["audit_name"]
+        log_filename = self.audit_name
         log_format = (
             "[{%(asctime)s} %(levelname)-7s %(filename)10s : %(lineno)-4s] %(funcName)30s %(message)s %(threadName)s"
         )
@@ -92,11 +92,11 @@ class Config:
         self.__resolve_automatic_settings()
 
         # Ensure base_urls_visit_path is within base_urls folder
-        if not self.is_path_subdir(self.config["base_urls_visit_path"], "./base_urls"):
+        if not self.is_path_subdir(self.base_urls_visit_path, "./base_urls"):
             raise ValueError("base_urls_visit_path must be within base_urls folder")
 
         # Ensure base_urls_nohead_path is within base_urls folder
-        if not self.is_path_subdir(self.config["base_urls_nohead_path"], "./base_urls"):
+        if not self.is_path_subdir(self.base_urls_nohead_path, "./base_urls"):
             raise ValueError("base_urls_nohead_path must be within base_urls folder")
 
         self.url_lookup = self.import_url_lookup_files()
@@ -235,10 +235,10 @@ class Config:
         """
         base_urls: dict[str, dict[str, str]] = {}
 
-        for filename in os.listdir(self.config["base_urls_visit_path"]):
+        for filename in os.listdir(self.base_urls_visit_path):
             if filename.endswith(".csv"):
                 with open(
-                    os.path.join(self.config["base_urls_visit_path"], filename),
+                    os.path.join(self.base_urls_visit_path, filename),
                     encoding="utf-8-sig",
                     newline="",
                 ) as file:
@@ -268,7 +268,7 @@ class Config:
 
                         # If only_allow_https is True, then only add
                         # URLs that start with https://
-                        if self.config["only_allow_https"] and parsed_url.scheme != "https":
+                        if self.only_allow_https and parsed_url.scheme != "https":
                             logging.error(
                                 "only_allow_https is True, skipping %s",
                                 row[1],
