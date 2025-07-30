@@ -10,21 +10,12 @@ import numpy as np
 
 from config import config
 from src.audit_plugins.default_audit import DefaultAudit
-from src.browser import Browser
 
 
-class ScreenshotAudit:
+class ScreenshotAudit(DefaultAudit):
     """Screenshot Audit."""
 
     audit_type = "ScreenshotAudit"
-
-    def __init__(self, browser: Browser, **kwargs: Any) -> None:
-        """Init variables."""
-        self.browser = browser
-        self.url = kwargs["url"]
-        self.site_data = kwargs["site_data"]
-        self.audit_id = kwargs["audit_id"]
-        self.page_id = kwargs["page_id"]
 
     def screenshot(self) -> Any:
         """Take a screenshot of the page that's loaded in the browser.
@@ -37,7 +28,7 @@ class ScreenshotAudit:
             cv2.IMREAD_COLOR,
         )
 
-    def run(self) -> list[dict[Any, Any]] | bool:
+    def run(self) -> list[dict[str, Any]] | bool:
         """Run the audit.
 
         Returns:
@@ -81,23 +72,10 @@ class ScreenshotAudit:
             logging.exception("Failed to save screenshot")
             return False
 
-        # Get page information from DefaultAudit
-        default_audit_row = DefaultAudit(
-            browser=self.browser,
-            url=self.url,
-            site_data=self.site_data,
-            audit_id=self.audit_id,
-            page_id=self.page_id,
-        ).run()[0]
-
-        output_row = [
+        return [
             {
-                **default_audit_row,
-                **{
-                    "audit_type": ScreenshotAudit.audit_type,
-                    "screenshot": self.audit_id + ".png",
-                },
+                **self._default_audit_row,
+                "audit_type": ScreenshotAudit.audit_type,
+                "screenshot": self.audit_id + ".png",
             }
         ]
-
-        return output_row

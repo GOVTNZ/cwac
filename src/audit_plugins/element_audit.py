@@ -19,25 +19,19 @@ from src.browser import Browser
 # import selenium.common.exceptions as sel_exceptions
 
 
-class ElementAudit:
+class ElementAudit(DefaultAudit):
     """element audit."""
-
-    # pylint: disable=too-many-instance-attributes
 
     audit_type = "ElementAudit"
 
     def __init__(self, browser: Browser, **kwargs: Any) -> None:
         """Init variables."""
+        super().__init__(browser, **kwargs)
         self.target_element = config.audit_plugins["element_audit"]["target_element_css_selector"]
-        self.site_data = kwargs["site_data"]
         self.base_url = kwargs["site_data"]["url"]
-        self.url = kwargs["url"]
         self.viewport_size = kwargs["viewport_size"]
-        self.browser = browser
-        self.audit_id = kwargs["audit_id"]
-        self.page_id = kwargs["page_id"]
 
-    def run(self) -> list[Any] | bool:
+    def run(self) -> list[dict[str, Any]] | bool:
         """Run an element detection on a specified URL.
 
         Returns:
@@ -70,14 +64,7 @@ class ElementAudit:
             found_elements.append(element_data)
 
         # Get page information from DefaultAudit
-        default_audit = DefaultAudit(
-            browser=self.browser,
-            url=self.url,
-            site_data=self.site_data,
-            audit_id=self.audit_id,
-            page_id=self.page_id,
-        )
-        default_audit_row = default_audit.run()[0]
+        default_audit_row = self._default_audit_row
 
         # Add default_test_row to all results
         final_output = []

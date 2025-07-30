@@ -15,23 +15,17 @@ from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
-# pylint: disable=too-many-instance-attributes
 
-
-class AxeCoreAudit:
+class AxeCoreAudit(DefaultAudit):
     """axe-core audit."""
 
     audit_type = "AxeCoreAudit"
 
     def __init__(self, browser: Browser, **kwargs: Any) -> None:
         """Init variables."""
-        self.site_data = kwargs["site_data"]
+        super().__init__(browser, **kwargs)
         self.base_url = kwargs["site_data"]["url"]
-        self.url = kwargs["url"]
         self.viewport_size = kwargs["viewport_size"]
-        self.browser = browser
-        self.audit_id = kwargs["audit_id"]
-        self.page_id = kwargs["page_id"]
         self.best_practice = config.audit_plugins["axe_core_audit"]["best-practice"]
 
     def best_practice_string(self, best_practice: bool) -> str:
@@ -129,7 +123,7 @@ class AxeCoreAudit:
 
         return expanded_results
 
-    def run(self) -> list[Any] | bool:
+    def run(self) -> list[dict[str, Any]] | bool:
         """Run an axe-core on a specified URL.
 
         Returns:
@@ -150,14 +144,7 @@ class AxeCoreAudit:
             return False
 
         # Get page information from DefaultAudit
-        default_audit = DefaultAudit(
-            browser=self.browser,
-            url=self.url,
-            site_data=self.site_data,
-            audit_id=self.audit_id,
-            page_id=self.page_id,
-        )
-        default_audit_row = default_audit.run()[0]
+        default_audit_row = self._default_audit_row
 
         expanded_results = self.run_generate_expanded_results(axe_core_results)
 

@@ -14,7 +14,7 @@ from src.browser import Browser
 # Audit classes MUST implement:
 # def __init__(self, browser: Browser, **kwargs) -> None
 #   - accepts a browser, and kwargs
-# run(self) -> bool/list
+# run(self) -> list[dict[str, Any]] | bool
 #   - runs the actual audit
 #   - if audit is successful, returns a list of dictionaries
 #       which form CSV data rows
@@ -35,12 +35,8 @@ class DefaultAudit:
         self.audit_id = kwargs["audit_id"]
         self.page_id = kwargs["page_id"]
 
-    def run(self) -> list[dict[Any, Any]]:
-        """Run the audit.
-
-        Returns:
-            list[dict[Any, Any]]: a list of audit result dicts
-        """
+    @property
+    def _default_audit_row(self) -> dict[str, Any]:
         # If we are not crawling pages for additional links, then
         # use the subdomain + domain as the base_url
         base_url = self.site_data["url"]
@@ -50,15 +46,21 @@ class DefaultAudit:
             parsed_url = urllib.parse.urlparse(base_url)
             base_url = parsed_url.scheme + "://" + parsed_url.netloc
 
-        return [
-            {
-                "organisation": self.site_data["organisation"],
-                "sector": self.site_data["sector"],
-                "page_title": self.browser.driver.title,
-                "base_url": base_url,
-                "url": self.url,
-                "viewport_size": self.browser.driver.get_window_size(),
-                "audit_id": self.audit_id,
-                "page_id": self.page_id,
-            }
-        ]
+        return {
+            "organisation": self.site_data["organisation"],
+            "sector": self.site_data["sector"],
+            "page_title": self.browser.driver.title,
+            "base_url": base_url,
+            "url": self.url,
+            "viewport_size": self.browser.driver.get_window_size(),
+            "audit_id": self.audit_id,
+            "page_id": self.page_id,
+        }
+
+    def run(self) -> list[dict[str, Any]] | bool:
+        """Run the audit.
+
+        Returns:
+            list[dict[Any, Any]]: a list of audit result dicts
+        """
+        return [self._default_audit_row]
