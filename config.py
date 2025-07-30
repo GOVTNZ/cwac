@@ -51,11 +51,6 @@ class Config:
     # Threading lock (shared amongst all threads)
     lock = threading.RLock()
 
-    # global variable to store robots.txt data
-    # the Crawler queries this and populates it
-    # if no entry is found for a website.
-    robots_txt_cache: dict[str, urllib.robotparser.RobotFileParser]
-
     def __init__(self) -> None:
         """Read config.json into self.config."""
         self.config = self.read_config()
@@ -104,12 +99,12 @@ class Config:
         if not self.is_path_subdir(self.config["base_urls_nohead_path"], "./base_urls"):
             raise ValueError("base_urls_nohead_path must be within base_urls folder")
 
-        self.config["url_lookup"] = self.import_url_lookup_files()
+        self.url_lookup = self.import_url_lookup_files()
 
         # global variable to store robots.txt data
         # the Crawler queries this and populates it
         # if no entry is found for a website.
-        self.config["robots_txt_cache"] = {}
+        self.robots_txt_cache: dict[str, urllib.robotparser.RobotFileParser] = {}
 
     def __resolve_automatic_settings(self) -> None:
         """Resolve configuration settings which are set to 'auto'.
@@ -176,15 +171,6 @@ class Config:
             self.unique_id += 1
             return str(self.unique_id)
 
-    def __setattr__(self, attr_name: str, attr_value: Any) -> None:
-        """Set a config value (not saved to disk).
-
-        Args:
-            attr_name (str): attribute name
-            attr_value (Any): attribute value
-        """
-        self.__dict__[attr_name] = attr_value
-
     def __getattr__(self, name: str) -> Any:
         """Get attribute from config dict.
 
@@ -228,12 +214,12 @@ class Config:
         parsed_url = parse.urlparse(url)
         domain = parsed_url.netloc.lower()
 
-        if domain not in self.config["url_lookup"]:
+        if domain not in self.url_lookup:
             logging.warning("Agency data missing for: %s", url)
             return {"organisation": "Unknown", "sector": "Unknown"}
         return {
-            "organisation": self.config["url_lookup"][domain]["organisation"],
-            "sector": self.config["url_lookup"][domain]["sector"],
+            "organisation": self.url_lookup[domain]["organisation"],
+            "sector": self.url_lookup[domain]["sector"],
         }
 
     def import_url_lookup_files(self) -> dict[str, dict[str, str]]:
