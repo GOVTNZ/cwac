@@ -150,7 +150,7 @@ def output_init_message() -> None:
     print_log(f"Perform header checks: {config.perform_header_check}")
     print_log(f"Shuffle base urls: {config.shuffle_base_urls}")
     print_log(f"Base urls visit path: {config.base_urls_visit_path}")
-    print_log(f"Check for broken internal links: {config.check_for_broken_internal_links}")
+    print_log(f"Recording unexpected response codes: {config.record_unexpected_response_codes}")
     print_log("*" * 80)
 
 

@@ -19,7 +19,7 @@
     "shuffle_base_urls": true,
     "base_urls_visit_path" : "./base_urls/visit/",
     "base_urls_nohead_path": "./base_urls/nohead/",
-    "check_for_broken_internal_links": true,
+    "record_unexpected_response_codes": true,
     "force_open_details_elements": true,
     "filter_to_organisations": [],
     "filter_to_domains": [],
