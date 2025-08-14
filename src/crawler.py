@@ -23,6 +23,7 @@ import src.audit_plugins
 import src.filters
 import src.output
 from config import config
+from src import logs
 from src.analytics import Analytics
 from src.audit_manager import AuditManager
 from src.browser import Browser
@@ -66,10 +67,11 @@ class Crawler:
             with config.lock:
                 site_data = self.url_queue.get()
 
-            logging.info("Starting test %s", site_data["url"])
+            with logs.group_by_base_url(f"./results/{config.audit_name}/logs/urls", site_data["url"]):
+                logging.info("Starting test %s", site_data["url"])
 
-            # Crawl the url (the crawler also initiates tests)
-            self.crawl(site_data, site_data["url"])
+                # Crawl the url (the crawler also initiates tests)
+                self.crawl(site_data, site_data["url"])
 
             # Restart the browser between each website
             self.browser.safe_restart()
