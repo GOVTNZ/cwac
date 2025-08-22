@@ -5,10 +5,10 @@ types-requests==2.32.4.20250611
 selenium==4.35.0
 lxml==6.0.0
 responses==0.25.8
-pre-commit==4.2.0
+pre-commit==4.3.0
 bandit==1.8.6
-mypy==1.16.1
-pylint==3.3.7
+mypy==1.17.1
+pylint==3.3.8
 flake8==7.3.0
 flake8-simplify==0.22.0
 black==25.1.0
