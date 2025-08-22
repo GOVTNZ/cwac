@@ -3,7 +3,7 @@ types-beautifulsoup4==4.12.0.20250516
 requests==2.32.5
 types-requests==2.32.4.20250809
 selenium==4.35.0
-lxml==6.0.0
+lxml==6.0.1
 responses==0.25.8
 pre-commit==4.3.0
 bandit==1.8.6
