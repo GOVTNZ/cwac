@@ -202,6 +202,13 @@ class CWAC:
                     reader = csv.reader(file)
                     header = next(reader)
                     for row in reader:
+                        if len(row) != 3:
+                            raise ValueError(
+                                "CSV files must have 3 columns",
+                                row,
+                                filename,
+                            )
+
                         dict_row = cast(SiteData, dict(zip(header, row)))
                         if self.should_skip_row(dict_row):
                             continue
