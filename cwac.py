@@ -58,7 +58,7 @@ class CWAC:
         Checks if a URL/Organisation should be included
         in the audit according to config_default.json's
         filter_to_organisations and
-        filter_to_domains.
+        filter_to_urls.
 
         Args:
             row (SiteData): a row from a CSV
@@ -73,19 +73,19 @@ class CWAC:
                     found_org = True
                     break
 
-        found_domain = False
-        if config.filter_to_domains:
-            for domain in config.filter_to_domains:
-                if domain in row["url"]:
-                    found_domain = True
+        found_url = False
+        if config.filter_to_urls:
+            for url in config.filter_to_urls:
+                if url in row["url"]:
+                    found_url = True
                     break
 
-        if config.filter_to_organisations and config.filter_to_domains:
-            return not (found_org and found_domain)
+        if config.filter_to_organisations and config.filter_to_urls:
+            return not (found_org and found_url)
         if config.filter_to_organisations:
             return not found_org
-        if config.filter_to_domains:
-            return not found_domain
+        if config.filter_to_urls:
+            return not found_url
 
         return False
 

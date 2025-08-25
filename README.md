@@ -172,8 +172,8 @@ Field descriptions:
   - a list of strings that can be used to restrict a CWAC scan to particular organisations. The organisations are specified in CSVs within the `base_urls` folder
   - e.g. ["Ministry of Social Development", "Department of Internal Affairs"]
   - partial string matches are included, e.g. "Internal" would match "Department of Internal Affairs"
-- `filter_to_domains`
-  - a list of strings of specific URLs to limit CWAC to (these URLs *must* be specified within a CSV inside of `base_urls_visit_path`)
+- `filter_to_urls`
+  - a list of strings that can be used to restrict a CWAC scan to particular URLs. The URLs are specified in CSVs within the `base_urls` folder, and are only considered when parsing the CSVs
   - e.g. ["https://msd.govt.nz/", "https://dia.govt.nz"]
   - partial string matches are included e.g. "dia.govt" matches "https://dia.govt.nz"
 - `viewport_sizes`
