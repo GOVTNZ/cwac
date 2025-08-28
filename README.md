@@ -109,6 +109,14 @@ Run: `xattr -d com.apple.quarantine <name-of-executable>`
 
 ## Usage instructions
 
+### Using the web interface
+
+CWAC has an experimental web interface which can be started with:
+
+```shell
+flask --app web run
+```
+
 ### Configuration files
 CWAC uses JSON files within the `./config` directory for its configuration. Before running a test, ensure that these files contain the settings that you want to use.
 
