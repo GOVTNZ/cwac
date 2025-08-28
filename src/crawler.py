@@ -12,7 +12,7 @@ import time
 import urllib
 import urllib.robotparser
 from queue import SimpleQueue
-from typing import Any, TypedDict
+from typing import Any
 
 import requests
 import selenium.common.exceptions
@@ -22,7 +22,7 @@ import src.audit_manager
 import src.audit_plugins
 import src.filters
 import src.output
-from config import config
+from config import AuditSubject, config
 from src.analytics import Analytics
 from src.audit_manager import AuditManager
 from src.browser import Browser
@@ -31,13 +31,7 @@ from src.output import CSVWriter
 # pylint: disable=too-many-branches, too-many-statements, too-many-locals
 
 
-class SiteData(TypedDict):
-    """Holds data for a site that should be crawled and audited."""
-
-    organisation: str
-    url: str
-    sector: str
-    supports_head: bool
+type SiteData = AuditSubject
 
 
 class Crawler:

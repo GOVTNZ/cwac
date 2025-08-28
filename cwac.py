@@ -5,13 +5,11 @@ Refer to the README for more information.
 """
 
 import concurrent.futures
-import csv
 import logging
-import os
 import random
 from queue import SimpleQueue
-from typing import cast
-from urllib.parse import urlparse, urlunparse
+from typing import Any
+from urllib.parse import urlparse
 
 import src.verify
 from config import config
@@ -51,56 +49,6 @@ class CWAC:
         for result in results:
             result.result()
         logging.info("All threads complete")
-
-    def should_skip_row(self, row: SiteData) -> bool:
-        """Check if a row being imported should be skipped.
-
-        Checks if a URL/Organisation should be included
-        in the audit according to config_default.json's
-        filter_to_organisations and
-        filter_to_urls.
-
-        Args:
-            row (SiteData): a row from a CSV
-
-        Returns:
-            bool: True if the row should be skipped, False otherwise
-        """
-        found_org = False
-        if config.filter_to_organisations:
-            for org in config.filter_to_organisations:
-                if org in row["organisation"]:
-                    found_org = True
-                    break
-
-        found_url = False
-        if config.filter_to_urls:
-            for url in config.filter_to_urls:
-                if url in row["url"]:
-                    found_url = True
-                    break
-
-        if config.filter_to_organisations and config.filter_to_urls:
-            return not (found_org and found_url)
-        if config.filter_to_organisations:
-            return not found_org
-        if config.filter_to_urls:
-            return not found_url
-
-        return False
-
-    def lowercase_url(self, url: str) -> str:
-        """Make URL protocl/netloc lowercase.
-
-        Args:
-            url (str): URL to make lowercase
-
-        Returns:
-            str: lowercase URL
-        """
-        parsed = urlparse(url)
-        modified = parsed._replace(scheme=parsed.scheme.lower(), netloc=parsed.netloc.lower())
-        return urlunparse(modified)
 
     def shuffle_queue(self, queue: SimpleQueue[SiteData]) -> None:
         """Shuffle a SimpleQueue.
@@ -147,81 +95,17 @@ class CWAC:
         if skipped_item is not None:
             queue.put(skipped_item)
 
-    def import_base_urls_without_head_support(self) -> set[str]:
-        """Import base urls that don't support HEAD requests.
+    def __queue_audit_subjects(self) -> SimpleQueue[Any]:
+        audit_queue: SimpleQueue[SiteData] = SimpleQueue()
 
-        Returns:
-            set[str]: a list of base urls that don't support HEAD requests
-        """
-        folder_path = config.base_urls_nohead_path
-        base_urls = set()
-
-        for filename in os.listdir(folder_path):
-            if filename.endswith(".csv"):
-                with open(
-                    os.path.join(folder_path, filename),
-                    encoding="utf-8-sig",
-                    newline="",
-                ) as file:
-                    reader = csv.reader(file)
-                    header = next(reader)
-                    for row in reader:
-                        dict_row = cast(dict[str, str], dict(zip(header, row)))
-
-                        # Strip whitespace from URL
-                        dict_row["url"] = dict_row["url"].strip()
-
-                        # Make the URL lowercase
-                        dict_row["url"] = self.lowercase_url(dict_row["url"])
-
-                        base_urls.add(dict_row["url"])
-        return base_urls
-
-    def import_base_urls(self) -> SimpleQueue[SiteData]:
-        """Import target URLs to visit and potentially crawl.
-
-        This function reads all CSVs in config.base_urls_visit_path
-        and returns a SimpleQueue of each row
-
-        Returns:
-            SimpleQueue: a SimpleQueue of URLs
-        """
-        folder_path = config.base_urls_visit_path
-
-        headless_base_urls = self.import_base_urls_without_head_support()
-
-        url_queue: SimpleQueue[SiteData] = SimpleQueue()
-
-        for filename in os.listdir(folder_path):
-            if filename.endswith(".csv"):
-                with open(
-                    os.path.join(folder_path, filename),
-                    encoding="utf-8-sig",
-                    newline="",
-                ) as file:
-                    reader = csv.reader(file)
-                    header = next(reader)
-                    for row in reader:
-                        dict_row = cast(SiteData, dict(zip(header, row)))
-                        if self.should_skip_row(dict_row):
-                            continue
-
-                        # Strip whitespace from URL
-                        dict_row["url"] = dict_row["url"].strip()
-
-                        # Make the URL lowercase
-                        dict_row["url"] = self.lowercase_url(dict_row["url"])
-
-                        dict_row["supports_head"] = dict_row["url"] not in headless_base_urls
-
-                        CWAC.analytics.add_base_url(dict_row["url"])
-
-                        url_queue.put(dict_row)
+        for subject in config.audit_subjects:
+            audit_queue.put(subject)
+            CWAC.analytics.add_base_url(subject["url"])
 
         # If shuffle_queue is True, shuffle the queue
         if config.shuffle_base_urls:
-            self.shuffle_queue(url_queue)
-        return url_queue
+            self.shuffle_queue(audit_queue)
+        return audit_queue
 
     def __init__(self) -> None:
         """Set up CWAC and run the test.
@@ -234,7 +118,7 @@ class CWAC:
         output_init_message()
 
         # Import base_urls into global varaiable
-        CWAC.url_queue = self.import_base_urls()
+        CWAC.url_queue = self.__queue_audit_subjects()
 
         things_to_scan = "websites"
         if config.max_links_per_domain == 1:
