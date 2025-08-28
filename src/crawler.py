@@ -12,7 +12,7 @@ import time
 import urllib
 import urllib.robotparser
 from queue import SimpleQueue
-from typing import Any, TypedDict
+from typing import Any
 
 import requests
 import selenium.common.exceptions
