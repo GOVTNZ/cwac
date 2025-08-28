@@ -5,15 +5,12 @@ Refer to the README for more information.
 """
 
 import concurrent.futures
-import csv
 import logging
-import os
 import random
 import re
 import sys
 from queue import SimpleQueue
-from typing import cast
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 import src.verify
 from config import Config
@@ -49,56 +46,6 @@ class CWAC:
     for result in results:
       result.result()
     logger.info('All threads complete')
-
-  def should_skip_row(self, row: SiteData) -> bool:
-    """Check if a row being imported should be skipped.
-
-    Checks if a URL/Organisation should be included
-    in the audit according to config_default.json's
-    filter_to_organisations and
-    filter_to_urls.
-
-    Args:
-        row (SiteData): a row from a CSV
-
-    Returns:
-        bool: True if the row should be skipped, False otherwise
-    """
-    found_org = False
-    if self.config.filter_to_organisations:
-      for org in self.config.filter_to_organisations:
-        if org in row['organisation']:
-          found_org = True
-          break
-
-    found_url = False
-    if self.config.filter_to_urls:
-      for url in self.config.filter_to_urls:
-        if url in row['url']:
-          found_url = True
-          break
-
-    if self.config.filter_to_organisations and self.config.filter_to_urls:
-      return not (found_org and found_url)
-    if self.config.filter_to_organisations:
-      return not found_org
-    if self.config.filter_to_urls:
-      return not found_url
-
-    return False
-
-  def lowercase_url(self, url: str) -> str:
-    """Make URL protocl/netloc lowercase.
-
-    Args:
-        url (str): URL to make lowercase
-
-    Returns:
-        str: lowercase URL
-    """
-    parsed = urlparse(url)
-    modified = parsed._replace(scheme=parsed.scheme.lower(), netloc=parsed.netloc.lower())
-    return urlunparse(modified)
 
   def shuffle_queue(self, queue: SimpleQueue[SiteData]) -> None:
     """Shuffle a SimpleQueue.
@@ -145,36 +92,6 @@ class CWAC:
     if skipped_item is not None:
       queue.put(skipped_item)
 
-  def import_base_urls_without_head_support(self) -> set[str]:
-    """Import base urls that don't support HEAD requests.
-
-    Returns:
-        set[str]: a list of base urls that don't support HEAD requests
-    """
-    folder_path = self.config.base_urls_nohead_path
-    base_urls = set()
-
-    for filename in os.listdir(folder_path):
-      if filename.endswith('.csv'):
-        with open(
-          os.path.join(folder_path, filename),
-          encoding='utf-8-sig',
-          newline='',
-        ) as file:
-          reader = csv.reader(file)
-          header = next(reader)
-          for row in reader:
-            dict_row = cast(dict[str, str], dict(zip(header, row)))
-
-            # Strip whitespace from URL
-            dict_row['url'] = dict_row['url'].strip()
-
-            # Make the URL lowercase
-            dict_row['url'] = self.lowercase_url(dict_row['url'])
-
-            base_urls.add(dict_row['url'])
-    return base_urls
-
   def import_base_urls(self) -> SimpleQueue[SiteData]:
     """Import target URLs to visit and potentially crawl.
 
@@ -184,37 +101,11 @@ class CWAC:
     Returns:
         SimpleQueue: a SimpleQueue of URLs
     """
-    folder_path = self.config.base_urls_visit_path
-
-    headless_base_urls = self.import_base_urls_without_head_support()
-
     url_queue: SimpleQueue[SiteData] = SimpleQueue()
 
-    for filename in os.listdir(folder_path):
-      if filename.endswith('.csv'):
-        with open(
-          os.path.join(folder_path, filename),
-          encoding='utf-8-sig',
-          newline='',
-        ) as file:
-          reader = csv.reader(file)
-          header = next(reader)
-          for row in reader:
-            dict_row = cast(SiteData, dict(zip(header, row)))
-            if self.should_skip_row(dict_row):
-              continue
-
-            # Strip whitespace from URL
-            dict_row['url'] = dict_row['url'].strip()
-
-            # Make the URL lowercase
-            dict_row['url'] = self.lowercase_url(dict_row['url'])
-
-            dict_row['supports_head'] = dict_row['url'] not in headless_base_urls
-
-            self.analytics.add_base_url(dict_row['url'])
-
-            url_queue.put(dict_row)
+    for url in self.config.audit_subjects:
+      url_queue.put(url)
+      self.analytics.add_base_url(url['url'])
 
     # If shuffle_queue is True, shuffle the queue
     if self.config.shuffle_base_urls:
