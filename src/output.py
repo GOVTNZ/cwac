@@ -134,7 +134,7 @@ def output_init_message() -> None:
     print_log(f"Thread count: {config.thread_count}")
     print_log(f"Browser: {config.browser}")
     print_log(f"Filter to orgs: {config.filter_to_organisations}")
-    print_log(f"Filter to domains: {config.filter_to_domains}")
+    print_log(f"Filter to urls: {config.filter_to_urls}")
     print_log(f"Max links per domain: {config.max_links_per_domain}")
     print_log(f"Chrome binary location: {config.chrome_binary_location}")
     print_log(f"Chrome driver location: {config.chrome_driver_location}")
