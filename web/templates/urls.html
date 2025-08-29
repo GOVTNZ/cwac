@@ -21,6 +21,36 @@
     <div class="container my-5">
       <h1>URLs</h1>
       <div class="col-lg-8 px-0">
+        {% for file in files %}
+          <div class="my-2">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Organisation</th>
+                  <th>URL</th>
+                  <th>Sector</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <td>Cancer Control Agency</td>
+                  <td>https://teaho.govt.nz/</td>
+                  <td>Public Service Departmental Agencies</td>
+                  <td>
+                    <div class="d-flex">
+                      <button class="btn btn-primary m-1">Edit</button>
+                      <button class="btn btn-danger m-1">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <pre class="m-0">Source: {{ file }}</pre>
+          </div>
+        {% endfor %}
+
         <div class="my-2">
           <table class="table table-bordered table-striped">
             <thead>
