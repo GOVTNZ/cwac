@@ -33,6 +33,8 @@
         </table>
         <pre class="m-0">Source: {{ file['path'] }}</pre>
       </div>
+    {% else %}
+      No url files found
     {% endfor %}
   </div>
 {% endblock %}
