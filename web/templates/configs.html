@@ -22,15 +22,17 @@
       <h1>Configs</h1>
       <div class="col-lg-8 px-0">
         <ol class="list-group">
-          <li
-            class="list-group-item d-flex align-items-center justify-content-between"
-          >
-            <pre class="m-0">config/config_default.json</pre>
-            <div>
-              <a href="#" class="btn btn-primary">Edit</a>
-              <a href="#" class="btn btn-danger">Delete</a>
-            </div>
-          </li>
+          {% for file in files %}
+            <li
+              class="list-group-item d-flex align-items-center justify-content-between"
+            >
+              <pre class="m-0">{{ file }}</pre>
+              <div>
+                <a href="#" class="btn btn-primary">Edit</a>
+                <a href="#" class="btn btn-danger">Delete</a>
+              </div>
+            </li>
+          {% endfor %}
         </ol>
       </div>
     </div>
