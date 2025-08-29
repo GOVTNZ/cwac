@@ -3,18 +3,22 @@
 {% block body %}
   <h1>Configs</h1>
   <div class="col-lg-8 px-0">
-    <ol class="list-group">
-      {% for file in files %}
-        <li
-          class="list-group-item d-flex align-items-center justify-content-between"
-        >
-          <pre class="m-0">{{ file }}</pre>
-          <div>
-            <a href="#" class="btn btn-primary">Edit</a>
-            <a href="#" class="btn btn-danger">Delete</a>
-          </div>
-        </li>
-      {% endfor %}
-    </ol>
+    {% if files|length != 0 %}
+      <ol class="list-group">
+        {% for file in files %}
+          <li
+            class="list-group-item d-flex align-items-center justify-content-between"
+          >
+            <pre class="m-0">{{ file }}</pre>
+            <div>
+              <a href="#" class="btn btn-primary">Edit</a>
+              <a href="#" class="btn btn-danger">Delete</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      No config files found
+    {% endif %}
   </div>
 {% endblock %}
