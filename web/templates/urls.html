@@ -1,190 +1,162 @@
-﻿<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CWAC | URLs</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
-      crossorigin="anonymous"
-    />
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container">
-        <a class="navbar-brand" href="{{ url_for('root') }}">CWAC</a>
+﻿{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>URLs</h1>
+  <div class="col-lg-8 px-0">
+    {% for file in files %}
+      <div class="my-2">
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Organisation</th>
+              <th>URL</th>
+              <th>Sector</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>Cancer Control Agency</td>
+              <td>https://teaho.govt.nz/</td>
+              <td>Public Service Departmental Agencies</td>
+              <td>
+                <div class="d-flex">
+                  <button class="btn btn-primary m-1">Edit</button>
+                  <button class="btn btn-danger m-1">Delete</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <pre class="m-0">Source: {{ file }}</pre>
       </div>
-    </nav>
+    {% endfor %}
 
-    <div class="container my-5">
-      <h1>URLs</h1>
-      <div class="col-lg-8 px-0">
-        {% for file in files %}
-          <div class="my-2">
-            <table class="table table-bordered table-striped">
-              <thead>
-                <tr>
-                  <th>Organisation</th>
-                  <th>URL</th>
-                  <th>Sector</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+    <div class="my-2">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Organisation</th>
+            <th>URL</th>
+            <th>Sector</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
 
-              <tbody>
-                <tr>
-                  <td>Cancer Control Agency</td>
-                  <td>https://teaho.govt.nz/</td>
-                  <td>Public Service Departmental Agencies</td>
-                  <td>
-                    <div class="d-flex">
-                      <button class="btn btn-primary m-1">Edit</button>
-                      <button class="btn btn-danger m-1">Delete</button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <pre class="m-0">Source: {{ file }}</pre>
-          </div>
-        {% endfor %}
-
-        <div class="my-2">
-          <table class="table table-bordered table-striped">
-            <thead>
-              <tr>
-                <th>Organisation</th>
-                <th>URL</th>
-                <th>Sector</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-                <td>Cancer Control Agency</td>
-                <td>https://teaho.govt.nz/</td>
-                <td>Public Service Departmental Agencies</td>
-                <td>
-                  <div class="d-flex">
-                    <button class="btn btn-primary m-1">Edit</button>
-                    <button class="btn btn-danger m-1">Delete</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Cancer Control Agency</td>
-                <td>https://kupe.net.nz/</td>
-                <td>Public Service Departmental Agencies</td>
-                <td>
-                  <div class="d-flex">
-                    <button class="btn btn-primary m-1">Edit</button>
-                    <button class="btn btn-danger m-1">Delete</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Charter School Agency</td>
-                <td>https://www.charterschools.govt.nz/</td>
-                <td>Public Service Departmental Agencies</td>
-                <td>
-                  <div class="d-flex">
-                    <button class="btn btn-primary m-1">Edit</button>
-                    <button class="btn btn-danger m-1">Delete</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Crown Law Office</td>
-                <td>https://www.crownlaw.govt.nz/</td>
-                <td>Public Service Departments</td>
-                <td>
-                  <div class="d-flex">
-                    <button class="btn btn-primary m-1">Edit</button>
-                    <button class="btn btn-danger m-1">Delete</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Department of Conservation</td>
-                <td>
-                  https://maps.doc.govt.nz/externalmaps/index.html?viewer=docmaps
-                </td>
-                <td>Public Service Departments</td>
-                <td>
-                  <div class="d-flex">
-                    <button class="btn btn-primary m-1">Edit</button>
-                    <button class="btn btn-danger m-1">Delete</button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <pre class="m-0">
-Source: ./base_urls/visit/all-urls-24 June2025.csv</pre
-          >
-        </div>
-
-        <hr />
-
-        <div class="my-2">
-          <table class="table table-bordered table-striped">
-            <thead>
-              <tr>
-                <th>Organisation</th>
-                <th>URL</th>
-                <th>Sector</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-                <td>xyz</td>
-                <td>https://www.ackama.com/projects</td>
-                <td>Vendor</td>
-                <td>
-                  <div class="d-flex">
-                    <button class="btn btn-primary m-1">Edit</button>
-                    <button class="btn btn-danger m-1">Delete</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>xyz</td>
-                <td>https://www.ackama.com/about-us</td>
-                <td>Vendor</td>
-                <td>
-                  <div class="d-flex">
-                    <button class="btn btn-primary m-1">Edit</button>
-                    <button class="btn btn-danger m-1">Delete</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>xyz</td>
-                <td>https://www.ackama.com/contact/careers</td>
-                <td>Vendor</td>
-                <td>
-                  <div class="d-flex">
-                    <button class="btn btn-primary m-1">Edit</button>
-                    <button class="btn btn-danger m-1">Delete</button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <pre class="m-0">Source: ./base_urls/visit/urls.csv</pre>
-        </div>
-      </div>
+        <tbody>
+          <tr>
+            <td>Cancer Control Agency</td>
+            <td>https://teaho.govt.nz/</td>
+            <td>Public Service Departmental Agencies</td>
+            <td>
+              <div class="d-flex">
+                <button class="btn btn-primary m-1">Edit</button>
+                <button class="btn btn-danger m-1">Delete</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Cancer Control Agency</td>
+            <td>https://kupe.net.nz/</td>
+            <td>Public Service Departmental Agencies</td>
+            <td>
+              <div class="d-flex">
+                <button class="btn btn-primary m-1">Edit</button>
+                <button class="btn btn-danger m-1">Delete</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Charter School Agency</td>
+            <td>https://www.charterschools.govt.nz/</td>
+            <td>Public Service Departmental Agencies</td>
+            <td>
+              <div class="d-flex">
+                <button class="btn btn-primary m-1">Edit</button>
+                <button class="btn btn-danger m-1">Delete</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Crown Law Office</td>
+            <td>https://www.crownlaw.govt.nz/</td>
+            <td>Public Service Departments</td>
+            <td>
+              <div class="d-flex">
+                <button class="btn btn-primary m-1">Edit</button>
+                <button class="btn btn-danger m-1">Delete</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Department of Conservation</td>
+            <td>
+              https://maps.doc.govt.nz/externalmaps/index.html?viewer=docmaps
+            </td>
+            <td>Public Service Departments</td>
+            <td>
+              <div class="d-flex">
+                <button class="btn btn-primary m-1">Edit</button>
+                <button class="btn btn-danger m-1">Delete</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <pre class="m-0">Source: ./base_urls/visit/all-urls-24 June2025.csv</pre>
     </div>
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-      crossorigin="anonymous"
-    ></script>
-  </body>
-</html>
+    <hr />
+
+    <div class="my-2">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Organisation</th>
+            <th>URL</th>
+            <th>Sector</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>xyz</td>
+            <td>https://www.ackama.com/projects</td>
+            <td>Vendor</td>
+            <td>
+              <div class="d-flex">
+                <button class="btn btn-primary m-1">Edit</button>
+                <button class="btn btn-danger m-1">Delete</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>xyz</td>
+            <td>https://www.ackama.com/about-us</td>
+            <td>Vendor</td>
+            <td>
+              <div class="d-flex">
+                <button class="btn btn-primary m-1">Edit</button>
+                <button class="btn btn-danger m-1">Delete</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>xyz</td>
+            <td>https://www.ackama.com/contact/careers</td>
+            <td>Vendor</td>
+            <td>
+              <div class="d-flex">
+                <button class="btn btn-primary m-1">Edit</button>
+                <button class="btn btn-danger m-1">Delete</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <pre class="m-0">Source: ./base_urls/visit/urls.csv</pre>
+    </div>
+  </div>
+{% endblock %}

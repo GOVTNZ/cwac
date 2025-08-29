@@ -1,54 +1,28 @@
-﻿<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CWAC</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
-      crossorigin="anonymous"
-    />
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container">
-        <a class="navbar-brand" href="{{ url_for('root') }}">CWAC</a>
-      </div>
-    </nav>
+﻿{% extends 'layout.html' %}
 
-    <div class="container my-5">
-      <h1>What would you like to do?</h1>
-      <div class="col-lg-8 px-0">
-        <ul>
-          <li class="list-unstyled m-1">
-            <a href="{{ url_for('view_configs') }}" class="btn btn-primary"
-              >View configs</a
-            >
-          </li>
-          <li class="list-unstyled m-1">
-            <a href="{{ url_for('view_urls') }}" class="btn btn-primary"
-              >View URLs</a
-            >
-          </li>
-          <li class="list-unstyled m-1">
-            <a href="#" class="btn btn-primary disabled">View results</a>
-          </li>
-          <li class="list-unstyled m-1">
-            <a href="#" class="btn btn-primary disabled">View reports</a>
-          </li>
-          <li class="list-unstyled m-1">
-            <a href="#" class="btn btn-primary disabled">Start a scan</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-      crossorigin="anonymous"
-    ></script>
-  </body>
-</html>
+{% block body %}
+  <h1>What would you like to do?</h1>
+  <div class="col-lg-8 px-0">
+    <ul>
+      <li class="list-unstyled m-1">
+        <a href="{{ url_for('view_configs') }}" class="btn btn-primary"
+          >View configs</a
+        >
+      </li>
+      <li class="list-unstyled m-1">
+        <a href="{{ url_for('view_urls') }}" class="btn btn-primary"
+          >View URLs</a
+        >
+      </li>
+      <li class="list-unstyled m-1">
+        <a href="#" class="btn btn-primary disabled">View results</a>
+      </li>
+      <li class="list-unstyled m-1">
+        <a href="#" class="btn btn-primary disabled">View reports</a>
+      </li>
+      <li class="list-unstyled m-1">
+        <a href="#" class="btn btn-primary disabled">Start a scan</a>
+      </li>
+    </ul>
+  </div>
+{% endblock %}
