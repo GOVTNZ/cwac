@@ -4,7 +4,8 @@ import os
 import secrets
 from typing import TypedDict, cast
 
-from flask import Flask, render_template
+from flask import Flask, abort, flash, redirect, render_template, request, url_for
+from flask.typing import ResponseReturnValue
 
 
 def fetch_secret_key() -> str:
@@ -50,6 +51,58 @@ def view_configs() -> str:
     files = []
 
   return render_template('configs.html', files=files)
+
+
+@app.route('/configs/<filename>/edit')
+def edit_config(filename: str) -> str:
+  filepath = f'./config/{filename}.json'
+
+  try:
+    with open(filepath, encoding='utf-8-sig') as f:
+      return render_template(
+        'configs_edit.html',
+        filepath=filepath,
+        filename=filename,
+        contents=f.read(),
+      )
+  except FileNotFoundError:
+    abort(404)
+
+
+@app.route('/configs/<filename>', methods=['POST'])
+def update_config(filename: str) -> ResponseReturnValue:
+  filepath = f'./config/{filename}.json'
+
+  try:
+    # todo: clean this up once we've established a proper Config class that can
+    #  handle the loading, validating, updating, etc of arbitrary files
+    with open(filepath, 'r+', encoding='utf-8') as f:
+      contents = request.form.get('contents', '')
+      if not isinstance(contents, str) or contents == '':
+        flash('contents is required', 'danger')
+        return (
+          render_template(
+            'configs_edit.html',
+            filepath=filepath,
+            filename=filename,
+            contents=f.read(),
+          ),
+          422,
+        )
+
+      # ensure that Unix line endings are in use, even on Windows
+      # todo: confirm that this is a good idea; the underlying issue we want to avoid is
+      #  having the default config in version control flipping between line endings, which
+      #  can come up in particular if you're on WSL as that will use Unix line-endings but
+      #  the browser (running in the Windows host) will use Windows line-endings...
+      contents = contents.replace('\r\n', '\n')
+
+      f.truncate()
+      f.write(contents)
+      flash(f'{filepath} has been updated', 'success')
+      return redirect(url_for('view_configs'))
+  except FileNotFoundError:
+    abort(404)
 
 
 @app.route('/urls')

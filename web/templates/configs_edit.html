@@ -1,0 +1,18 @@
+﻿{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Configs</h1>
+  <p>Editing {{ filepath }}</p>
+  <div class="col-lg-8 px-0">
+    <form
+      action="{{ url_for('update_config', filename=filename) }}"
+      method="post"
+    >
+      <label for="contents">Contents</label>
+      <textarea class="form-control" rows="20" id="contents" name="contents">
+{{ contents }}</textarea
+      >
+      <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+  </div>
+{% endblock %}
