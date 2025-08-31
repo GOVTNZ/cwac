@@ -65,7 +65,7 @@ def view_urls() -> str:
           header = next(reader)
           for row in reader:
             if len(row) != 3:
-              endpoint_file['invalid_reason'] = 'CSV files must have 3 columns'
+              endpoint_file['invalid_reason'] = 'must have 3 columns'
               break
 
             subject = cast(Endpoint, dict(zip(header, row)))
