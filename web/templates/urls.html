@@ -28,6 +28,16 @@
                   </div>
                 </td>
               </tr>
+            {% else %}
+              <tr>
+                <td class="text-center" colspan="4">
+                  {% if file['invalid_reason'] %}
+                    Invalid CSV: {{ file['invalid_reason'] }}
+                  {% else %}
+                    File is empty
+                  {% endif %}
+                </td>
+              </tr>
             {% endfor %}
           </tbody>
         </table>
