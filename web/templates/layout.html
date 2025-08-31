@@ -24,7 +24,11 @@
       </div>
     </nav>
 
-    <main role="main" class="container my-5">
+    <main role="main" class="container my-2">
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+
       {% block body %}
       {% endblock %}
     </main>
