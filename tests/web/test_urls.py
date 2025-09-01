@@ -8,6 +8,7 @@
 import os
 
 from flask.testing import FlaskClient
+from markupsafe import escape
 from pyfakefs.fake_filesystem import FakeFilesystem
 
 
@@ -235,3 +236,520 @@ class TestViewUrls:
 
     assert b'File is empty' in response.data
     assert b'<pre class="m-0">Source: ./base_urls/visit/three.csv</pre>' in response.data
+
+
+class TestEditUrls:
+  """Tests for the GET /urls/<filename>/edit endpoint."""
+
+  def test_missing_directory_is_handled(self, client: FlaskClient) -> None:
+    """Test handling when the base_urls/visit/ directory is missing.
+
+    The page should return a 404
+    """
+
+    response = client.get('/urls/urls/edit')
+
+    assert response.status_code == 404
+
+  def test_file_does_not_exist(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the file does not exist.
+
+    The page should return a 404
+    """
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
+
+    response = client.get('/urls/does_not_exist/edit')
+
+    assert response.status_code == 404
+
+  def test_file_contents_are_shown(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when given the name of a csv file that exists.
+
+    The contents of the file should be read and rendered in a text area.
+    """
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
+
+    response = client.get('/urls/urls/edit')
+
+    assert response.status_code == 200
+
+    assert b'Editing ./base_urls/visit/urls.csv' in response.data
+
+    with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
+      assert f'{escape(f.read())}</textarea\n'.encode() in response.data
+
+  def test_file_does_not_have_to_be_a_valid_csv(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when given the name of a file that is not a valid csv.
+
+    The contents of the file should be shown per normal.
+    """
+
+    fs.create_file('base_urls/visit/urls.csv', contents='{\n"hello": "world"\n}')
+
+    response = client.get('/urls/urls/edit')
+
+    assert response.status_code == 200
+
+    assert b'Editing ./base_urls/visit/urls.csv' in response.data
+
+    with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
+      assert f'{escape(f.read())}</textarea\n'.encode() in response.data
+
+  def test_weird_characters_work_fine(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename has interesting characters.
+
+    The file should be resolved without issue.
+    """
+
+    fs.create_file(
+      'base_urls/visit/my urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'ACME,https://acme.com/finance,Finance',
+          'ACME,https://acme.com/hr,Human Resources',
+        ]
+      ),
+    )
+    fs.create_file(
+      'base_urls/visit/theirs: urls.file.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
+
+    response = client.get('/urls/my%20urls/edit')
+
+    assert response.status_code == 200
+
+    assert b'Editing ./base_urls/visit/my urls.csv' in response.data
+
+    with open('base_urls/visit/my urls.csv', encoding='utf-8-sig') as f:
+      assert f'{escape(f.read())}</textarea\n'.encode() in response.data
+
+    response = client.get('/urls/theirs:%20urls.file/edit')
+
+    assert response.status_code == 200
+
+    assert b'Editing ./base_urls/visit/theirs: urls.file.csv' in response.data
+
+    with open('base_urls/visit/theirs: urls.file.csv', encoding='utf-8-sig') as f:
+      assert f'{escape(f.read())}</textarea\n'.encode() in response.data
+
+  def test_parent_files_cannot_be_accessed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename includes a path attempting to traverse upwards.
+
+    The file should not be resolved.
+    """
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
+
+    fs.create_file('root_file.json', contents='{"hello": "world"}')
+
+    response = client.get('/urls/../root_file/edit')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/..%2Froot_file/edit')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/..\\root_file/edit')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/..%5Croot_file/edit')
+
+    assert response.status_code == 404
+
+  def test_child_files_cannot_be_accessed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename includes a path attempting to traverse downwards.
+
+    The file should not be resolved.
+    """
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
+
+    fs.create_file('base_urls/visit/inner/file.csv', contents='{"hello": "world"}')
+
+    response = client.get('/urls/inner/file/edit')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/inner%2Ffile/edit')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/inner\\file/edit')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/inner/%5Cfile/edit')
+
+    assert response.status_code == 404
+
+
+class TestUpdateUrls:
+  """Tests for the POST /urls/<filename> endpoint."""
+
+  def test_missing_directory_is_handled(self, client: FlaskClient) -> None:
+    """Test handling when the config/ directory is missing.
+
+    The page should return a 404
+    """
+
+    response = client.post('/urls/urls', data={'contents': '{}'})
+
+    assert response.status_code == 404
+
+  def test_file_must_exist_to_be_updated(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename is not for a file that already exists.
+
+    An error should be returned without the file being created.
+    """
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
+
+    response = client.post(
+      '/urls/does_not_exist',
+      data={
+        'contents': '\n'.join(
+          [
+            'organisation,url,sector',
+            'ACME,https://acme.com/finance,Finance',
+            'ACME,https://acme.com/hr,Human Resources',
+          ]
+        )
+      },
+    )
+
+    assert response.status_code == 404
+    assert os.path.exists('./base_urls/visit/does_not_exist.csv') is False
+    assert os.path.exists('./base_urls/does_not_exist.csv') is False
+
+  def test_contents_is_required_and_a_string(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling requests that do not have a "contents" string in their data.
+
+    An error should be returned without the file being changed.
+    """
+
+    contents_old = '\n'.join(
+      [
+        'organisation,url,sector',
+        'Umbrella Corp,https://umbrella.com,R&D',
+        "Buy 'n' Large,https://bnl.com/,Sales",
+      ]
+    )
+
+    fs.create_file('base_urls/visit/urls.csv', contents=contents_old)
+
+    response = client.post('/urls/urls')
+
+    assert response.status_code == 422
+    assert b'contents is required' in response.data
+    with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
+      assert contents_old == f.read()
+
+    response = client.post('/urls/urls', data={})
+
+    assert response.status_code == 422
+    assert b'contents is required' in response.data
+    with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
+      assert contents_old == f.read()
+
+    response = client.post('/urls/urls', data={'contents': ''})
+
+    assert response.status_code == 422
+    assert b'contents is required' in response.data
+    with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
+      assert contents_old == f.read()
+
+  def test_file_contents_are_updated(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when given the name of a csv file that exists.
+
+    The contents of the file should be updated, and the user redirected to the
+    list page with a success message.
+    """
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'ACME,https://acme.com/finance,Finance',
+          'ACME,https://acme.com/hr,Human Resources',
+        ]
+      ),
+    )
+
+    response = client.post(
+      '/urls/urls',
+      data={
+        'contents': '\n'.join(
+          [
+            'organisation,url,sector',
+            'Umbrella Corp,https://umbrella.com,R&D',
+            "Buy 'n' Large,https://bnl.com/,Sales",
+          ]
+        )
+      },
+    )
+
+    assert response.status_code == 302
+
+    with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
+      assert f.read() == '\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      )
+
+    response = client.post('/urls/urls', data={'contents': 'this is not a valid csv'})
+
+    assert response.status_code == 302
+
+    with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
+      assert f.read() == 'this is not a valid csv'
+
+  def test_weird_characters_work_fine(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename has interesting characters.
+
+    The file should be updated without issue.
+    """
+
+    fs.create_file('base_urls/visit/my urls.csv', contents='organisation,url,sector\n')
+    fs.create_file('base_urls/visit/theirs: urls.file.csv', contents='organisation,url,sector\n')
+
+    response = client.post(
+      '/urls/my%20urls',
+      data={
+        'contents': '\n'.join(
+          [
+            'organisation,url,sector',
+            'ACME,https://acme.com/finance,Finance',
+            'ACME,https://acme.com/hr,Human Resources',
+          ]
+        )
+      },
+    )
+
+    assert response.status_code == 302
+
+    with open('base_urls/visit/my urls.csv', encoding='utf-8-sig') as f:
+      assert f.read() == '\n'.join(
+        [
+          'organisation,url,sector',
+          'ACME,https://acme.com/finance,Finance',
+          'ACME,https://acme.com/hr,Human Resources',
+        ]
+      )
+
+    response = client.post(
+      '/urls/theirs:%20urls.file',
+      data={
+        'contents': '\n'.join(
+          [
+            'organisation,url,sector',
+            'Umbrella Corp,https://umbrella.com,R&D',
+            "Buy 'n' Large,https://bnl.com/,Sales",
+          ]
+        )
+      },
+    )
+
+    assert response.status_code == 302
+
+    with open('base_urls/visit/theirs: urls.file.csv', encoding='utf-8-sig') as f:
+      assert f.read() == '\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      )
+
+  def test_line_endings_are_normalized(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test line endings are normalized to Unix style."""
+
+    contents = '\n'.join(
+      [
+        'organisation,url,sector',
+        'Umbrella Corp,https://umbrella.com,R&D',
+        "Buy 'n' Large,https://bnl.com/,Sales",
+      ]
+    )
+    fs.create_file('base_urls/visit/urls.csv', contents=contents)
+
+    response = client.post('/urls/urls', data={'contents': contents.replace('\n', '\r\n')})
+
+    assert response.status_code == 302
+
+    with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
+      contents_now = f.read()
+      assert contents_now == contents_now.replace('\r\n', '\n')
+
+  def test_parent_files_cannot_be_accessed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename includes a path attempting to traverse upwards.
+
+    The file should not be resolved.
+    """
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'ACME,https://acme.com/finance,Finance',
+          'ACME,https://acme.com/hr,Human Resources',
+        ]
+      ),
+    )
+
+    contents_visit = '\n'.join(
+      [
+        'organisation,url,sector',
+        'Umbrella Corp,https://umbrella.com,R&D',
+      ]
+    )
+    fs.create_file('base_urls/visit.csv', contents=contents_visit)
+
+    contents_root = '\n'.join(
+      [
+        'organisation,url,sector',
+        "Buy 'n' Large,https://bnl.com/,Sales",
+      ]
+    )
+    fs.create_file('root.csv', contents=contents_root)
+
+    response = client.post('/urls/../root', data={'contents': '{"hello": "sunshine"}'})
+
+    assert response.status_code == 404
+    with open('root.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents_root
+    with open('base_urls/visit.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents_visit
+
+    response = client.post('/urls/..%2Froot', data={'contents': '{"hello": "sunshine"}'})
+
+    assert response.status_code == 404
+    with open('root.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents_root
+    with open('base_urls/visit.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents_visit
+
+    response = client.post('/urls/..\\root', data={'contents': '{"hello": "sunshine"}'})
+
+    assert response.status_code == 404
+    with open('root.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents_root
+    with open('base_urls/visit.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents_visit
+
+    response = client.post('/urls/..%5Croot', data={'contents': '{"hello": "sunshine"}'})
+
+    assert response.status_code == 404
+    with open('root.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents_root
+    with open('base_urls/visit.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents_visit
+
+  def test_child_files_cannot_be_accessed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename includes a path attempting to traverse downwards.
+
+    The file should not be resolved.
+    """
+
+    contents = '\n'.join(
+      [
+        'organisation,url,sector',
+        'Umbrella Corp,https://umbrella.com,R&D',
+      ]
+    )
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
+    fs.create_file('base_urls/visit/inner/file.csv', contents=contents)
+
+    response = client.post('/urls/inner/file', data={'contents': '{"hello": "sunshine"}'})
+
+    assert response.status_code == 404
+    with open('base_urls/visit/inner/file.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents
+
+    response = client.post('/urls/inner%2Ffile', data={'contents': '{"hello": "sunshine"}'})
+
+    assert response.status_code == 404
+    with open('base_urls/visit/inner/file.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents
+
+    response = client.post('/urls/inner\\file', data={'contents': '{"hello": "sunshine"}'})
+
+    assert response.status_code == 404
+    with open('base_urls/visit/inner/file.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents
+
+    response = client.post('/urls/inner/%5Cfile', data={'contents': '{"hello": "sunshine"}'})
+
+    assert response.status_code == 404
+    with open('base_urls/visit/inner/file.csv', encoding='utf-8-sig') as f:
+      assert f.read() == contents
