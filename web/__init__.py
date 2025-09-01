@@ -1,11 +1,23 @@
 import contextlib
 import csv
 import os
+import secrets
 from typing import TypedDict, cast
 
 from flask import Flask, render_template
 
+
+def fetch_secret_key() -> str:
+  """Fetches the secret key from disk, generating it if it does not already exist."""
+  with contextlib.suppress(FileExistsError), open('secret_key', 'x', encoding='utf-8') as f:
+    f.write(secrets.token_hex())
+
+  with open('secret_key', encoding='utf-8') as f:
+    return f.read()
+
+
 app = Flask(__name__)
+app.secret_key = fetch_secret_key()
 
 
 # todo: this has been copied from config.py to avoid loading the config
