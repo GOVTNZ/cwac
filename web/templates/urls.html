@@ -11,7 +11,6 @@
               <th>Organisation</th>
               <th>URL</th>
               <th>Sector</th>
-              <th>Actions</th>
             </tr>
           </thead>
 
@@ -21,16 +20,10 @@
                 <td>{{ endpoint['organisation'] }}</td>
                 <td>{{ endpoint['url'] }}</td>
                 <td>{{ endpoint['sector'] }}</td>
-                <td>
-                  <div class="d-flex">
-                    <button class="btn btn-primary m-1">Edit</button>
-                    <button class="btn btn-danger m-1">Delete</button>
-                  </div>
-                </td>
               </tr>
             {% else %}
               <tr>
-                <td class="text-center" colspan="4">
+                <td class="text-center" colspan="3">
                   {% if file['invalid_reason'] %}
                     Invalid CSV: {{ file['invalid_reason'] }}
                   {% else %}
@@ -42,6 +35,12 @@
           </tbody>
         </table>
         <pre class="m-0">Source: {{ file['path'] }}</pre>
+        {% set filename = file['path'].removeprefix('./base_urls/visit/').removesuffix('.csv') %}
+        <a
+          href="{{ url_for('edit_urls', filename=filename) }}"
+          class="btn btn-primary btn-sm"
+          >Edit</a
+        >
       </div>
     {% else %}
       No url files found
