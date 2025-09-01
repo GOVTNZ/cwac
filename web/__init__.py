@@ -40,6 +40,13 @@ class EndpointsFile(TypedDict):
   invalid_reason: str
 
 
+class ScanResult(TypedDict):
+  """Holds the outcome of a scan of one or more endpoints."""
+
+  name: str
+  files: list[str]
+
+
 @app.route('/')
 def root() -> str:
   """Present a home page."""
@@ -109,6 +116,23 @@ def update_config(filename: str) -> ResponseReturnValue:
       return redirect(url_for('view_configs'))
   except FileNotFoundError:
     abort(404)
+
+
+@app.route('/results')
+def view_results() -> str:
+  """Present a list of results from previous scans."""
+  results: list[ScanResult] = []
+
+  for dirname, _, files in os.walk('results'):
+    if dirname.count('/') == 0:
+      continue
+    if dirname.count('/') == 1:
+      results.append(ScanResult(name=dirname.removeprefix('results/'), files=files))
+    else:
+      subname = dirname.removeprefix('results/').removeprefix(results[-1]['name']).removeprefix('/')
+      results[-1]['files'] += [f'{subname}/{f}' for f in files]
+
+  return render_template('results.html', results=results)
 
 
 @app.route('/urls')
