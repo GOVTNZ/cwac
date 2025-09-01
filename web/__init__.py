@@ -1,3 +1,5 @@
+"""Basic web interface for using CWAC."""
+
 import contextlib
 import csv
 import os
@@ -40,11 +42,13 @@ class EndpointsFile(TypedDict):
 
 @app.route('/')
 def root() -> str:
+  """Present a home page."""
   return render_template('index.html')
 
 
 @app.route('/configs')
 def view_configs() -> str:
+  """Present a list of available configs."""
   try:
     files = [c for c in os.listdir('./config') if c.endswith('.json')]
   except FileNotFoundError:
@@ -55,6 +59,7 @@ def view_configs() -> str:
 
 @app.route('/configs/<filename>/edit')
 def edit_config(filename: str) -> str:
+  """Present a form for modifying a config file."""
   filepath = f'./config/{filename}.json'
 
   try:
@@ -71,6 +76,7 @@ def edit_config(filename: str) -> str:
 
 @app.route('/configs/<filename>', methods=['POST'])
 def update_config(filename: str) -> ResponseReturnValue:
+  """Update a url CSV with new content."""
   filepath = f'./config/{filename}.json'
 
   try:
@@ -107,6 +113,7 @@ def update_config(filename: str) -> ResponseReturnValue:
 
 @app.route('/urls')
 def view_urls() -> str:
+  """Present contents of url CSVs."""
   files: list[EndpointsFile] = []
 
   # todo: we should be taking the "base_urls_visit_path" of the "current config" into account
@@ -141,6 +148,7 @@ def view_urls() -> str:
 
 @app.route('/urls/<filename>/edit')
 def edit_urls(filename: str) -> str:
+  """Present a form for modifying a url CSV."""
   # todo: we should be taking the "base_urls_visit_path" of the "current config" into account
   filepath = f'./base_urls/visit/{filename}.csv'
 
@@ -158,6 +166,7 @@ def edit_urls(filename: str) -> str:
 
 @app.route('/urls/<filename>', methods=['POST'])
 def update_urls(filename: str) -> ResponseReturnValue:
+  """Update a url CSV with new content."""
   # todo: we should be taking the "base_urls_visit_path" of the "current config" into account
   filepath = f'./base_urls/visit/{filename}.csv'
 
