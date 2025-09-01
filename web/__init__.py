@@ -6,7 +6,16 @@ import os
 import secrets
 from typing import TypedDict, cast
 
-from flask import Flask, abort, flash, redirect, render_template, request, url_for
+from flask import (
+  Flask,
+  abort,
+  flash,
+  redirect,
+  render_template,
+  request,
+  send_from_directory,
+  url_for,
+)
 from flask.typing import ResponseReturnValue
 
 
@@ -133,6 +142,12 @@ def view_results() -> str:
       results[-1]['files'] += [f'{subname}/{f}' for f in files]
 
   return render_template('results.html', results=results)
+
+
+@app.route('/d/results/<string:name>/<path:file>')
+def download_result_file(name: str, file: str) -> ResponseReturnValue:
+  """Download a file from a scan results directory."""
+  return send_from_directory('../results', f'{name}/{file}', as_attachment=True)
 
 
 @app.route('/urls')

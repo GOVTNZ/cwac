@@ -246,3 +246,169 @@ class TestViewResults:
     assert b'logs/audit_results.log' in response.data
     assert b'csvs/internal/progress.csv' in response.data
     assert b'csvs/audits/language_audit.csv' in response.data
+
+
+class TestDownloadResultFile:
+  """Tests for the GET /d/results endpoint."""
+
+  def test_results_directories_cannot_be_downloaded(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when given a path for a results directory without a file.
+
+    A 404 should be returned.
+    """
+    # todo: we probably should be accounting for this more widely,
+    #  and maybe even be using it in all our fs stuff?
+    client.application.root_path = '/'
+
+    fs.makedir('results')
+
+    fs.makedir('results/2025-03-01_12-00-00_audit_results')
+    fs.add_real_file(
+      'config/config_default.json',
+      target_path='results/2025-03-01_12-00-00_audit_results/config.json',
+    )
+
+    response = client.get('/d/results/2025-03-01_12-00-00_audit_results')
+
+    assert response.status_code == 404
+
+    response = client.get('/d/results/2025-03-01_12-00-00_audit_results/')
+
+    assert response.status_code == 404
+
+  def test_files_that_do_not_exist_are_handled(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when given a path for a file that does not exist.
+
+    A 404 should be returned.
+    """
+    # todo: we probably should be accounting for this more widely,
+    #  and maybe even be using it in all our fs stuff?
+    client.application.root_path = '/'
+
+    fs.makedir('results')
+
+    fs.makedir('results/2025-03-01_12-00-00_audit_results')
+    fs.add_real_file(
+      'config/config_default.json',
+      target_path='results/2025-03-01_12-00-00_audit_results/config.json',
+    )
+
+    response = client.get('/d/results/2025-03-01_12-00-00_audit_results/default_config.json')
+
+    assert response.status_code == 404
+
+  def test_files_inside_results_can_be_downloaded(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when given a path for a file that is inside the results/ directory.
+
+    The file contents should be returned.
+    """
+
+    # todo: we probably should be accounting for this more widely,
+    #  and maybe even be using it in all our fs stuff?
+    client.application.root_path = '/'
+
+    fs.makedirs('results/2025-03-01_12-00-00_audit_results')
+    fs.add_real_file(
+      'config/config_default.json',
+      target_path='results/2025-03-01_12-00-00_audit_results/config.json',
+    )
+    fs.create_file(
+      'results/2025-03-01_12-00-00_audit_results/logs/audit_results.log',
+      contents=build_audit_results_log_content('2025-03-01'),
+    )
+    fs.create_file(
+      'results/2025-03-01_12-00-00_audit_results/audit_log.csv',
+      contents='\n'.join(
+        [
+          'organisation,base_url,url,sector',
+          'DIA,http://localhost:5000,http://localhost:5000,R&D',
+          'DIA,http://localhost:5000,http://localhost:5000/configs,R&D',
+          'DIA,http://localhost:5000,http://localhost:5000/urls,R&D',
+        ]
+      ),
+    )
+    fs.create_file(
+      'results/2025-03-01_12-00-00_audit_results/language_audit.csv',
+      contents=build_language_audit_csv_content(),
+    )
+    fs.create_file(
+      'results/2025-03-01_12-00-00_audit_results/pages_scanned.csv',
+      contents='\n'.join(
+        [
+          'organisation,base_url,number_of_pages,sector',
+          'DIA,http://localhost:5000,3,R&D',
+        ]
+      ),
+    )
+
+    response = client.get('/d/results/2025-03-01_12-00-00_audit_results/config.json')
+
+    assert response.status_code == 200
+
+    with open('results/2025-03-01_12-00-00_audit_results/config.json', encoding='utf-8') as f:
+      assert f.read().encode() == response.data
+
+    response = client.get('/d/results/2025-03-01_12-00-00_audit_results/logs/audit_results.log')
+
+    assert response.status_code == 200
+
+    with open('results/2025-03-01_12-00-00_audit_results/logs/audit_results.log', encoding='utf-8') as f:
+      assert f.read().encode() == response.data
+
+    response = client.get('/d/results/2025-03-01_12-00-00_audit_results/audit_log.csv')
+
+    assert response.status_code == 200
+
+    with open('results/2025-03-01_12-00-00_audit_results/audit_log.csv', encoding='utf-8') as f:
+      assert f.read().encode() == response.data
+
+    response = client.get('/d/results/2025-03-01_12-00-00_audit_results/language_audit.csv')
+
+    assert response.status_code == 200
+
+    with open('results/2025-03-01_12-00-00_audit_results/language_audit.csv', encoding='utf-8') as f:
+      assert f.read().encode() == response.data
+
+    response = client.get('/d/results/2025-03-01_12-00-00_audit_results/pages_scanned.csv')
+
+    assert response.status_code == 200
+
+    with open('results/2025-03-01_12-00-00_audit_results/pages_scanned.csv', encoding='utf-8') as f:
+      assert f.read().encode() == response.data
+
+  def test_files_outside_results_cannot_be_downloaded(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when given a path for a file that is outside the results/ directory.
+
+    A 404 should be returned.
+    """
+
+    # todo: we probably should be accounting for this more widely,
+    #  and maybe even be using it in all our fs stuff?
+    client.application.root_path = '/'
+
+    fs.makedirs('results/2025-03-01_12-00-00_audit_results')
+    fs.add_real_file('config/config_default.json')
+    fs.add_real_file(
+      'config/config_default.json',
+      target_path='results/2025-03-01_12-00-00_audit_results/config.json',
+    )
+    fs.create_file(
+      'results/2025-03-01_12-00-00_audit_results/logs/audit_results.log',
+      contents=build_audit_results_log_content('2025-03-01'),
+    )
+
+    response = client.get('/d/results/../config/config_default.json')
+
+    assert response.status_code == 404
+
+    response = client.get('/d/results/2025-03-01_12-00-00_audit_results/../../config/config_default.json')
+
+    assert response.status_code == 404
+
+    response = client.get('/d/results/%2E%2E/config/config_default.json')
+
+    assert response.status_code == 404
+
+    response = client.get('/d/results/2025-03-01_12-00-00_audit_results/%2E%2E/%2E%2E/config/config_default.json')
+
+    assert response.status_code == 404

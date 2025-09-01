@@ -9,7 +9,12 @@
         {% if result['files']|length != 0 %}
           <ol class="list-group">
             {% for file in result['files'] %}
-              <li class="list-group-item">{{ file }}</li>
+              <li class="list-group-item">
+                <a
+                  href="{{ url_for('download_result_file', name=result['name'], file=file) }}"
+                  >{{ file }}</a
+                >
+              </li>
             {% endfor %}
           </ol>
         {% else %}
