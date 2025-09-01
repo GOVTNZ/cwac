@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Results</h1>
+  <div class="col-lg-8 px-0">
+    {% for result in results %}
+      <div class="my-3">
+        <h5>results/{{ result['name'] }}</h5>
+        {% if result['files']|length != 0 %}
+          <ol class="list-group">
+            {% for file in result['files'] %}
+              <li class="list-group-item">{{ file }}</li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          No files found
+        {% endif %}
+      </div>
+    {% else %}
+      No results found
+    {% endfor %}
+  </div>
+{% endblock %}
