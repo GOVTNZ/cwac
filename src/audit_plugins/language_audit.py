@@ -17,7 +17,6 @@ from nltk.corpus import cmudict  # type: ignore
 from nltk.sentiment import SentimentIntensityAnalyzer  # type: ignore
 from selenium.common import WebDriverException
 
-from config import config
 from src.audit_plugins.default_audit import DefaultAudit
 
 # Download Natural Language Toolkit data
@@ -27,9 +26,6 @@ nltk.download("cmudict", download_dir=nltk_dir, quiet=True)
 nltk.download("vader_lexicon", download_dir=nltk_dir, quiet=True)
 nltk.data.path.append(nltk_dir)
 dictionary = cmudict.dict()
-
-# Bool to toggle if sentiment analysis is run
-RUN_SENTIMENT_ANALYSIS = config.audit_plugins["language_audit"]["run_sentiment_analysis"]
 
 
 class LanguageAudit(DefaultAudit):
@@ -75,7 +71,7 @@ class LanguageAudit(DefaultAudit):
         )
 
         # Perform sentiment analysis
-        if RUN_SENTIMENT_ANALYSIS:
+        if self.config.audit_plugins["language_audit"]["run_sentiment_analysis"]:
             sentiment = self.sentiment_analysis(content)
             for key, value in sentiment.items():
                 output_rows[0][key] = str(value)

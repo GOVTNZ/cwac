@@ -22,7 +22,7 @@ import src.audit_manager
 import src.audit_plugins
 import src.filters
 import src.output
-from config import config
+from config import Config
 from src.analytics import Analytics
 from src.audit_manager import AuditManager
 from src.browser import Browser
@@ -45,15 +45,17 @@ class Crawler:
 
     def __init__(
         self,
+        config: Config,
         browser: Browser,
         url_queue: SimpleQueue[SiteData],
         analytics: Analytics,
     ) -> None:
         """Initialise various vars."""
+        self.config = config
         self.browser = browser
         self.url_queue = url_queue
         self.analytics = analytics
-        self.url_filter = src.filters.URLFilter()
+        self.url_filter = src.filters.URLFilter(self.config)
 
     def iterate_through_base_urls(self) -> None:
         """Pick URLs from url_queue, and initiates a crawl on that URL."""
@@ -63,7 +65,7 @@ class Crawler:
             url_iteration += 1
 
             # Get a url off the shared queue
-            with config.lock:
+            with self.config.lock:
                 site_data = self.url_queue.get()
 
             logging.info("Starting test %s", site_data["url"])
@@ -85,7 +87,7 @@ class Crawler:
         """
         # Get the final URL after redirects
         try:
-            ua_string = {"User-Agent": config.user_agent}
+            ua_string = {"User-Agent": self.config.user_agent}
             response = requests.get(url, headers=ua_string, timeout=(10, 10))
         except Exception:  # pylint: disable=broad-exception-caught
             logging.exception("Failed to get final URL %s", url)
@@ -311,7 +313,7 @@ class Crawler:
             new_link (str): the link to be audited
             site_data (dict[Any, Any]): contains info about the site
         """
-        for filename, audit_config in config.audit_plugins.items():
+        for filename, audit_config in self.config.audit_plugins.items():
             # Use importlib to dynamically import audit plugins specified
             # inside config.json.
             # audit plugins must be placed inside src/audit_plugins
@@ -324,7 +326,7 @@ class Crawler:
                 continue
 
             audit_module = importlib.import_module(f"src.audit_plugins.{filename}")
-            audit_class = getattr(audit_module, config.audit_plugins[filename]["class_name"])
+            audit_class = getattr(audit_module, self.config.audit_plugins[filename]["class_name"])
             audit_manager.register_audit(
                 audit_name=filename,
                 audit_class=audit_class,
@@ -365,8 +367,8 @@ class Crawler:
                     "status_code": status_code,
                 }
             )
-            if config.record_unexpected_response_codes:
-                csv_writer.write_csv_file(f"./results/{config.audit_name}/unexpected_response_codes.csv")
+            if self.config.record_unexpected_response_codes:
+                csv_writer.write_csv_file(f"./results/{self.config.audit_name}/unexpected_response_codes.csv")
 
             return False
         return status_code is not None
@@ -387,7 +389,7 @@ class Crawler:
         # Fetch the robots.txt file
         try:
             logging.info("Fetching robots.txt %s", robots_txt_url)
-            response = requests.get(robots_txt_url, headers={"User-Agent": config.user_agent}, timeout=10)
+            response = requests.get(robots_txt_url, headers={"User-Agent": self.config.user_agent}, timeout=10)
             response.raise_for_status()
 
             # Check Content-Type is text/plain (in a safe way)
@@ -425,17 +427,17 @@ class Crawler:
         Returns:
             bool: True if URL is allowed by robots.txt, else False (True if config disables robots.txt checks)
         """
-        if not config.follow_robots_txt:
+        if not self.config.follow_robots_txt:
             return True
 
         # Get the protocol/domain of the URL
         protocol, domain = urllib.parse.urlparse(url)[:2]
 
         # If the domain is in config.robots_txt_cache, use that
-        if domain in config.robots_txt_cache:
-            robot_parser = config.robots_txt_cache[domain]
+        if domain in self.config.robots_txt_cache:
+            robot_parser = self.config.robots_txt_cache[domain]
             logging.info("Using cached robots.txt for %s", domain)
-            result = robot_parser.can_fetch(config.user_agent_product_token, url)
+            result = robot_parser.can_fetch(self.config.user_agent_product_token, url)
             logging.info("robots.txt result for %s was %s", url, "allow" if result else "disallow")
             return result
 
@@ -448,15 +450,15 @@ class Crawler:
             robot_parser.parse(robots_txt.splitlines())
         except (requests.exceptions.RequestException, ValueError):
             robot_parser.parse("")
-            config.robots_txt_cache[domain] = robot_parser
+            self.config.robots_txt_cache[domain] = robot_parser
             logging.exception("Failed to fetch or parse robots.txt - default to allow! %s", domain)
             return True
 
         # Cache the robotparser object
-        config.robots_txt_cache[domain] = robot_parser
+        self.config.robots_txt_cache[domain] = robot_parser
 
         # Check if the URL is allowed by robots.txt
-        result = robot_parser.can_fetch(config.user_agent_product_token, url)
+        result = robot_parser.can_fetch(self.config.user_agent_product_token, url)
 
         # Log the outcome
         logging.info("robots.txt result for %s was %s", url, "allow" if result else "disallow")
@@ -477,12 +479,12 @@ class Crawler:
             base_url (str): the first url to crawl
         """
         action = "crawl"
-        if config.max_links_per_domain == 1:
+        if self.config.max_links_per_domain == 1:
             action = "visit"
         logging.info("Starting %s of %s", action, base_url)
 
         # Create an AuditManager instance
-        audit_manager = AuditManager(browser=self.browser, analytics=self.analytics)
+        audit_manager = AuditManager(config=self.config, browser=self.browser, analytics=self.analytics)
 
         # Counts number of test failures
         test_failures = 0
@@ -506,12 +508,12 @@ class Crawler:
         while queue:
             parent_url, url, depth = queue.pop()
 
-            if pages_scanned >= config.max_links_per_domain:
+            if pages_scanned >= self.config.max_links_per_domain:
                 logging.info("Max pages scanned reached %s", base_url)
                 break
 
             # Delay
-            time.sleep(config.delay_between_page_loads)
+            time.sleep(self.config.delay_between_page_loads)
 
             # Filter/sanitise the URL
             try:
@@ -527,8 +529,12 @@ class Crawler:
             # process_url_headers returns a dict with
             # status_code and final_url after redirects
             # status_code is None if an error occurred
-            if config.perform_header_check:
-                url_data = src.filters.process_url_headers(url, supports_head_requests=site_data["supports_head"])
+            if self.config.perform_header_check:
+                url_data = src.filters.process_url_headers(
+                    self.config,
+                    url,
+                    supports_head_requests=site_data["supports_head"],
+                )
                 url_status_code = url_data["status_code"]
                 url = url_data["final_url"]
                 if not self.are_url_headers_acceptable(
@@ -562,7 +568,7 @@ class Crawler:
                     }
                 ]
             )
-            csv_writer.write_csv_file(f"./results/{config.audit_name}/audit_log.csv")
+            csv_writer.write_csv_file(f"./results/{self.config.audit_name}/audit_log.csv")
 
             self.register_audit_plugins(audit_manager, url, site_data)
             test_success = audit_manager.run_audits()
@@ -580,7 +586,7 @@ class Crawler:
                     return
 
             # don't bother getting links if we are only scanning one link per base url
-            if config.max_links_per_domain == 1:
+            if self.config.max_links_per_domain == 1:
                 break
 
             links = self.get_links(base_url, url)
@@ -593,12 +599,12 @@ class Crawler:
 
         self.analytics.record_test_failure(base_url)
         self.record_pages_scanned(site_data, pages_scanned)
-        if config.max_links_per_domain != 1:
+        if self.config.max_links_per_domain != 1:
             logging.info("Crawl exhausted all links %s", base_url)
 
     def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
         """Record the number of pages that were scanned for the site."""
-        with config.lock:
+        with self.config.lock:
             csv_writer = src.output.CSVWriter()
             csv_writer.add_rows(
                 [
@@ -610,7 +616,7 @@ class Crawler:
                     }
                 ]
             )
-            csv_writer.write_csv_file(f"./results/{config.audit_name}/pages_scanned.csv")
+            csv_writer.write_csv_file(f"./results/{self.config.audit_name}/pages_scanned.csv")
 
 
 class RandomQueue:

@@ -10,7 +10,7 @@ from typing import Any
 
 import selenium
 
-from config import config
+from config import Config
 from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
@@ -21,12 +21,12 @@ class AxeCoreAudit(DefaultAudit):
 
     audit_type = "AxeCoreAudit"
 
-    def __init__(self, browser: Browser, **kwargs: Any) -> None:
+    def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
         """Init variables."""
-        super().__init__(browser, **kwargs)
+        super().__init__(config, browser, **kwargs)
         self.base_url = kwargs["site_data"]["url"]
         self.viewport_size = kwargs["viewport_size"]
-        self.best_practice = config.audit_plugins["axe_core_audit"]["best-practice"]
+        self.best_practice = self.config.audit_plugins["axe_core_audit"]["best-practice"]
 
     def best_practice_string(self, best_practice: bool) -> str:
         """Return best practice string for reports."""

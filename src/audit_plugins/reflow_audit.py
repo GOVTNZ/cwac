@@ -19,7 +19,7 @@ import sys
 import time
 from typing import Any
 
-from config import config
+from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
@@ -29,12 +29,12 @@ class ReflowAudit(DefaultAudit):
 
     audit_type = "ReflowAudit"
 
-    def __init__(self, browser: Browser, **kwargs: Any) -> None:
+    def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
         """Init variables."""
-        super().__init__(browser, **kwargs)
+        super().__init__(config, browser, **kwargs)
 
         # Provide warning if headless mode is not enabled
-        if not config.headless:
+        if not self.config.headless:
             logging.warning(
                 "Headless mode is not enabled."
                 "ReflowAudit performance will be reduced."
@@ -55,7 +55,7 @@ class ReflowAudit(DefaultAudit):
             bool: if the audit fails
             list[dict[Any, Any]]: a list of audit result dicts
         """
-        if not config.headless:
+        if not self.config.headless:
             # Log an error and quit
             logging.error("Headless mode must be enabled for ReflowAudit.")
             print("Headless mode must be enabled for ReflowAudit.")
@@ -83,11 +83,12 @@ class ReflowAudit(DefaultAudit):
             return False
 
         # Run a ScreenshotAudit if the page overflows
-        if config.audit_plugins["reflow_audit"]["screenshot_failures"] and overflow_amount > 0:
+        if self.config.audit_plugins["reflow_audit"]["screenshot_failures"] and overflow_amount > 0:
             # pylint: disable=import-outside-toplevel
             from src.audit_plugins.screenshot_audit import ScreenshotAudit
 
             screenshot_audit = ScreenshotAudit(
+                config=self.config,
                 browser=self.browser,
                 url=self.url,
                 site_data=self.site_data,

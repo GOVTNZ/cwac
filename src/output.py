@@ -7,6 +7,8 @@ import threading
 import time
 from typing import Any
 
+from config import Config
+
 # pylint: disable=too-many-locals
 
 
@@ -98,9 +100,8 @@ class CSVWriter:
         return True
 
 
-def output_init_message() -> None:
+def output_init_message(config: Config) -> None:
     """Print the initial message to stdout and the log."""
-    from config import config  # pylint: disable=import-outside-toplevel
 
     def print_log(*message: str) -> None:
         """Print a message and write to the log file.
@@ -169,6 +170,7 @@ def generate_time_str_from_mins(mins: float) -> str:
 
 
 def print_progress_bar(
+    config: Config,
     iteration: int,
     total: int,
     start_time: float = 1,
@@ -176,12 +178,11 @@ def print_progress_bar(
     """Call in a loop to create terminal progress bar.
 
     Args:
+        config (Config): config object
         iteration (int): current iteration
         total (int): total iterations
         start_time (float): time the program started
     """
-    from config import config  # pylint: disable=import-outside-toplevel
-
     length: int = 20
     decimals: int = 1
 

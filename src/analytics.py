@@ -3,14 +3,16 @@
 import time
 
 import src.output
-from config import config
+from config import Config
 
 
 class Analytics:
     """Analytics that track scan statistics."""
 
-    def __init__(self) -> None:
+    def __init__(self, config: Config) -> None:
         """Initialise variables."""
+        self.config = config
+
         # Tracks how many pages have been scanned
         self.total_pages_scanned = 0
 
@@ -33,7 +35,7 @@ class Analytics:
 
     def is_url_in_pages_scanned(self, base_url: str, url: str) -> bool:
         """Return True if the url has been scanned previously for the given base_url."""
-        with config.lock:
+        with self.config.lock:
             return url in self.pages_scanned[base_url]
 
     def add_page_scanned(self, base_url: str, url: str) -> None:
@@ -43,12 +45,13 @@ class Analytics:
             base_url (str): The base URL that the tested URL came from
             url (str): The specific URL that was tested
         """
-        with config.lock:
+        with self.config.lock:
             self.total_pages_scanned += 1
             self.pages_scanned.setdefault(base_url, set()).add(url)
 
             # Output a progress bar
             src.output.print_progress_bar(
+                config=self.config,
                 iteration=self.total_pages_scanned,
                 total=self.est_num_pages_in_test,
                 start_time=self.start_time,
@@ -59,12 +62,13 @@ class Analytics:
 
         Used to adjust est_num_pages_in_test when tests fail.
         """
-        with config.lock:
+        with self.config.lock:
             # Get how many pages were successfully scanned
-            self.est_num_pages_in_test -= max(0, config.max_links_per_domain - len(self.pages_scanned[base_url]))
+            self.est_num_pages_in_test -= max(0, self.config.max_links_per_domain - len(self.pages_scanned[base_url]))
 
             # Output a progress bar
             src.output.print_progress_bar(
+                config=self.config,
                 iteration=self.total_pages_scanned,
                 total=self.est_num_pages_in_test,
                 start_time=self.start_time,

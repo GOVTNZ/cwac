@@ -18,7 +18,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 
-from config import config
+from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
@@ -28,12 +28,12 @@ class FocusIndicatorAudit(DefaultAudit):
 
     audit_type = "FocusIndicatorAudit"
 
-    def __init__(self, browser: Browser, **kwargs: Any) -> None:
+    def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
         """Init variables."""
-        super().__init__(browser, **kwargs)
-        self.root_element_css_selector = config.audit_plugins["focus_indicator_audit"]["root_element_css_selector"]
-        self.pre_num_tab_presses = config.audit_plugins["focus_indicator_audit"]["pre_tab_key_presses"]
-        self.max_num_tab_presses = config.audit_plugins["focus_indicator_audit"]["max_tab_key_presses"]
+        super().__init__(config, browser, **kwargs)
+        self.root_element_css_selector = self.config.audit_plugins["focus_indicator_audit"]["root_element_css_selector"]
+        self.pre_num_tab_presses = self.config.audit_plugins["focus_indicator_audit"]["pre_tab_key_presses"]
+        self.max_num_tab_presses = self.config.audit_plugins["focus_indicator_audit"]["max_tab_key_presses"]
 
     def wait_for_page_to_stop_animating(self) -> bool:
         """Wait for animations to finish on the page.
@@ -152,7 +152,7 @@ class FocusIndicatorAudit(DefaultAudit):
         }
 
         # If config.headless is False, log an error
-        if not config.headless:
+        if not self.config.headless:
             logging.error("ERROR: FocusIndicatorAudit needs headless=True in config.json")
             print("ERROR: FocusIndicatorAudit needs headless=True in config.json")
             sys.exit(1)

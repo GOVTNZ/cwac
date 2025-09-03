@@ -15,7 +15,7 @@ from urllib import parse
 
 
 class Config:
-    """A global config class used throughout CWAC.
+    """A config class used throughout CWAC.
 
     Config settings are stored in ./config/config_[xyz].json.
     """
@@ -51,9 +51,10 @@ class Config:
     # Threading lock (shared amongst all threads)
     lock = threading.RLock()
 
-    def __init__(self) -> None:
+    def __init__(self, config_filename: str) -> None:
         """Read config.json into self.config."""
-        self.config = self.read_config()
+        with open("./config/" + config_filename, "r", encoding="utf-8-sig") as file:
+            self.config = json.load(file)
 
         self.unique_id = 0
 
@@ -178,7 +179,7 @@ class Config:
             name (str): the name of the attribute (in config.json)
         """
         if name == "lock":
-            return config.lock
+            return self.config.lock
         return self.config[name]
 
     def read_config(self) -> Any:
@@ -301,6 +302,3 @@ class Config:
         # If the common path is the same as the parent path, then
         # path is a subdirectory of parent_path
         return common_path == parent_path
-
-
-config = Config()

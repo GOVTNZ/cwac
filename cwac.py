@@ -9,12 +9,14 @@ import csv
 import logging
 import os
 import random
+import re
+import sys
 from queue import SimpleQueue
 from typing import cast
 from urllib.parse import urlparse, urlunparse
 
 import src.verify
-from config import config
+from config import Config
 from src.analytics import Analytics
 from src.browser import Browser
 from src.crawler import Crawler, SiteData
@@ -24,20 +26,14 @@ from src.output import output_init_message
 class CWAC:
     """Main CWAC class."""
 
-    # Global queue of URLs to scan
-    url_queue: SimpleQueue[SiteData]
-
-    # Global anaytics for the scan
-    analytics = Analytics()
-
     def thread(self, thread_id: int) -> None:
         """Start a browser, and start crawling.
 
         Args:
             thread_id (int): identifier for the thread
         """
-        browser = Browser(thread_id)
-        crawl = Crawler(browser=browser, url_queue=CWAC.url_queue, analytics=CWAC.analytics)
+        browser = Browser(self.config, thread_id)
+        crawl = Crawler(config=self.config, browser=browser, url_queue=self.url_queue, analytics=self.analytics)
         crawl.iterate_through_base_urls()
         browser.close()
 
@@ -46,8 +42,10 @@ class CWAC:
 
         Number of threads defined by config.json.thread_count.
         """
-        with concurrent.futures.ThreadPoolExecutor(max_workers=config.thread_count) as executor:
-            results = {executor.submit(self.thread, thread_id): thread_id for thread_id in range(config.thread_count)}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.config.thread_count) as executor:
+            results = {
+                executor.submit(self.thread, thread_id): thread_id for thread_id in range(self.config.thread_count)
+            }
         for result in results:
             result.result()
         logging.info("All threads complete")
@@ -67,24 +65,24 @@ class CWAC:
             bool: True if the row should be skipped, False otherwise
         """
         found_org = False
-        if config.filter_to_organisations:
-            for org in config.filter_to_organisations:
+        if self.config.filter_to_organisations:
+            for org in self.config.filter_to_organisations:
                 if org in row["organisation"]:
                     found_org = True
                     break
 
         found_url = False
-        if config.filter_to_urls:
-            for url in config.filter_to_urls:
+        if self.config.filter_to_urls:
+            for url in self.config.filter_to_urls:
                 if url in row["url"]:
                     found_url = True
                     break
 
-        if config.filter_to_organisations and config.filter_to_urls:
+        if self.config.filter_to_organisations and self.config.filter_to_urls:
             return not (found_org and found_url)
-        if config.filter_to_organisations:
+        if self.config.filter_to_organisations:
             return not found_org
-        if config.filter_to_urls:
+        if self.config.filter_to_urls:
             return not found_url
 
         return False
@@ -153,7 +151,7 @@ class CWAC:
         Returns:
             set[str]: a list of base urls that don't support HEAD requests
         """
-        folder_path = config.base_urls_nohead_path
+        folder_path = self.config.base_urls_nohead_path
         base_urls = set()
 
         for filename in os.listdir(folder_path):
@@ -186,7 +184,7 @@ class CWAC:
         Returns:
             SimpleQueue: a SimpleQueue of URLs
         """
-        folder_path = config.base_urls_visit_path
+        folder_path = self.config.base_urls_visit_path
 
         headless_base_urls = self.import_base_urls_without_head_support()
 
@@ -214,42 +212,45 @@ class CWAC:
 
                         dict_row["supports_head"] = dict_row["url"] not in headless_base_urls
 
-                        CWAC.analytics.add_base_url(dict_row["url"])
+                        self.analytics.add_base_url(dict_row["url"])
 
                         url_queue.put(dict_row)
 
         # If shuffle_queue is True, shuffle the queue
-        if config.shuffle_base_urls:
+        if self.config.shuffle_base_urls:
             self.shuffle_queue(url_queue)
         return url_queue
 
-    def __init__(self) -> None:
+    def __init__(self, config_file: str) -> None:
         """Set up CWAC and run the test.
 
         Imports target URLs, sets up Analytics, creates
         relevant folders, spawns a number of threads, then
         finally verifies the results of the test.
         """
-        # Print the initial message
-        output_init_message()
+        self.config = Config(config_file)
+        self.analytics = Analytics(self.config)
 
-        # Import base_urls into global varaiable
-        CWAC.url_queue = self.import_base_urls()
+        # Print the initial message
+        output_init_message(self.config)
+
+        # Import base_urls for this run
+        self.url_queue = self.import_base_urls()
 
         things_to_scan = "websites"
-        if config.max_links_per_domain == 1:
+        if self.config.max_links_per_domain == 1:
             things_to_scan = "pages"
 
         # Print the number of URLs to be scanned
-        num_websites_msg = f"Number of {things_to_scan} to be scanned: {CWAC.url_queue.qsize()}"
+        num_websites_msg = f"Number of {things_to_scan} to be scanned: {self.url_queue.qsize()}"
         print(num_websites_msg)
         print("*" * 80)
         logging.info(num_websites_msg)
 
         # Set the estimated number of pages in the analytics object
-        self.analytics.est_num_pages_in_test = CWAC.url_queue.qsize() * config.max_links_per_domain
+        self.analytics.est_num_pages_in_test = self.url_queue.qsize() * self.config.max_links_per_domain
 
-        if config.thread_count == 1:
+        if self.config.thread_count == 1:
             # Run CWAC without threading (useful for profiling)
             self.thread(0)
         else:
@@ -257,7 +258,10 @@ class CWAC:
             self.spawn_threads()
 
         # Verify results
-        src.verify.verify_axe_results(pages_scanned=self.analytics.pages_scanned)
+        src.verify.verify_axe_results(
+            max_links_per_domain=self.config.max_links_per_domain,
+            pages_scanned=self.analytics.pages_scanned,
+        )
 
         print("\r\n")
         print("-" * 80)
@@ -267,4 +271,16 @@ class CWAC:
 
 
 if __name__ == "__main__":
-    cwac: CWAC = CWAC()
+
+    def resolve_config_filename() -> str:
+        """Resolve the config filename when being invoked directly."""
+        config_filename = "config_default.json"
+        # First arg passed to CWAC is the config filename
+        if len(sys.argv) > 1:
+            config_filename = sys.argv[1]
+            # Only accept alphanumeric, underscores, dots, and hyphens
+            if not re.match(r"^[a-zA-Z0-9_.-]+$", config_filename):
+                raise ValueError("config_filename must be alphanumeric, underscores, and hyphens")
+        return config_filename
+
+    cwac: CWAC = CWAC(resolve_config_filename())
