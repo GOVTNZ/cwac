@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Start a scan</h1>
+  <div class="col-lg-8 px-0">
+    <form action="{{ url_for('create_scan') }}" method="post">
+      <div class="form-control">
+        <label for="config">Config file</label>
+        <select
+          id="config"
+          name="config"
+          class="form-select"
+          required
+          {% if configs|length == 0 %}disabled{% endif %}
+        >
+          {% for config in configs %}
+            <option>{{ config }}</option>
+          {% else %}
+            <option value="" selected>No config files found</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button
+        class="btn btn-primary"
+        type="submit"
+        {% if configs|length == 0 %}disabled{% endif %}
+      >
+        Start
+      </button>
+    </form>
+  </div>
+{% endblock %}
