@@ -4,7 +4,9 @@ import contextlib
 import csv
 import os
 import secrets
-from typing import TypedDict, cast
+import threading
+import time
+from typing import Literal, TypedDict, cast
 
 from flask import (
   Flask,
@@ -30,6 +32,48 @@ def fetch_secret_key() -> str:
 
 app = Flask(__name__)
 app.secret_key = fetch_secret_key()
+
+type CWACState = Literal['idle', 'running', 'finished']
+
+
+class CWACAlreadyRunningError(RuntimeError):
+  """Exception raised when a CWAC session is already running."""
+
+
+class CWACManager:
+  """A class for managing runs of CWAC in the background.
+
+  Only one instance of CWAC can be running at a time.
+  """
+
+  __thread: threading.Thread | None = None
+
+  @property
+  def state(self) -> CWACState:
+    """The current state of the manager."""
+    if self.__thread is None:
+      return 'idle'
+    if self.__thread.is_alive():
+      return 'running'
+    return 'finished'
+
+  def start(self, config_filename: str) -> None:
+    """Start a new CWAC run."""
+    if self.state == 'running':
+      raise CWACAlreadyRunningError()
+
+    self.__thread = threading.Thread(target=self.__run_cwac, args=(config_filename,), daemon=True)
+    self.__thread.start()
+
+  @staticmethod
+  def __run_cwac(config_filename: str) -> None:
+    """Run a new instance of CWAC with the given config file."""
+    print(f'running CWAC using {config_filename}')
+    time.sleep(5)  # pretend to do some heavy lifting
+    print('finished CWACing')
+
+
+cwac_manager = CWACManager()
 
 
 # todo: this has been copied from config.py to avoid loading the config
@@ -239,3 +283,48 @@ def update_urls(filename: str) -> ResponseReturnValue:
       return redirect(url_for('view_urls'))
   except FileNotFoundError:
     abort(404)
+
+
+def render_scans_new_template() -> str:
+  """Render the scans_new.html template."""
+  try:
+    configs = [c for c in os.listdir('./config') if c.endswith('.json')]
+  except FileNotFoundError:
+    configs = []
+
+  return render_template('scans_new.html', configs=configs)
+
+
+@app.route('/scans/new')
+def new_scan() -> ResponseReturnValue:
+  """Initialize a new scan."""
+  return render_scans_new_template()
+
+
+@app.route('/scans', methods=['POST'])
+def create_scan() -> ResponseReturnValue:
+  """Initialize a new scan."""
+  # todo: ensure config file exists (?)
+  config_file = request.form.get('config', '')
+  if config_file == '':
+    flash('a config file is required', 'danger')
+    return render_scans_new_template(), 422
+
+  try:
+    cwac_manager.start(config_file)
+
+    flash('scan started', 'success')
+    return redirect(url_for('view_scan'))
+  except CWACAlreadyRunningError:
+    flash('scan already in progress', 'danger')
+    return render_scans_new_template(), 422
+
+
+@app.route('/scans/progress')
+def view_scan() -> ResponseReturnValue:
+  """View the progress of an ongoing scan."""
+  if cwac_manager.state == 'idle':
+    flash('no scan in progress', 'warning')
+    return redirect(url_for('new_scan'))
+
+  return render_template('scans_progress.html', scan_state=cwac_manager.state)
