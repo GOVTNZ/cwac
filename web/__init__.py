@@ -5,7 +5,6 @@ import csv
 import os
 import secrets
 import threading
-import time
 from typing import Literal, TypedDict, cast
 
 from flask import (
@@ -19,6 +18,8 @@ from flask import (
   url_for,
 )
 from flask.typing import ResponseReturnValue
+
+from cwac import CWAC
 
 
 def fetch_secret_key() -> str:
@@ -40,6 +41,10 @@ class CWACAlreadyRunningError(RuntimeError):
   """Exception raised when a CWAC session is already running."""
 
 
+class CWACNotRunError(RuntimeError):
+  """Exception raised when a CWAC session has not yet been run."""
+
+
 class CWACManager:
   """A class for managing runs of CWAC in the background.
 
@@ -47,6 +52,8 @@ class CWACManager:
   """
 
   __thread: threading.Thread | None = None
+
+  __latest_cwac_instance: CWAC | None = None
 
   @property
   def state(self) -> CWACState:
@@ -65,12 +72,29 @@ class CWACManager:
     self.__thread = threading.Thread(target=self.__run_cwac, args=(config_filename,), daemon=True)
     self.__thread.start()
 
-  @staticmethod
-  def __run_cwac(config_filename: str) -> None:
+  def __run_cwac(self, config_filename: str) -> None:
     """Run a new instance of CWAC with the given config file."""
     print(f'running CWAC using {config_filename}')
-    time.sleep(5)  # pretend to do some heavy lifting
+    self.__latest_cwac_instance = CWAC(config_filename)
     print('finished CWACing')
+
+  @property
+  def __cwac(self) -> CWAC:
+    """Return the latest instance of CWAC to be started.
+
+    An error will be raised if CWAC has not yet been run.
+    """
+    if self.__latest_cwac_instance is None:
+      raise CWACNotRunError()
+    return self.__latest_cwac_instance
+
+  def results_directory(self) -> str:
+    """Return the path to the results directory for the current CWAC run."""
+    return 'results/' + self.__cwac.config.audit_name
+
+  def log_file_path(self) -> str:
+    """Return the path to the main log file for the current CWAC run."""
+    return self.results_directory() + '/' + self.__cwac.config.audit_name + '.log'
 
 
 cwac_manager = CWACManager()
@@ -327,4 +351,7 @@ def view_scan() -> ResponseReturnValue:
     flash('no scan in progress', 'warning')
     return redirect(url_for('new_scan'))
 
-  return render_template('scans_progress.html', scan_state=cwac_manager.state)
+  with open(cwac_manager.log_file_path(), encoding='utf-8') as f:
+    logs = f.read()
+
+  return render_template('scans_progress.html', manager=cwac_manager, logs=logs)
