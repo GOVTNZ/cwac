@@ -2,5 +2,14 @@
 
 {% block body %}
   <h1>Scan progress</h1>
-  <div class="col-lg-8 px-0">{{ scan_state }}</div>
+  <div class="col-lg-8 px-0">
+    {{ manager.state }}
+    <p>logging to {{ manager.log_file_path() }}</p>
+    <div>
+      <label for="logs">Logs</label>
+      <textarea class="form-control" rows="20" id="logs" readonly disabled>
+{{ logs }}</textarea
+      >
+    </div>
+  </div>
 {% endblock %}
