@@ -5,7 +5,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any
+from typing import Any, TypedDict, cast
 
 from config import Config
 
@@ -171,12 +171,24 @@ def generate_time_str_from_mins(mins: float) -> str:
   return f'{int(hours)}h {int(mins)}m'
 
 
+class ProgressUpdate(TypedDict):
+  """An update on the progress of a scan."""
+
+  time: float
+  iteration: int
+  total: int
+  speed: str
+  percent: str
+  elapsed: str
+  remaining: str
+
+
 def print_progress_bar(
   config: Config,
   iteration: int,
   total: int,
   start_time: float = 1,
-) -> None:
+) -> ProgressUpdate:
   """Call in a loop to create terminal progress bar.
 
   Args:
@@ -211,7 +223,7 @@ def print_progress_bar(
   # Write progress data to CSV file
   csv_writer = CSVWriter()
 
-  output_row = {
+  output_row: ProgressUpdate = {
     'time': time.time(),
     'iteration': iteration,
     'total': total,
@@ -221,10 +233,11 @@ def print_progress_bar(
     'remaining': f'{time_est}',
   }
 
-  csv_writer.add_row(output_row)
+  csv_writer.add_row(cast(dict[Any, Any], output_row))
 
   csv_writer.write_csv_file(f'./results/{config.audit_name}/progress.csv')
 
   # Print New Line on Complete
   if iteration == total:
     print()
+  return output_row

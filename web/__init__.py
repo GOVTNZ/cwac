@@ -7,6 +7,7 @@ import secrets
 import threading
 from typing import Literal, TypedDict, cast
 
+import flask
 from flask import (
   Flask,
   abort,
@@ -20,6 +21,7 @@ from flask import (
 from flask.typing import ResponseReturnValue
 
 from cwac import CWAC
+from src.output import ProgressUpdate
 
 
 def fetch_secret_key() -> str:
@@ -96,6 +98,10 @@ class CWACManager:
   def log_file_path(self) -> str:
     """Return the path to the main log file for the current CWAC run."""
     return self.results_directory() + '/' + self.__cwac.config.audit_name + '.log'
+
+  def progress(self) -> ProgressUpdate:
+    """Fetch the most recent progress update of the current CWAC run."""
+    return self.__cwac.analytics.progress
 
 
 cwac_manager = CWACManager()
@@ -356,3 +362,11 @@ def view_scan() -> ResponseReturnValue:
     logs = f.read()
 
   return render_template('scans_progress.html', manager=cwac_manager, logs=logs)
+
+
+@app.route('/scans/progress/update')
+def get_scan_progress() -> ResponseReturnValue:
+  """Get the progress of the scan so far."""
+  if cwac_manager.state == 'idle':
+    return flask.jsonify({})
+  return flask.jsonify(cwac_manager.progress())

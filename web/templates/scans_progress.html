@@ -3,13 +3,44 @@
 {% block body %}
   <h1>Scan progress</h1>
   <div class="col-lg-8 px-0">
-    {{ manager.state }}
-    <p>logging to {{ manager.log_file_path() }}</p>
+    <p id="scan-state">{{ manager.state }}</p>
+
+    <div class="my-3">
+      <div
+        class="progress"
+        role="progressbar"
+        aria-valuenow="{{ manager.progress().percent }}"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      >
+        <div
+          id="scan-progress"
+          class="progress-bar bg-{{ 'success' if manager.progress().percent == '100.0' else 'primary' }}"
+          style="width: {{ manager.progress().percent }}%"
+        ></div>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span id="scan-progress-stat"
+          >p:{{ manager.progress().iteration }}/8</span
+        >
+        <span id="scan-progress-speed"
+          >v:{{ manager.progress().speed }}p/s</span
+        >
+        <span id="scan-progress-elapsed"
+          >t:{{ manager.progress().elapsed }}</span
+        >
+        <span id="scan-progress-remaining"
+          >t-:{{ manager.progress().remaining }}</span
+        >
+      </div>
+    </div>
     <div>
-      <label for="logs">Logs</label>
+      <label for="logs">{{ manager.log_file_path() }}</label>
       <textarea class="form-control" rows="20" id="logs" readonly disabled>
 {{ logs }}</textarea
       >
     </div>
   </div>
+
+  <script src="/static/scans_progress.js"></script>
 {% endblock %}

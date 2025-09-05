@@ -28,6 +28,17 @@ class Analytics:
     # Store the full set of base_urls
     self.base_urls: set[str] = set()
 
+    # todo: we should fill these out with actual values
+    self.progress: src.output.ProgressUpdate = {
+      'time': time.time(),
+      'iteration': 0,
+      'total': 0,
+      'speed': f'{0:.2f}',
+      'percent': '0',
+      'elapsed': f'{0}',
+      'remaining': f'{0}',
+    }
+
   def add_base_url(self, base_url: str) -> None:
     """Add base url in preparation of it being scanned."""
     self.pages_scanned[base_url] = set()
@@ -50,7 +61,7 @@ class Analytics:
       self.pages_scanned.setdefault(base_url, set()).add(url)
 
       # Output a progress bar
-      src.output.print_progress_bar(
+      self.progress = src.output.print_progress_bar(
         config=self.config,
         iteration=self.total_pages_scanned,
         total=self.est_num_pages_in_test,
@@ -67,7 +78,7 @@ class Analytics:
       self.est_num_pages_in_test -= max(0, self.config.max_links_per_domain - len(self.pages_scanned[base_url]))
 
       # Output a progress bar
-      src.output.print_progress_bar(
+      self.progress = src.output.print_progress_bar(
         config=self.config,
         iteration=self.total_pages_scanned,
         total=self.est_num_pages_in_test,
