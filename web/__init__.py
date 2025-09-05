@@ -76,6 +76,7 @@ class CWACManager:
     """Run a new instance of CWAC with the given config file."""
     print(f'running CWAC using {config_filename}')
     self.__latest_cwac_instance = CWAC(config_filename)
+    self.__latest_cwac_instance.run()
     print('finished CWACing')
 
   @property
