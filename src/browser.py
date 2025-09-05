@@ -3,10 +3,10 @@
 Contains useful functions for managing browsers.
 """
 
-import logging
 import platform
 import time
 import traceback
+from logging import getLogger
 from typing import Any, cast
 
 import selenium
@@ -17,6 +17,8 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from config import Config
 
 WebDriverType = selenium.webdriver.firefox.webdriver.WebDriver | selenium.webdriver.chrome.webdriver.WebDriver
+
+logging = getLogger("cwac")
 
 
 class Browser:

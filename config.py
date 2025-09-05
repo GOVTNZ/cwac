@@ -3,15 +3,17 @@
 import csv
 import datetime
 import json
-import logging
 import os
 import platform
 import re
 import sys
 import threading
 import urllib.robotparser
+from logging import INFO, FileHandler, Formatter, getLogger
 from typing import Any
 from urllib import parse
+
+logging = getLogger("cwac")
 
 
 class Config:
@@ -65,26 +67,12 @@ class Config:
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.config["audit_name"] = timestamp + "_" + self.audit_name
 
-        # Configure logging
-        log_filename = self.audit_name
-        log_format = (
-            "[{%(asctime)s} %(levelname)-7s %(filename)10s : %(lineno)-4s] %(funcName)30s %(message)s %(threadName)s"
-        )
-
         # Create the results folder
-        folder_path = "./results/" + log_filename + "/"
+        folder_path = "./results/" + self.audit_name + "/"
         os.makedirs(folder_path, exist_ok=True)
 
-        # Log timestamp format (ISO 8601)
-        log_date_format = "%Y-%m-%dT%H:%M:%S%z"
-
-        logging.basicConfig(
-            filename=f"./{folder_path}/{log_filename}.log",
-            format=log_format,
-            filemode="w",
-            level=logging.INFO,
-            datefmt=log_date_format,
-        )
+        # Configure logging
+        self.__setup_logger(f"./{folder_path}/{self.audit_name}.log")
 
         # Write self.config to the results folder for reference
         with open(f"{folder_path}/config.json", "w", encoding="utf-8-sig") as file:
@@ -106,6 +94,32 @@ class Config:
         # the Crawler queries this and populates it
         # if no entry is found for a website.
         self.robots_txt_cache: dict[str, urllib.robotparser.RobotFileParser] = {}
+
+    def __setup_logger(self, log_filename: str) -> None:
+        """Set up the CWAC logger for a new run.
+
+        Args:
+            log_filename (str): The filename of the log file.
+        """
+        # remove any existing handlers
+        for h in logging.handlers[:]:
+            logging.removeHandler(h)
+            h.close()
+
+        # set the level back to INFO
+        logging.setLevel(INFO)
+
+        # create a new formatter with our desired format
+        formatter = Formatter(
+            "[{%(asctime)s} %(levelname)-7s %(filename)10s : %(lineno)-4s] %(funcName)30s %(message)s %(threadName)s",
+            # Log timestamp format (ISO 8601)
+            "%Y-%m-%dT%H:%M:%S%z",
+        )
+
+        # add a new file handler with our desired format
+        handler = FileHandler(log_filename, "w")
+        handler.setFormatter(formatter)
+        logging.addHandler(handler)
 
     def __resolve_automatic_settings(self) -> None:
         """Resolve configuration settings which are set to 'auto'.

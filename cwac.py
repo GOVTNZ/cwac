@@ -6,11 +6,11 @@ Refer to the README for more information.
 
 import concurrent.futures
 import csv
-import logging
 import os
 import random
 import re
 import sys
+from logging import getLogger
 from queue import SimpleQueue
 from typing import cast
 from urllib.parse import urlparse, urlunparse
@@ -21,6 +21,8 @@ from src.analytics import Analytics
 from src.browser import Browser
 from src.crawler import Crawler, SiteData
 from src.output import output_init_message
+
+logging = getLogger("cwac")
 
 
 class CWAC:
