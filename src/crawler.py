@@ -4,13 +4,13 @@ Crawls specified websites and tests them using AuditManager
 """
 
 import importlib
-import logging
 import posixpath
 import random
 import re
 import time
 import urllib
 import urllib.robotparser
+from logging import getLogger
 from queue import SimpleQueue
 from typing import Any
 
@@ -31,6 +31,8 @@ from src.output import CSVWriter
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-locals
 
+
+logging = getLogger("cwac")
 
 type SiteData = ConfigSiteData
 

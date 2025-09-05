@@ -1,7 +1,7 @@
 """URL filters."""
 
-import logging
 import urllib.parse
+from logging import getLogger
 from typing import Any, Callable
 
 import requests
@@ -12,6 +12,9 @@ from config import Config
 # url_filter_* functions return True when a URL is acceptable
 # url_filter_* functions must be registered in the URLFilter class
 # by using register_url_filter(func)
+
+
+logging = getLogger("cwac")
 
 
 def url_filter_whitelist(config: Config, url: urllib.parse.ParseResult) -> bool:
