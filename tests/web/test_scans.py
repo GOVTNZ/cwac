@@ -11,7 +11,7 @@ from flask.testing import FlaskClient
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
 
-from web import CWACAlreadyRunningError, cwac_manager
+from web import CWACAlreadyRunningError, CWACManager, cwac_manager
 
 
 def has_flash(client: FlaskClient, message: str, typ: str) -> bool:
@@ -154,7 +154,7 @@ class TestViewScan:
   """Tests for the GET /scans/progress endpoint."""
 
   def test_a_scan_must_be_running(self, client: FlaskClient) -> None:
-    """Testing handling when a CWAC scan has not been started.
+    """Test handling when a CWAC scan has not been started.
 
     The user should be redirected to the "new scan" page with a warning.
     """
@@ -164,3 +164,51 @@ class TestViewScan:
     assert response.location == '/scans/new'
 
     assert has_flash(client, 'no scan in progress', 'warning')
+
+
+class TestScanProgressUpdate:
+  """Tests for the GET /scans/progress endpoint."""
+
+  def test_an_idle_state_is_ok(self, client: FlaskClient) -> None:
+    """Test handling when the scan state is idle.
+
+    An empty object should be returned as JSON.
+    """
+    response = client.get('/scans/progress/update')
+
+    assert response.status_code == 200
+
+    assert response.json == {}
+
+  def test_the_latest_progress_update_is_returned(self, client: FlaskClient, mocker: MockerFixture) -> None:
+    """Test handling when a scan is in progress.
+
+    The latest scan progress update should be returned as JSON.
+    """
+    mocker.patch.object(CWACManager, 'state', new_callable=mocker.PropertyMock, return_value='running')
+    mocker.patch.object(
+      cwac_manager,
+      'progress',
+      return_value={
+        'elapsed': '0h 2m',
+        'iteration': 7,
+        'percent': '87.5',
+        'remaining': '0h 1m',
+        'speed': '0.14',
+        'time': 1757294135.263283,
+        'total': 8,
+      },
+    )
+
+    response = client.get('/scans/progress/update')
+
+    assert response.status_code == 200
+    assert response.json == {
+      'elapsed': '0h 2m',
+      'iteration': 7,
+      'percent': '87.5',
+      'remaining': '0h 1m',
+      'speed': '0.14',
+      'time': 1757294135.263283,
+      'total': 8,
+    }

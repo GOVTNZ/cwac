@@ -136,18 +136,19 @@ class CWAC:
     # Set the estimated number of pages in the analytics object
     self.analytics.est_num_pages_in_test = self.url_queue.qsize() * self.config.max_links_per_domain
 
-    if self.config.thread_count == 1:
-      # Run CWAC without threading (useful for profiling)
-      self.thread(0)
-    else:
-      # Run CWAC with multithreading
-      self.spawn_threads()
+    if self.config.thread_count > 0:
+      if self.config.thread_count == 1:
+        # Run CWAC without threading (useful for profiling)
+        self.thread(0)
+      else:
+        # Run CWAC with multithreading
+        self.spawn_threads()
 
-    # Verify results
-    src.verify.verify_axe_results(
-      max_links_per_domain=self.config.max_links_per_domain,
-      pages_scanned=self.analytics.pages_scanned,
-    )
+      # Verify results
+      src.verify.verify_axe_results(
+        max_links_per_domain=self.config.max_links_per_domain,
+        pages_scanned=self.analytics.pages_scanned,
+      )
 
     print('\r\n')
     print('-' * 80)
