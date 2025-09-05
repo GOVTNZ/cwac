@@ -113,20 +113,15 @@ class CWAC:
     return url_queue
 
   def __init__(self, config_file: str) -> None:
-    """Set up CWAC and run the test.
-
-    Imports target URLs, sets up Analytics, creates
-    relevant folders, spawns a number of threads, then
-    finally verifies the results of the test.
-    """
+    """Set up CWAC in preparing of a run."""
     self.config = Config(config_file)
     self.analytics = Analytics(self.config)
+    self.url_queue = self.import_base_urls()
 
+  def run(self) -> None:
+    """Run the checker."""
     # Print the initial message
     output_init_message(self.config)
-
-    # Import base_urls for this run
-    self.url_queue = self.import_base_urls()
 
     things_to_scan = 'websites'
     if self.config.max_links_per_domain == 1:
@@ -175,3 +170,4 @@ if __name__ == '__main__':
     return config_filename
 
   cwac: CWAC = CWAC(resolve_config_filename())
+  cwac.run()
