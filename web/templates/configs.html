@@ -2,6 +2,9 @@
 
 {% block body %}
   <h1>Configs</h1>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('new_config') }}"
+    >New config</a
+  >
   <div class="col-lg-8 px-0">
     {% if files|length != 0 %}
       <ol class="list-group">
