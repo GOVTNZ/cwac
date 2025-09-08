@@ -1,5 +1,6 @@
 /**
  * @typedef {Object} ProgressUpdate
+ * @property {string} logs
  * @property {number} time
  * @property {number} iteration
  * @property {number} total
@@ -25,6 +26,12 @@ async function updateProgress() {
 
   /** @type {ProgressUpdate} */
   const data = await resp.json();
+
+  /** @type {HTMLTextAreaElement} */
+  const logsTextArea = document.getElementById('logs');
+
+  logsTextArea.value = data.logs;
+  logsTextArea.scrollTop = logsTextArea.scrollHeight;
 
   const progressBar = document.getElementById('scan-progress');
 
