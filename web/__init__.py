@@ -3,6 +3,7 @@
 import contextlib
 import csv
 import os
+import re
 import secrets
 import threading
 from typing import Literal, TypedDict, cast
@@ -155,6 +156,12 @@ def view_configs() -> str:
   return render_template('configs.html', files=files)
 
 
+@app.route('/configs/new')
+def new_config() -> str:
+  """Present a form for creating a config file."""
+  return render_template('configs_new.html')
+
+
 @app.route('/configs/<filename>/edit')
 def edit_config(filename: str) -> str:
   """Present a form for modifying a config file."""
@@ -170,6 +177,75 @@ def edit_config(filename: str) -> str:
       )
   except FileNotFoundError:
     abort(404)
+
+
+@app.route('/configs', methods=['POST'])
+def create_config() -> ResponseReturnValue:
+  """Create a new config file."""
+  filename = request.form.get('filename', '')
+  contents = request.form.get('contents', '')
+  if not isinstance(filename, str) or filename == '':
+    flash('filename is required', 'danger')
+    return (
+      render_template(
+        'configs_new.html',
+        filename=filename,
+        contents=contents,
+      ),
+      422,
+    )
+
+  if not isinstance(contents, str) or contents == '':
+    flash('contents is required', 'danger')
+    return (
+      render_template(
+        'configs_new.html',
+        filename=filename,
+        contents=contents,
+      ),
+      422,
+    )
+
+  if os.path.splitext(filename)[1] != '':
+    flash('filename should not include an extension', 'danger')
+    return (
+      render_template(
+        'configs_new.html',
+        filename=filename,
+        contents=contents,
+      ),
+      422,
+    )
+
+  if re.search(r'[^a-zA-Z\d_-]', filename) is not None:
+    flash('filename should only use letters, numbers, underscores, and dashes', 'danger')
+    return (
+      render_template(
+        'configs_new.html',
+        filename=filename,
+        contents=contents,
+      ),
+      422,
+    )
+
+  os.makedirs('config', exist_ok=True)
+  filepath = f'./config/{filename}.json'
+  try:
+    with open(filepath, 'x', encoding='utf-8') as f:
+      f.write(contents)
+  except FileExistsError:
+    flash('a config file with that name already exists', 'danger')
+    return (
+      render_template(
+        'configs_new.html',
+        filename=filename,
+        contents=contents,
+      ),
+      422,
+    )
+
+  flash(f'{filepath} has been created', 'success')
+  return redirect(url_for('view_configs'))
 
 
 @app.route('/configs/<filename>', methods=['POST'])

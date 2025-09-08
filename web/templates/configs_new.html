@@ -1,0 +1,32 @@
+﻿{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Configs</h1>
+  <p>New config</p>
+  <div class="col-lg-8 px-0">
+    <form action="{{ url_for('create_config') }}" method="post">
+      <label class="form-label" for="filename">Filename</label>
+      <div class="input-group">
+        <input
+          class="form-control"
+          id="filename"
+          name="filename"
+          type="text"
+          value="{{ filename }}"
+        />
+        <span class="input-group-text">.json</span>
+      </div>
+
+      <label class="form-label" for="contents">Contents</label>
+      <textarea class="form-control" rows="20" id="contents" name="contents">
+{{ contents }}</textarea
+      >
+      <div class="my-2">
+        <button type="submit" class="btn btn-primary">Create</button>
+        <a href="{{ url_for('view_configs') }}" class="btn btn-secondary"
+          >Cancel</a
+        >
+      </div>
+    </form>
+  </div>
+{% endblock %}
