@@ -3,9 +3,14 @@
 {% block body %}
   <h1>Results</h1>
   <div class="col-lg-8 px-0">
+    {% include '_details_controls.html' %}
+
     {% for result in results %}
-      <div class="my-3">
-        <h5>results/{{ result['name'] }}</h5>
+      <details class="my-3">
+        <summary>
+          <h5 class="d-inline-block">results/{{ result['name'] }}</h5>
+        </summary>
+
         {% if result['files']|length != 0 %}
           <ol class="list-group">
             {% for file in result['files'] %}
@@ -20,7 +25,7 @@
         {% else %}
           No files found
         {% endif %}
-      </div>
+      </details>
     {% else %}
       No results found
     {% endfor %}

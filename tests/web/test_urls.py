@@ -75,6 +75,8 @@ class TestViewUrls:
 
     assert b'No url files found' not in response.data
 
+    assert b'./base_urls/visit/one.csv' in response.data
+
     assert b'<td>ACME</td>' in response.data
     assert b'<td>https://acme.com/finance</td>' in response.data
     assert b'<td>Finance</td>' in response.data
@@ -83,7 +85,7 @@ class TestViewUrls:
     assert b'<td>https://acme.com/hr</td>' in response.data
     assert b'<td>Human Resources</td>' in response.data
 
-    assert b'<pre class="m-0">Source: ./base_urls/visit/one.csv</pre>' in response.data
+    assert b'./base_urls/visit/two.csv' in response.data
 
     assert b'<td>Umbrella Corp</td>' in response.data
     assert b'<td>https://umbrella.com</td>' in response.data
@@ -92,8 +94,6 @@ class TestViewUrls:
     assert b'<td>Buy &#39;n&#39; Large</td>' in response.data
     assert b'<td>https://bnl.com/</td>' in response.data
     assert b'<td>Sales</td>' in response.data
-
-    assert b'<pre class="m-0">Source: ./base_urls/visit/two.csv</pre>' in response.data
 
   def test_only_csv_files_are_listed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
     """Test handling when the base_urls/visit directory has other files.
@@ -120,6 +120,8 @@ class TestViewUrls:
     assert b'No url files found' not in response.data
     assert b'example.txt' not in response.data
 
+    assert b'./base_urls/visit/urls.csv' in response.data
+
     assert b'<td>ACME</td>' in response.data
     assert b'<td>https://acme.com/finance</td>' in response.data
     assert b'<td>Finance</td>' in response.data
@@ -127,8 +129,6 @@ class TestViewUrls:
     assert b'<td>ACME</td>' in response.data
     assert b'<td>https://acme.com/hr</td>' in response.data
     assert b'<td>Human Resources</td>' in response.data
-
-    assert b'<pre class="m-0">Source: ./base_urls/visit/urls.csv</pre>' in response.data
 
   def test_invalid_csv_files_are_fine(self, client: FlaskClient, fs: FakeFilesystem) -> None:
     """Test handling when the base_urls/visit directory has an invalid CSV file.
@@ -184,19 +184,20 @@ class TestViewUrls:
     assert b'<td>https://acme.com/finance</td>' in response.data
     assert b'<td>Finance</td>' in response.data
 
-    assert b'<pre class="m-0">Source: ./base_urls/visit/one.csv</pre>' in response.data
+    assert b'./base_urls/visit/one.csv' in response.data
 
+    assert b'./base_urls/visit/two.csv' in response.data
     assert b'Invalid CSV: must have 3 columns' in response.data
-    assert b'<pre class="m-0">Source: ./base_urls/visit/two.csv</pre>' in response.data
+
+    assert b'./base_urls/visit/three.csv' in response.data
 
     assert b'<td>Umbrella Corp</td>' in response.data
     assert b'<td>https://umbrella.com</td>' in response.data
     assert b'<td>R&amp;D</td>' in response.data
 
-    assert b'<pre class="m-0">Source: ./base_urls/visit/three.csv</pre>' in response.data
+    assert b'./base_urls/visit/silly.csv' in response.data
 
     assert b'Invalid CSV: must have 3 columns' in response.data
-    assert b'<pre class="m-0">Source: ./base_urls/visit/silly.csv</pre>' in response.data
 
   def test_empty_csv_files_are_fine(self, client: FlaskClient, fs: FakeFilesystem) -> None:
     """Test handling when the base_urls/visit directory has an empty CSV file.
@@ -225,17 +226,17 @@ class TestViewUrls:
 
     assert b'No url files found' not in response.data
 
+    assert b'./base_urls/visit/one.csv' in response.data
+
     assert b'<td>ACME</td>' in response.data
     assert b'<td>https://acme.com/finance</td>' in response.data
     assert b'<td>Finance</td>' in response.data
 
-    assert b'<pre class="m-0">Source: ./base_urls/visit/one.csv</pre>' in response.data
-
+    assert b'./base_urls/visit/two.csv' in response.data
     assert b'File is empty' in response.data
-    assert b'<pre class="m-0">Source: ./base_urls/visit/two.csv</pre>' in response.data
 
+    assert b'./base_urls/visit/three.csv' in response.data
     assert b'File is empty' in response.data
-    assert b'<pre class="m-0">Source: ./base_urls/visit/three.csv</pre>' in response.data
 
 
 class TestEditUrls:

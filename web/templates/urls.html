@@ -3,8 +3,22 @@
 {% block body %}
   <h1>URLs</h1>
   <div class="col-lg-8 px-0">
+    {% include '_details_controls.html' %}
+
     {% for file in files %}
-      <div class="my-2">
+      <details class="my-2">
+        <summary>
+          <h5 class="d-inline-block">
+            {% set filename = file['path'].removeprefix('./base_urls/visit/').removesuffix('.csv') %}
+            <a
+              href="{{ url_for('edit_urls', filename=filename) }}"
+              class="btn btn-primary btn-sm"
+              >Edit</a
+            >
+            {{ file['path'] }}
+          </h5>
+        </summary>
+
         <table class="table table-bordered table-striped">
           <thead>
             <tr>
@@ -34,14 +48,7 @@
             {% endfor %}
           </tbody>
         </table>
-        <pre class="m-0">Source: {{ file['path'] }}</pre>
-        {% set filename = file['path'].removeprefix('./base_urls/visit/').removesuffix('.csv') %}
-        <a
-          href="{{ url_for('edit_urls', filename=filename) }}"
-          class="btn btn-primary btn-sm"
-          >Edit</a
-        >
-      </div>
+      </details>
     {% else %}
       No url files found
     {% endfor %}
