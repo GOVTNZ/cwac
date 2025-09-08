@@ -285,6 +285,23 @@ def update_config(filename: str) -> ResponseReturnValue:
     abort(404)
 
 
+@app.route('/configs/<filename>', methods=['DELETE'])
+def delete_config(filename: str) -> ResponseReturnValue:
+  """Delete a config file."""
+  if filename == 'config_default':
+    flash('./config/config_default.json cannot be deleted', 'danger')
+    return redirect(url_for('view_configs'))
+
+  filepath = f'./config/{filename}.json'
+
+  try:
+    os.remove(filepath)
+    flash(f'{filepath} has been deleted', 'success')
+    return redirect(url_for('view_configs'))
+  except FileNotFoundError:
+    abort(404)
+
+
 @app.route('/results')
 def view_results() -> str:
   """Present a list of results from previous scans."""

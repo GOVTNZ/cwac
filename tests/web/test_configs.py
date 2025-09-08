@@ -12,6 +12,12 @@ from markupsafe import escape
 from pyfakefs.fake_filesystem import FakeFilesystem
 
 
+def has_flash(client: FlaskClient, message: str, typ: str) -> bool:
+  """Check that a flash message of the given type exists in the session."""
+  with client.session_transaction() as session:
+    return any(flash == (typ, message) for flash in session.get('_flashes', []))
+
+
 class TestViewConfigs:
   """Tests for the GET /configs endpoint."""
 
@@ -621,3 +627,119 @@ class TestUpdateConfig:
     assert response.status_code == 404
     with open('config/inner/file.json', encoding='utf-8') as f:
       assert f.read() == '{"hello": "world"}'
+
+
+class TestDeleteConfig:
+  """Tests for the DELETE /configs/<filename> endpoint."""
+
+  def test_missing_directory_is_handled(self, client: FlaskClient) -> None:
+    """Test handling attempting to delete a file when the config/ directory does not exist.
+
+    An error should be returned.
+    """
+    response = client.delete('/configs/config_linux')
+
+    assert response.status_code == 404
+
+  def test_file_does_not_exist(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling attempting to delete a file that does not exist.
+
+    An error should be returned.
+    """
+    fs.makedir('config')
+
+    response = client.delete('/configs/does_not_exist')
+
+    assert response.status_code == 404
+
+  def test_default_config_cannot_be_deleted(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when attempting to delete the default config file.
+
+    The file should not be deleted, and the user redirected with a flash message.
+    """
+    fs.add_real_file('config/config_default.json')
+
+    response = client.delete('configs/config_default')
+
+    assert response.status_code == 302
+    assert response.location == '/configs'
+
+    assert has_flash(client, './config/config_default.json cannot be deleted', 'danger')
+
+    assert os.path.exists('config/config_default.json') is True
+
+  def test_the_file_is_deleted(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when attempting to delete a config file.
+
+    The file should be deleted and the user redirected to the view page
+    """
+    fs.add_real_file('config/config_default.json')
+    fs.add_real_file('config/config_default.json', target_path='config/config_linux.json')
+
+    response = client.delete('configs/config_linux')
+
+    assert response.status_code == 302
+    assert response.location == '/configs'
+
+    assert has_flash(client, './config/config_linux.json has been deleted', 'success')
+
+    assert os.path.exists('config/config_default.json') is True
+    assert os.path.exists('config/config_linux.json') is False
+
+  def test_parent_files_cannot_be_accessed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename includes a path attempting to traverse upwards.
+
+    The file should not be resolved.
+    """
+
+    fs.add_real_file('config/config_default.json')
+    fs.create_file('root_file.json', contents='{"hello": "world"}')
+
+    response = client.delete('/configs/../root_file')
+
+    assert response.status_code == 404
+    assert os.path.exists('root_file.json') is True
+
+    response = client.delete('/configs/..%2Froot_file')
+
+    assert response.status_code == 404
+    assert os.path.exists('root_file.json') is True
+
+    response = client.delete('/configs/..\\root_file')
+
+    assert response.status_code == 404
+    assert os.path.exists('root_file.json') is True
+
+    response = client.delete('/configs/..%5Croot_file')
+
+    assert response.status_code == 404
+    assert os.path.exists('root_file.json') is True
+
+  def test_child_files_cannot_be_accessed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename includes a path attempting to traverse downwards.
+
+    The file should not be resolved.
+    """
+
+    fs.add_real_file('config/config_default.json')
+    fs.create_file('config/inner/file.json', contents='{"hello": "world"}')
+
+    response = client.delete('/configs/inner/file')
+
+    assert response.status_code == 404
+    assert os.path.exists('config/inner/file.json') is True
+
+    response = client.delete('/configs/inner%2Ffile')
+
+    assert response.status_code == 404
+    assert os.path.exists('config/inner/file.json') is True
+
+    response = client.delete('/configs/inner\\file')
+
+    assert response.status_code == 404
+    assert os.path.exists('config/inner/file.json') is True
+
+    response = client.delete('/configs/inner/%5Cfile')
+
+    assert response.status_code == 404
+    assert os.path.exists('config/inner/file.json') is True
