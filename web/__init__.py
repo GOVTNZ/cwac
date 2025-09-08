@@ -125,7 +125,14 @@ class EndpointsFile(TypedDict):
 
 
 class ScanResult(TypedDict):
-  """Holds the outcome of a scan of one or more endpoints."""
+  """Holds the raw outcome of a scan of one or more endpoints."""
+
+  name: str
+  files: list[str]
+
+
+class ScanReport(TypedDict):
+  """Holds the processed outcome of a scan of one or more endpoints."""
 
   name: str
   files: list[str]
@@ -223,6 +230,29 @@ def view_results() -> str:
 def download_result_file(name: str, file: str) -> ResponseReturnValue:
   """Download a file from a scan results directory."""
   return send_from_directory('../results', f'{name}/{file}', as_attachment=True)
+
+
+@app.route('/reports')
+def view_reports() -> str:
+  """Present a list of reports that have been generated."""
+  reports: list[ScanResult] = []
+
+  for dirname, _, files in os.walk('reports'):
+    if dirname.count('/') == 0:
+      continue
+    if dirname.count('/') == 1:
+      reports.append(ScanResult(name=dirname.removeprefix('reports/'), files=files))
+    else:
+      subname = dirname.removeprefix('reports/').removeprefix(reports[-1]['name']).removeprefix('/')
+      reports[-1]['files'] += [f'{subname}/{f}' for f in files]
+
+  return render_template('reports.html', reports=reports)
+
+
+@app.route('/d/reports/<string:name>/<path:file>')
+def download_report_file(name: str, file: str) -> ResponseReturnValue:
+  """Download a file from the reports/ directory."""
+  return send_from_directory('../reports', f'{name}/{file}', as_attachment=True)
 
 
 @app.route('/urls')

@@ -20,7 +20,9 @@
         >
       </li>
       <li class="list-unstyled m-1">
-        <a href="#" class="btn btn-primary disabled">View reports</a>
+        <a href="{{ url_for('view_reports') }}" class="btn btn-primary"
+          >View reports</a
+        >
       </li>
       <li class="list-unstyled m-1">
         <a href="{{ url_for('new_scan') }}" class="btn btn-primary"
