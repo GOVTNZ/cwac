@@ -369,4 +369,8 @@ def get_scan_progress() -> ResponseReturnValue:
   """Get the progress of the scan so far."""
   if cwac_manager.state == 'idle':
     return flask.jsonify({})
-  return flask.jsonify(cwac_manager.progress())
+
+  with open(cwac_manager.log_file_path(), encoding='utf-8') as f:
+    logs = f.read()
+
+  return flask.jsonify({'logs': logs, **cwac_manager.progress()})

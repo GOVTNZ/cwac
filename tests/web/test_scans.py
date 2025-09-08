@@ -14,6 +14,20 @@ from pytest_mock import MockerFixture
 from web import CWACAlreadyRunningError, CWACManager, cwac_manager
 
 
+def build_audit_results_log_content(date: str) -> str:
+  """Build the contents of an audit_results.log file."""
+  return '\n'.join(
+    [
+      f'[{{{date}T12:00:00+1200}} INFO output.py : 113 ] print_log *************************************************************** MainThread',  # noqa: E501, pylint: disable=line-too-long
+      f'[{{{date}T12:00:00+1200}} INFO output.py : 113 ] print_log Centralised Web Accessibility Checker (CWAC) MainThread',  # noqa: E501, pylint: disable=line-too-long
+      f'[{{{date}T12:00:00+1200}} INFO output.py : 113 ] print_log Te Tari Taiwhenua | Department of Internal Affairs MainThread',  # noqa: E501, pylint: disable=line-too-long
+      f'[{{{date}T12:00:00+1200}} INFO output.py : 113 ] print_log Run time: {date} 12:00:00 MainThread',
+      f'[{{{date}T12:00:00+1200}} INFO output.py : 113 ] print_log *************************************************************** MainThread',  # noqa: E501, pylint: disable=line-too-long
+      f'[{{{date}T12:00:39+1200}} INFO   cwac.py : 151 ]  __init__ CWAC complete! MainThread',
+    ]
+  )
+
+
 def has_flash(client: FlaskClient, message: str, typ: str) -> bool:
   """Check that a flash message of the given type exists in the session."""
   with client.session_transaction() as session:
@@ -180,16 +194,31 @@ class TestScanProgressUpdate:
 
     assert response.json == {}
 
-  def test_the_latest_progress_update_is_returned(self, client: FlaskClient, mocker: MockerFixture) -> None:
+  def test_the_latest_progress_update_and_logs_are_returned(
+    self,
+    client: FlaskClient,
+    fs: FakeFilesystem,
+    mocker: MockerFixture,
+  ) -> None:
     """Test handling when a scan is in progress.
 
-    The latest scan progress update should be returned as JSON.
+    The JSON response should include the latest scan progress update and the logs.
     """
+    fs.create_file(
+      'results/2025-01-01_12-00-00_audit_results/2025-01-01_12-00-00_audit_results.log',
+      contents=build_audit_results_log_content('2025-01-03'),
+    )
     mocker.patch.object(CWACManager, 'state', new_callable=mocker.PropertyMock, return_value='running')
+    mocker.patch.object(
+      cwac_manager,
+      'log_file_path',
+      return_value='results/2025-01-01_12-00-00_audit_results/2025-01-01_12-00-00_audit_results.log',
+    )
     mocker.patch.object(
       cwac_manager,
       'progress',
       return_value={
+        'logs': build_audit_results_log_content('2025-01-03'),
         'elapsed': '0h 2m',
         'iteration': 7,
         'percent': '87.5',
@@ -204,6 +233,7 @@ class TestScanProgressUpdate:
 
     assert response.status_code == 200
     assert response.json == {
+      'logs': build_audit_results_log_content('2025-01-03'),
       'elapsed': '0h 2m',
       'iteration': 7,
       'percent': '87.5',
