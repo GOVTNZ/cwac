@@ -149,20 +149,20 @@ class TestViewResults:
 
     # todo: none of this actually asserts the relation of the items properly
 
-    assert b'<h5>results/2025-01-01_12-00-00_audit_results</h5>' in response.data
+    assert b'>results/2025-01-01_12-00-00_audit_results</h5>' in response.data
     assert b'No files found' in response.data
 
     # results with just a config
-    assert b'<h5>results/2025-01-02_12-00-00_audit_results</h5>' in response.data
+    assert b'>results/2025-01-02_12-00-00_audit_results</h5>' in response.data
     assert b'config.json' in response.data
 
     # results with just a config and an output log
-    assert b'<h5>results/2025-01-03_12-00-00_audit_results</h5>' in response.data
+    assert b'>results/2025-01-03_12-00-00_audit_results</h5>' in response.data
     assert b'config.json' in response.data
     assert b'audit_log.csv' in response.data
 
     # results with a bunch of stuff
-    assert b'<h5>results/2025-01-04_12-00-00_audit_results</h5>' in response.data
+    assert b'>results/2025-01-04_12-00-00_audit_results</h5>' in response.data
     assert b'config.json' in response.data
     assert b'language_audit.csv' in response.data
 
@@ -227,21 +227,21 @@ class TestViewResults:
     # todo: none of this actually asserts the relation of the items properly
 
     # results with just some empty nested directories
-    assert b'<h5>results/2025-02-01_12-00-00_audit_results</h5>' in response.data
+    assert b'>results/2025-02-01_12-00-00_audit_results</h5>' in response.data
     assert b'No files found' in response.data
     assert b'inner-dir-empty' not in response.data
     assert b'inner-dir1' not in response.data
     assert b'empty-inner-inner-dir' not in response.data
 
     # results with just a config file and some empty nested directories
-    assert b'<h5>results/2025-02-02_12-00-00_audit_results</h5>' in response.data
+    assert b'>results/2025-02-02_12-00-00_audit_results</h5>' in response.data
     assert b'config.json' in response.data
     assert b'inner-dir-empty' not in response.data
     assert b'inner-dir2' not in response.data
     assert b'empty-inner-inner-dir' not in response.data
 
     # results with files, some in nested directories
-    assert b'<h5>results/2025-02-03_12-00-00_audit_results</h5>' in response.data
+    assert b'>results/2025-02-03_12-00-00_audit_results</h5>' in response.data
     assert b'config.json' in response.data
     assert b'logs/audit_results.log' in response.data
     assert b'csvs/internal/progress.csv' in response.data

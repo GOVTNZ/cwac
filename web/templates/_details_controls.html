@@ -1,0 +1,15 @@
+<button class="btn btn-primary btn-sm" id="btn-expand">Expand all</button>
+<button class="btn btn-primary btn-sm" id="btn-collapse">Collapse all</button>
+
+<script>
+  document.getElementById('btn-expand').addEventListener('click', () => {
+    for (const el of document.getElementsByTagName('details')) {
+      el.open = true;
+    }
+  });
+  document.getElementById('btn-collapse').addEventListener('click', () => {
+    for (const el of document.getElementsByTagName('details')) {
+      el.open = false;
+    }
+  });
+</script>

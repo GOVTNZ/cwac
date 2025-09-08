@@ -90,15 +90,15 @@ class TestViewReports:
 
     # todo: none of this actually asserts the relation of the items properly
 
-    assert b'<h5>reports/2025-01-01_12-00-00_audit_reports</h5>' in response.data
+    assert b'>reports/2025-01-01_12-00-00_audit_reports</h5>' in response.data
     assert b'No files found' in response.data
 
     # reports with just a config
-    assert b'<h5>reports/2025-01-02_12-00-00_audit_reports</h5>' in response.data
+    assert b'>reports/2025-01-02_12-00-00_audit_reports</h5>' in response.data
     assert b'language_audit.csv' in response.data
 
     # reports with a bunch of stuff
-    assert b'<h5>reports/2025-01-03_12-00-00_audit_reports</h5>' in response.data
+    assert b'>reports/2025-01-03_12-00-00_audit_reports</h5>' in response.data
     assert b'language_audit.csv' in response.data
     assert b'language_audit_leaderboard.csv' in response.data
 
@@ -149,21 +149,21 @@ class TestViewReports:
     # todo: none of this actually asserts the relation of the items properly
 
     # reports with just some empty nested directories
-    assert b'<h5>reports/2025-02-01_12-00-00_audit_reports</h5>' in response.data
+    assert b'>reports/2025-02-01_12-00-00_audit_reports</h5>' in response.data
     assert b'No files found' in response.data
     assert b'inner-dir-empty' not in response.data
     assert b'inner-dir1' not in response.data
     assert b'empty-inner-inner-dir' not in response.data
 
     # reports with just a config file and some empty nested directories
-    assert b'<h5>reports/2025-02-02_12-00-00_audit_reports</h5>' in response.data
+    assert b'>reports/2025-02-02_12-00-00_audit_reports</h5>' in response.data
     assert b'language_audit.csv' in response.data
     assert b'inner-dir-empty' not in response.data
     assert b'inner-dir2' not in response.data
     assert b'empty-inner-inner-dir' not in response.data
 
     # reports with files, some in nested directories
-    assert b'<h5>reports/2025-02-03_12-00-00_audit_reports</h5>' in response.data
+    assert b'>reports/2025-02-03_12-00-00_audit_reports</h5>' in response.data
     assert b'language_audit.csv' in response.data
     assert b'leaderboards/language_audit_leaderboard.csv' in response.data
 
