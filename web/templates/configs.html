@@ -20,7 +20,12 @@
                 class="btn btn-primary"
                 >Edit</a
               >
-              <a href="#" class="btn btn-danger">Delete</a>
+              <button
+                class="btn btn-danger config-delete"
+                data-filename="{{ filename }}"
+              >
+                Delete
+              </button>
             </div>
           </li>
         {% endfor %}
@@ -29,4 +34,6 @@
       No config files found
     {% endif %}
   </div>
+
+  <script src="/static/configs_delete.js"></script>
 {% endblock %}
