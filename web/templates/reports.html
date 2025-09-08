@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Reports</h1>
+  <div class="col-lg-8 px-0">
+    {% for report in reports %}
+      <div class="my-3">
+        <h5>reports/{{ report['name'] }}</h5>
+        {% if report['files']|length != 0 %}
+          <ol class="list-group">
+            {% for file in report['files'] %}
+              <li class="list-group-item">
+                <a
+                  href="{{ url_for('download_report_file', name=report['name'], file=file) }}"
+                  >{{ file }}</a
+                >
+              </li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          No files found
+        {% endif %}
+      </div>
+    {% else %}
+      No reports found
+    {% endfor %}
+  </div>
+{% endblock %}
