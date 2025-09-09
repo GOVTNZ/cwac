@@ -5,14 +5,14 @@
   <a class="btn btn-primary btn-sm" href="{{ url_for('new_config') }}"
     >New config</a
   >
-  <div class="col-lg-8 px-0">
+  <div>
     {% if files|length != 0 %}
       <ol class="list-group">
         {% for file in files %}
           <li
-            class="list-group-item d-flex align-items-center justify-content-between"
+            class="list-group-item d-flex align-items-center justify-content-between rounded-pill my-2"
           >
-            <pre class="m-0">{{ file }}</pre>
+            <pre class="m-0 ms-2">{{ file }}</pre>
             <div>
               {% set filename = file.removesuffix('.json') %}
               <a
