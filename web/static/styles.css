@@ -9,7 +9,7 @@
 
 .navbar {
   background: #f3eee8;
-  height: 90px;
+  min-height: 90px;
 }
 
 footer {
@@ -18,7 +18,7 @@ footer {
   }
 
   background: var(--bs-primary);
-  height: 204px;
+  min-height: 204px;
   color: white;
 }
 
