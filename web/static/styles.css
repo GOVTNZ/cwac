@@ -28,3 +28,17 @@ footer {
   --bs-list-group-color: var(--bs-primary);
   --bs-list-group-bg: #f9f6f3;
 }
+
+.card {
+  border: none;
+  border-bottom: 2px solid #d4c6b5;
+
+  --bs-card-border-radius: 42px;
+  --bs-card-bg: #f9f6f3;
+
+  box-shadow:
+    1.6px 9.7px 10.3px -3px #00000014,
+    0.6px 3.8px 4px -2px #00000017,
+    0.2px 1.5px 1.6px -1px #00000017,
+    0.1px 0.5px 0.5px 0px #0000001a;
+}
