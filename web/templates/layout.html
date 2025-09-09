@@ -31,8 +31,17 @@
       </div>
     </nav>
 
+    {% if intro_title or intro_subtitle %}
+      <div class="intro">
+        <div class="container my-5">
+          <h1>{{ intro_title }}</h1>
+          <p class="lead">{{ intro_subtitle }}</p>
+        </div>
+      </div>
+    {% endif %}
+
     <main role="main" class="flex-grow-1">
-      <div class="container my-2">
+      <div class="container">
         {% for category, message in get_flashed_messages(with_categories=true) %}
           <div class="alert alert-{{ category }}">{{ message }}</div>
         {% endfor %}

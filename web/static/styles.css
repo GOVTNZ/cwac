@@ -38,6 +38,10 @@
   min-height: 90px;
 }
 
+.intro {
+  background: #f3eee8;
+}
+
 footer {
   > :first-child {
     margin-block: 48px;
