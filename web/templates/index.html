@@ -2,33 +2,86 @@
 
 {% block body %}
   <h1>What would you like to do?</h1>
-  <div class="col-lg-8 px-0">
-    <ul>
-      <li class="list-unstyled m-1">
-        <a href="{{ url_for('view_configs') }}" class="btn btn-primary"
-          >View configs</a
+
+  <div class="row">
+    <p>
+      Set up CWAC: Set up how the Centralised Web Accessibility Checker will run
+      on your machine.
+    </p>
+
+    <div class="col card me-4">
+      <div class="card-body">
+        <h3 class="card-title">Configure CWAC</h3>
+        <p class="card-text">
+          Set up different configurations for how CWAC runs on your machine.
+        </p>
+        <a
+          href="{{ url_for('view_configs') }}"
+          class="btn btn-primary rounded-pill"
+          >Configure CWAC</a
         >
-      </li>
-      <li class="list-unstyled m-1">
-        <a href="{{ url_for('view_urls') }}" class="btn btn-primary"
-          >View URLs</a
+      </div>
+    </div>
+
+    <div class="col card ms-4">
+      <div class="card-body">
+        <h3 class="card-title">Set URL endpoints</h3>
+        <p class="card-text">
+          Set up which endpoints CWAC will scan when it runs for different
+          configurations.
+        </p>
+        <a
+          href="{{ url_for('view_urls') }}"
+          class="btn btn-primary rounded-pill"
+          >Set URL endpoints</a
         >
-      </li>
-      <li class="list-unstyled m-1">
-        <a href="{{ url_for('view_results') }}" class="btn btn-primary"
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <p>
+      Scans and outcomes: Start a scan, and see results and reports of completed
+      scans.
+    </p>
+
+    <div class="col card me-4">
+      <div class="card-body">
+        <h3 class="card-title">Start a scan</h3>
+        <p class="card-text">Start a scan using specific configuration.</p>
+        <a href="{{ url_for('new_scan') }}" class="btn btn-primary rounded-pill"
+          >Start scanning</a
+        >
+      </div>
+    </div>
+
+    <div class="col card mx-4">
+      <div class="card-body">
+        <h3 class="card-title">View raw results</h3>
+        <p class="card-text">
+          View and download the raw results of previous scans, and how they were
+          set up to run.
+        </p>
+        <a
+          href="{{ url_for('view_results') }}"
+          class="btn btn-primary rounded-pill"
           >View results</a
         >
-      </li>
-      <li class="list-unstyled m-1">
-        <a href="{{ url_for('view_reports') }}" class="btn btn-primary"
-          >View reports</a
+      </div>
+    </div>
+
+    <div class="col card ms-4">
+      <div class="card-body">
+        <h3 class="card-title">Download reports</h3>
+        <p class="card-text">
+          Download the reports of different audits for a previous scan.
+        </p>
+        <a
+          href="{{ url_for('view_reports') }}"
+          class="btn btn-primary rounded-pill"
+          >Download reports</a
         >
-      </li>
-      <li class="list-unstyled m-1">
-        <a href="{{ url_for('new_scan') }}" class="btn btn-primary"
-          >Start a scan</a
-        >
-      </li>
-    </ul>
+      </div>
+    </div>
   </div>
 {% endblock %}
