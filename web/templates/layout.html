@@ -15,23 +15,49 @@
       integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
       crossorigin="anonymous"
     />
+    <link href="/static/styles.css" rel="stylesheet" />
   </head>
 
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg">
       <div class="container">
-        <a class="navbar-brand" href="{{ url_for('root') }}">CWAC</a>
+        <div>
+          <a class="navbar-brand" href="{{ url_for('root') }}">
+            {% include '_logo_cwac.html' %}<span
+              >Centralised Web Accessibility Checker</span
+            ></a
+          >
+        </div>
       </div>
     </nav>
 
-    <main role="main" class="container my-2">
-      {% for category, message in get_flashed_messages(with_categories=true) %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
-      {% endfor %}
+    <main role="main">
+      <div class="container my-2">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
 
-      {% block body %}
-      {% endblock %}
+        {% block body %}
+        {% endblock %}
+      </div>
     </main>
+
+    <footer class="fixed-bottom">
+      <div class="container">
+        <div class="row">
+          <div class="col-4">
+            {% include '_logo_cwac.html' %}
+
+            <div>Centralised Web Accessibility Checker</div>
+          </div>
+          <div class="col-4">
+            {% include '_logo_github.html' %}
+            <a href="https://github.com/GOVTNZ/cwac">View on GitHub</a>
+          </div>
+          <div class="col-4">{% include '_logo_nzgovt.html' %}</div>
+        </div>
+      </div>
+    </footer>
 
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"

@@ -1,0 +1,14 @@
+nav {
+  background: #f3eee8;
+  height: 90px;
+}
+
+footer {
+  > :first-child {
+    margin-block: 48px;
+  }
+
+  background: #49216e;
+  height: 204px;
+  color: white;
+}
