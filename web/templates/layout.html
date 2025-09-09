@@ -23,7 +23,7 @@
       <div class="container">
         <div>
           <a class="navbar-brand" href="{{ url_for('root') }}">
-            {% include '_logo_cwac.html' %}<span class="text-primary"
+            {% include 'svgs/_logo_cwac.svg' %}<span class="text-primary"
               >Centralised Web Accessibility Checker</span
             ></a
           >
@@ -46,15 +46,17 @@
       <div class="container">
         <div class="row">
           <div class="col-4">
-            {% include '_logo_cwac.html' %}
+            {% include 'svgs/_logo_cwac.svg' %}
 
             <div>Centralised Web Accessibility Checker</div>
           </div>
           <div class="col-4">
-            {% include '_logo_github.html' %}
-            <a class="text-white ms-2" href="https://github.com/GOVTNZ/cwac">View on GitHub</a>
+            {% include 'svgs/_logo_github.svg' %}
+            <a class="text-white ms-2" href="https://github.com/GOVTNZ/cwac"
+              >View on GitHub</a
+            >
           </div>
-          <div class="col-4">{% include '_logo_nzgovt.html' %}</div>
+          <div class="col-4">{% include 'svgs/_logo_nzgovt.svg' %}</div>
         </div>
       </div>
     </footer>
