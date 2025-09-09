@@ -2,7 +2,12 @@
   --bs-primary: #49216e;
 }
 
-nav {
+* {
+  --bs-breadcrumb-item-active-color: #6c757d;
+  --bs-breadcrumb-divider-color: #ced4da;
+}
+
+.navbar {
   background: #f3eee8;
   height: 90px;
 }

@@ -2,6 +2,14 @@
 
 {% block body %}
   <h1>Start a scan</h1>
+
+  <nav aria-label="breadcrumb" class="mt-5">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Start a scan</li>
+    </ol>
+  </nav>
+
   <div class="col-lg-8 px-0">
     <form action="{{ url_for('create_scan') }}" method="post">
       <div class="form-control">

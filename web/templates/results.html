@@ -2,6 +2,16 @@
 
 {% block body %}
   <h1>Results</h1>
+
+  <nav aria-label="breadcrumb" class="mt-5">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">
+        Download results
+      </li>
+    </ol>
+  </nav>
+
   <div class="col-lg-8 px-0">
     {% include '_details_controls.html' %}
 

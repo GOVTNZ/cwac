@@ -2,6 +2,19 @@
 
 {% block body %}
   <h1>Scan progress</h1>
+
+  <nav aria-label="breadcrumb" class="mt-5">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('new_scan') }}">Start a scan</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">
+        {{ filename }}.json
+      </li>
+    </ol>
+  </nav>
+
   <div class="col-lg-8 px-0">
     <p id="scan-state">{{ manager.state }}</p>
 
