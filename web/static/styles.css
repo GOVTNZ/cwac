@@ -1,3 +1,7 @@
+:root {
+  --bs-primary: #49216e;
+}
+
 nav {
   background: #f3eee8;
   height: 90px;
@@ -8,7 +12,14 @@ footer {
     margin-block: 48px;
   }
 
-  background: #49216e;
+  background: var(--bs-primary);
   height: 204px;
   color: white;
+}
+
+.list-group-item {
+  border: none;
+
+  --bs-list-group-color: var(--bs-primary);
+  --bs-list-group-bg: #f9f6f3;
 }
