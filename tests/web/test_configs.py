@@ -63,9 +63,9 @@ class TestViewConfigs:
 
     assert b'No config files found' not in response.data
 
-    assert b'<pre class="m-0">config_default.json</pre>' in response.data
-    assert b'<pre class="m-0">config_linux.json</pre>' in response.data
-    assert b'<pre class="m-0">config_macos.json</pre>' in response.data
+    assert b'<pre class="m-0 ms-2">config_default.json</pre>' in response.data
+    assert b'<pre class="m-0 ms-2">config_linux.json</pre>' in response.data
+    assert b'<pre class="m-0 ms-2">config_macos.json</pre>' in response.data
 
   def test_only_json_files_are_listed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
     """Test handling when the config/ directory has other files.
@@ -83,7 +83,7 @@ class TestViewConfigs:
 
     assert b'No config files found' not in response.data
 
-    assert b'<pre class="m-0">config_default.json</pre>' in response.data
+    assert b'<pre class="m-0 ms-2">config_default.json</pre>' in response.data
     assert b'config_linux.txt' not in response.data
     assert b'config_macos.jsonc' not in response.data
 
