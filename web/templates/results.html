@@ -1,8 +1,9 @@
 {% extends 'layout.html' %}
 
-{% block body %}
-  <h1>Results</h1>
+{% set intro_title = 'View raw results' %}
+{% set intro_subtitle = 'View and download the raw results of previous scans, and how they were set up to run.' %}
 
+{% block body %}
   <nav aria-label="breadcrumb" class="mt-5">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>

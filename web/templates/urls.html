@@ -1,8 +1,9 @@
 ﻿{% extends 'layout.html' %}
 
-{% block body %}
-  <h1>URLs</h1>
+{% set intro_title = 'Set URL endpoints' %}
+{% set intro_subtitle = 'Set up which endpoints CWAC will scan when it runs for different configurations.' %}
 
+{% block body %}
   <nav aria-label="breadcrumb" class="mt-5">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>

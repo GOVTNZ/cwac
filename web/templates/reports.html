@@ -1,8 +1,9 @@
 {% extends 'layout.html' %}
 
-{% block body %}
-  <h1>Reports</h1>
+{% set intro_title = 'Download reports' %}
+{% set intro_subtitle = 'Download the reports of different audits for a previous scan.' %}
 
+{% block body %}
   <nav aria-label="breadcrumb" class="mt-5">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
