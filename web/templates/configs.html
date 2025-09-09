@@ -2,9 +2,18 @@
 
 {% block body %}
   <h1>Configs</h1>
+
+  <nav aria-label="breadcrumb" class="mt-5">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Configure CWAC</li>
+    </ol>
+  </nav>
+
   <a class="btn btn-primary btn-sm" href="{{ url_for('new_config') }}"
     >New config</a
   >
+
   <div>
     {% if files|length != 0 %}
       <ol class="list-group">
