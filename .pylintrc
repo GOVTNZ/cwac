@@ -21,5 +21,5 @@ ignore-docstrings=yes
 ignore-patterns=.venv
 
 [MESSAGES CONTROL]
-disable=broad-exception-caught, bad-indentation
+disable=broad-exception-caught, bad-indentation, W0511
 fail-on=useless-suppression, use-symbolic-message-instead
