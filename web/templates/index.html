@@ -16,7 +16,7 @@
           {% include 'svgs/_icon_settings.svg' %}
         </div>
         <h3 class="card-title mb-4">Configure CWAC</h3>
-        <p class="card-text mb-4">
+        <p class="card-text mb-4 text-black">
           Set up different configurations for how CWAC runs on your machine.
         </p>
         <a
@@ -31,7 +31,7 @@
       <div class="card-body">
         <div class="card-icon my-2">{% include 'svgs/_icon_link.svg' %}</div>
         <h3 class="card-title mb-4">Set URL endpoints</h3>
-        <p class="card-text mb-4">
+        <p class="card-text mb-4 text-black">
           Set up which endpoints CWAC will scan when it runs for different
           configurations.
         </p>
@@ -56,7 +56,9 @@
       <div class="card-body">
         <div class="card-icon my-2">{% include 'svgs/_icon_inspect.svg' %}</div>
         <h3 class="card-title mb-4">Start a scan</h3>
-        <p class="card-text mb-4">Start a scan using specific configuration.</p>
+        <p class="card-text mb-4 text-black">
+          Start a scan using specific configuration.
+        </p>
         <a href="{{ url_for('new_scan') }}" class="btn btn-primary rounded-pill"
           >Start scanning</a
         >
@@ -69,7 +71,7 @@
           {% include 'svgs/_icon_assignment.svg' %}
         </div>
         <h3 class="card-title mb-4">View raw results</h3>
-        <p class="card-text mb-4">
+        <p class="card-text mb-4 text-black">
           View and download the raw results of previous scans, and how they were
           set up to run.
         </p>
@@ -85,7 +87,7 @@
       <div class="card-body">
         <div class="card-icon my-2">{% include 'svgs/_icon_browse.svg' %}</div>
         <h3 class="card-title mb-4">Download reports</h3>
-        <p class="card-text mb-4">
+        <p class="card-text mb-4 text-black">
           Download the reports of different audits for a previous scan.
         </p>
         <a

@@ -14,6 +14,7 @@
   --bs-link-decoration: none;
   --bs-link-hover-color: var(--cwac-primary-950);
   --bs-link-hover-color-rgb: var(--cwac-primary-950-rgb);
+  --bs-heading-color: var(--bs-primary);
 }
 
 * {
@@ -68,6 +69,7 @@ footer {
   --bs-card-title-color: var(--bs-primary);
   --bs-card-border-radius: 42px;
   --bs-card-bg: #f9f6f3;
+  --bs-card-color: var(--bs-primary);
 
   box-shadow:
     1.6px 9.7px 10.3px -3px #00000014,
