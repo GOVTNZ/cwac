@@ -63,6 +63,8 @@ footer {
   border: none;
   border-bottom: 2px solid #d4c6b5;
 
+  --bs-card-spacer-x: 24px;
+  --bs-card-spacer-y: 24px;
   --bs-card-title-color: var(--bs-primary);
   --bs-card-border-radius: 42px;
   --bs-card-bg: #f9f6f3;

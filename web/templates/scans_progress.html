@@ -1,8 +1,6 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h1>Scan progress</h1>
-
   <nav aria-label="breadcrumb" class="mt-5">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
@@ -15,41 +13,72 @@
     </ol>
   </nav>
 
-  <div class="col-lg-8 px-0">
-    <p id="scan-state">{{ manager.state }}</p>
+  <div class="row mb-4">
+    <div class="col-lg-10 offset-lg-2">
+      Currently scanning
+      <h2>{{ manager.results_directory() }}</h2>
+    </div>
+  </div>
 
-    <div class="my-3">
-      <div
-        class="progress"
-        role="progressbar"
-        aria-valuenow="{{ manager.progress().percent }}"
-        aria-valuemin="0"
-        aria-valuemax="100"
-      >
-        <div
-          id="scan-progress"
-          class="progress-bar bg-{{ 'success' if manager.progress().percent == '100.0' else 'primary' }}"
-          style="width: {{ manager.progress().percent }}%"
-        ></div>
-      </div>
-      <div class="d-flex justify-content-between">
-        <span id="scan-progress-stat"
-          >p:{{ manager.progress().iteration }}/8</span
-        >
-        <span id="scan-progress-speed"
-          >v:{{ manager.progress().speed }}p/s</span
-        >
-        <span id="scan-progress-elapsed"
-          >t:{{ manager.progress().elapsed }}</span
-        >
-        <span id="scan-progress-remaining"
-          >t-:{{ manager.progress().remaining }}</span
-        >
+  <div class="row">
+    <div class="col-lg-2">
+      <div class="card rounded-5">
+        <div class="card-body">
+          <div>Selected configuration:</div>
+          <div>
+            <button
+              type="submit"
+              class="btn btn-sm btn-success rounded-pill disabled"
+            >
+              Scanning...
+            </button>
+            <a href="#" class="btn btn-sm btn-danger rounded-pill disabled"
+              >Stop</a
+            >
+          </div>
+        </div>
       </div>
     </div>
-    <div>
-      <label for="logs">{{ manager.log_file_path() }}</label>
-      <textarea class="form-control" rows="20" id="logs" readonly disabled>
+
+    <div class="col-lg-10">
+      <div class="mb-3">
+        <div
+          class="progress"
+          role="progressbar"
+          aria-valuenow="{{ manager.progress().percent }}"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <div
+            id="scan-progress"
+            class="progress-bar bg-{{ 'success' if manager.progress().percent == '100.0' else 'primary' }}"
+            style="width: {{ manager.progress().percent }}%"
+          ></div>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span id="scan-progress-stat"
+            >p:{{ manager.progress().iteration }}/8</span
+          >
+          <span id="scan-progress-speed"
+            >v:{{ manager.progress().speed }}p/s</span
+          >
+          <span id="scan-progress-elapsed"
+            >t:{{ manager.progress().elapsed }}</span
+          >
+          <span id="scan-progress-remaining"
+            >t-:{{ manager.progress().remaining }}</span
+          >
+        </div>
+      </div>
+
+      <textarea
+        class="form-control"
+        rows="20"
+        id="logs"
+        readonly
+        disabled
+        aria-label="{{ manager.log_file_path() }}"
+      >
 {{ logs }}</textarea
       >
     </div>
