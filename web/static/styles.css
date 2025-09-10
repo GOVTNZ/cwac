@@ -22,6 +22,10 @@
   --bs-breadcrumb-divider-color: #ced4da;
 }
 
+.breadcrumb a {
+  text-decoration: none;
+}
+
 .btn-primary {
   --bs-btn-bg: var(--cwac-primary-900);
   --bs-btn-border-color: var(--cwac-primary-950);
