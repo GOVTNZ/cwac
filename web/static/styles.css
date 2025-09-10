@@ -81,3 +81,10 @@ footer {
     0.2px 1.5px 1.6px -1px #00000017,
     0.1px 0.5px 0.5px 0px #0000001a;
 }
+
+.card-icon {
+  display: flex;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+}
