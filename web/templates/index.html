@@ -3,101 +3,89 @@
 {% set intro_title = 'Centralised Web Accessibility Checker' %}
 {% set intro_subtitle = 'The Centralised Web Accessibility Checker is an open source tool to detect and make recommendations for accessibility issues across websites.' %}
 
-{% block body %}
-  <div class="row">
-    <p class="mb-4">
-      <strong class="text-primary">Set up CWAC:</strong> Set up how the
-      Centralised Web Accessibility Checker will run on your machine.
-    </p>
-
-    <div class="col card me-4">
-      <div class="card-body">
-        <div class="card-icon my-2">
-          {% include 'svgs/_icon_settings.svg' %}
+{% macro card(icon, title, text, goto_url, goto_text) -%}
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="card-icon my-2">{% include icon %}</div>
+        <h3 class="card-title mb-4">{{ title }}</h3>
+        <p class="card-text mb-4 text-black flex-grow-1">{{ text }}</p>
+        <div>
+          <a
+            href="{{ goto_url }}"
+            class="btn btn-primary rounded-pill px-4 py-3"
+            >{{ goto_text }}</a
+          >
         </div>
-        <h3 class="card-title mb-4">Configure CWAC</h3>
-        <p class="card-text mb-4 text-black">
-          Set up different configurations for how CWAC runs on your machine.
-        </p>
-        <a
-          href="{{ url_for('view_configs') }}"
-          class="btn btn-primary rounded-pill px-4 py-3"
-          >Configure CWAC</a
-        >
       </div>
     </div>
+  </div>
+{%- endmacro %}
 
-    <div class="col card ms-4">
-      <div class="card-body">
-        <div class="card-icon my-2">{% include 'svgs/_icon_link.svg' %}</div>
-        <h3 class="card-title mb-4">Set URL endpoints</h3>
-        <p class="card-text mb-4 text-black">
-          Set up which endpoints CWAC will scan when it runs for different
-          configurations.
-        </p>
-        <a
-          href="{{ url_for('view_urls') }}"
-          class="btn btn-primary rounded-pill px-4 py-3"
-          >Set URL endpoints</a
-        >
-      </div>
-    </div>
+{% block body %}
+  <p class="mb-4">
+    <strong class="text-primary">Set up CWAC:</strong> Set up how the
+    Centralised Web Accessibility Checker will run on your machine.
+  </p>
+
+  <div class="row gap-5">
+    {{
+      card(
+        icon='svgs/_icon_settings.svg',
+        title='Configure CWAC',
+        text='Set up different configurations for how CWAC runs on your machine.',
+        goto_url=url_for('view_configs'),
+        goto_text='Configure CWAC'
+      )
+    }}
+
+    {{
+      card(
+        icon='svgs/_icon_link.svg',
+        title='Set URL endpoints',
+        text='Set up which endpoints CWAC will scan when it runs for different configurations.',
+        goto_url=url_for('view_urls'),
+        goto_text='Set URL endpoints'
+      )
+    }}
   </div>
 
   <hr class="my-5" />
 
-  <div class="row">
-    <p class="mb-4">
-      <strong class="text-primary">Scans and outcomes:</strong> Start a scan,
-      and see results and reports of completed scans.
-    </p>
+  <p class="mb-4">
+    <strong class="text-primary">Scans and outcomes:</strong> Start a scan, and
+    see results and reports of completed scans.
+  </p>
 
-    <div class="col card me-4">
-      <div class="card-body">
-        <div class="card-icon my-2">{% include 'svgs/_icon_inspect.svg' %}</div>
-        <h3 class="card-title mb-4">Start a scan</h3>
-        <p class="card-text mb-4 text-black">
-          Start a scan using specific configuration.
-        </p>
-        <a
-          href="{{ url_for('new_scan') }}"
-          class="btn btn-primary rounded-pill px-4 py-3"
-          >Start scanning</a
-        >
-      </div>
-    </div>
+  <div class="row gap-5">
+    {{
+      card(
+        icon='svgs/_icon_inspect.svg',
+        title='Scan a scan',
+        text='Start a scan using specific configuration.',
+        goto_url=url_for('new_scan'),
+        goto_text='Start scanning'
+      )
+    }}
 
-    <div class="col card mx-4">
-      <div class="card-body">
-        <div class="card-icon my-2">
-          {% include 'svgs/_icon_assignment.svg' %}
-        </div>
-        <h3 class="card-title mb-4">View raw results</h3>
-        <p class="card-text mb-4 text-black">
-          View and download the raw results of previous scans, and how they were
-          set up to run.
-        </p>
-        <a
-          href="{{ url_for('view_results') }}"
-          class="btn btn-primary rounded-pill px-4 py-3"
-          >View results</a
-        >
-      </div>
-    </div>
+    {{
+      card(
+        icon='svgs/_icon_assignment.svg',
+        title='View raw results',
+        text='View and download the raw results of previous scans, and how they were set up to run.',
+        goto_url=url_for('view_results'),
+        goto_text='View results'
+      )
+    }}
 
-    <div class="col card ms-4">
-      <div class="card-body">
-        <div class="card-icon my-2">{% include 'svgs/_icon_browse.svg' %}</div>
-        <h3 class="card-title mb-4">Download reports</h3>
-        <p class="card-text mb-4 text-black">
-          Download the reports of different audits for a previous scan.
-        </p>
-        <a
-          href="{{ url_for('view_reports') }}"
-          class="btn btn-primary rounded-pill px-4 py-3"
-          >Download reports</a
-        >
-      </div>
-    </div>
+    {{
+      card(
+        icon='svgs/_icon_browse.svg',
+        title='Download reports',
+        text='Download the reports of different audits for a previous scan.',
+        goto_url=url_for('view_reports'),
+        goto_text='Download reports'
+      )
+    }}
   </div>
 {% endblock %}
