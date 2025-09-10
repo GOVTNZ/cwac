@@ -35,12 +35,12 @@
       <div class="intro">
         <div class="container my-5">
           <h1>{{ intro_title }}</h1>
-          <p class="lead">{{ intro_subtitle }}</p>
+          <p class="lead mt-4">{{ intro_subtitle }}</p>
         </div>
       </div>
     {% endif %}
 
-    <main role="main" class="flex-grow-1">
+    <main role="main" class="flex-grow-1 my-5">
       <div class="container">
         {% for category, message in get_flashed_messages(with_categories=true) %}
           <div class="alert alert-{{ category }}">{{ message }}</div>
