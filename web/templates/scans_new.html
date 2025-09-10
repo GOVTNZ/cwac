@@ -11,24 +11,26 @@
     </ol>
   </nav>
 
-  <div class="col-lg-8 px-0">
-    <form action="{{ url_for('create_scan') }}" method="post">
-      <div class="form-control">
-        <label for="config">Config file</label>
-        <select
-          id="config"
-          name="config"
-          class="form-select"
-          required
-          {% if configs|length == 0 %}disabled{% endif %}
-        >
-          {% for config in configs %}
-            <option>{{ config }}</option>
-          {% else %}
-            <option value="" selected>No config files found</option>
-          {% endfor %}
-        </select>
-      </div>
+  <form
+    class="card rounded-5"
+    action="{{ url_for('create_scan') }}"
+    method="post"
+  >
+    <div class="card-body">
+      <label for="config">Select configuration</label>
+      <select
+        id="config"
+        name="config"
+        class="form-select"
+        required
+        {% if configs|length == 0 %}disabled{% endif %}
+      >
+        {% for config in configs %}
+          <option>{{ config }}</option>
+        {% else %}
+          <option value="" selected>No config files found</option>
+        {% endfor %}
+      </select>
 
       <button
         class="btn btn-primary"
@@ -37,6 +39,6 @@
       >
         Start
       </button>
-    </form>
-  </div>
+    </div>
+  </form>
 {% endblock %}

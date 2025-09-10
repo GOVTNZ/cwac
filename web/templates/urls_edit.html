@@ -1,8 +1,6 @@
 ﻿{% extends 'layout.html' %}
 
 {% block body %}
-  <h1>URLs</h1>
-
   <nav aria-label="breadcrumb" class="mt-5">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
@@ -15,22 +13,46 @@
     </ol>
   </nav>
 
-  <p>Editing {{ filepath }}</p>
-  <div class="col-lg-8 px-0">
-    <form
-      action="{{ url_for('update_urls', filename=filename) }}"
-      method="post"
-    >
-      <label for="contents">Contents</label>
-      <textarea class="form-control" rows="20" id="contents" name="contents">
+  <div class="row mb-3">
+    <div class="col-lg-10 offset-lg-2">
+      Currently editing
+      <h2>{{ filepath }}</h2>
+    </div>
+  </div>
+
+  <form
+    class="row"
+    action="{{ url_for('update_urls', filename=filename) }}"
+    method="post"
+  >
+    <div class="col-lg-2">
+      <div class="card rounded-5">
+        <div class="card-body">
+          <div>
+            <button type="submit" class="btn btn-sm btn-primary rounded-pill">
+              Save
+            </button>
+            <a href="#" class="btn btn-sm btn-danger rounded-pill disabled"
+              >Delete</a
+            >
+          </div>
+
+          These are the URL endpoints that will be scanned by any configurations
+          that reference them.
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-10">
+      <textarea
+        class="form-control"
+        rows="20"
+        id="contents"
+        name="contents"
+        aria-label="Contents"
+      >
 {{ contents }}</textarea
       >
-      <div class="my-2">
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a href="{{ url_for('view_urls') }}" class="btn btn-secondary"
-          >Cancel</a
-        >
-      </div>
-    </form>
-  </div>
+    </div>
+  </form>
 {% endblock %}
