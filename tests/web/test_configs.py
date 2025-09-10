@@ -138,7 +138,7 @@ class TestEditConfig:
 
     assert response.status_code == 200
 
-    assert b'Editing ./config/config_default.json' in response.data
+    assert b'<h2>./config/config_default.json</h2>' in response.data
 
     with open('config/config_default.json', encoding='utf-8') as f:
       assert f'{escape(f.read())}</textarea\n'.encode() in response.data
@@ -155,7 +155,7 @@ class TestEditConfig:
 
     assert response.status_code == 200
 
-    assert b'Editing ./config/config_linux.json' in response.data
+    assert b'<h2>./config/config_linux.json</h2>' in response.data
 
     with open('config/config_linux.json', encoding='utf-8') as f:
       assert f'{escape(f.read())}</textarea\n'.encode() in response.data
@@ -173,7 +173,7 @@ class TestEditConfig:
 
     assert response.status_code == 200
 
-    assert b'Editing ./config/config macos.json' in response.data
+    assert b'<h2>./config/config macos.json</h2>' in response.data
 
     with open('config/config macos.json', encoding='utf-8') as f:
       assert f'{escape(f.read())}</textarea\n'.encode() in response.data
@@ -182,7 +182,7 @@ class TestEditConfig:
 
     assert response.status_code == 200
 
-    assert b'Editing ./config/config: linux.file.json' in response.data
+    assert b'<h2>./config/config: linux.file.json</h2>' in response.data
 
     with open('config/config: linux.file.json', encoding='utf-8') as f:
       assert f'{escape(f.read())}</textarea\n'.encode() in response.data

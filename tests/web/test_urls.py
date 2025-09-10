@@ -294,7 +294,7 @@ class TestEditUrls:
 
     assert response.status_code == 200
 
-    assert b'Editing ./base_urls/visit/urls.csv' in response.data
+    assert b'<h2>./base_urls/visit/urls.csv</h2>' in response.data
 
     with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
       assert f'{escape(f.read())}</textarea\n'.encode() in response.data
@@ -311,7 +311,7 @@ class TestEditUrls:
 
     assert response.status_code == 200
 
-    assert b'Editing ./base_urls/visit/urls.csv' in response.data
+    assert b'<h2>./base_urls/visit/urls.csv</h2>' in response.data
 
     with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
       assert f'{escape(f.read())}</textarea\n'.encode() in response.data
@@ -347,7 +347,7 @@ class TestEditUrls:
 
     assert response.status_code == 200
 
-    assert b'Editing ./base_urls/visit/my urls.csv' in response.data
+    assert b'<h2>./base_urls/visit/my urls.csv</h2>' in response.data
 
     with open('base_urls/visit/my urls.csv', encoding='utf-8-sig') as f:
       assert f'{escape(f.read())}</textarea\n'.encode() in response.data
@@ -356,7 +356,7 @@ class TestEditUrls:
 
     assert response.status_code == 200
 
-    assert b'Editing ./base_urls/visit/theirs: urls.file.csv' in response.data
+    assert b'<h2>./base_urls/visit/theirs: urls.file.csv</h2>' in response.data
 
     with open('base_urls/visit/theirs: urls.file.csv', encoding='utf-8-sig') as f:
       assert f'{escape(f.read())}</textarea\n'.encode() in response.data
