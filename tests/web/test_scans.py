@@ -241,4 +241,5 @@ class TestScanProgressUpdate:
       'speed': '0.14',
       'time': 1757294135.263283,
       'total': 8,
+      'state': 'running',
     }
