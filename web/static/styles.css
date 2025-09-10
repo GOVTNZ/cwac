@@ -15,6 +15,21 @@
   --bs-link-hover-color: var(--cwac-primary-950);
   --bs-link-hover-color-rgb: var(--cwac-primary-950-rgb);
   --bs-heading-color: var(--bs-primary);
+  --bs-body-font-family: 'Inter', sans-serif;
+}
+
+.lead {
+  font-weight: 400;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-weight: 700;
 }
 
 * {
