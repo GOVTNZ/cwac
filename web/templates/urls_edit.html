@@ -14,7 +14,7 @@
   </nav>
 
   <div class="row mb-3">
-    <div class="col-lg-10 offset-lg-2 text-primary">
+    <div class="col-lg-9 offset-lg-3 text-primary">
       Currently editing
       <h2>{{ filepath }}</h2>
     </div>
@@ -25,25 +25,30 @@
     action="{{ url_for('update_urls', filename=filename) }}"
     method="post"
   >
-    <div class="col-lg-2">
+    <div class="col-lg-3">
       <div class="card rounded-5">
         <div class="card-body">
-          <div>
+          These are the URL endpoints that will be scanned by any configurations
+          that reference them.
+
+          <div class="d-flex justify-content-between my-3">
+            <a
+              href="{{ url_for('view_urls') }}"
+              class="btn btn-sm btn-outline-secondary rounded-pill"
+              >Discard edits</a
+            >
             <button type="submit" class="btn btn-sm btn-primary rounded-pill">
               Save
             </button>
-            <a href="#" class="btn btn-sm btn-danger rounded-pill disabled"
-              >Delete</a
-            >
           </div>
-
-          These are the URL endpoints that will be scanned by any configurations
-          that reference them.
+          <a href="#" class="btn btn-sm btn-danger rounded-pill disabled w-100"
+            >Delete this configuration</a
+          >
         </div>
       </div>
     </div>
 
-    <div class="col-lg-10">
+    <div class="col-lg-9">
       <textarea
         class="form-control"
         rows="20"
