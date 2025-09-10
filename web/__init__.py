@@ -496,4 +496,4 @@ def get_scan_progress() -> ResponseReturnValue:
   with open(cwac_manager.log_file_path(), encoding='utf-8') as f:
     logs = f.read()
 
-  return flask.jsonify({'logs': logs, **cwac_manager.progress()})
+  return flask.jsonify({'logs': logs, 'state': cwac_manager.state, **cwac_manager.progress()})

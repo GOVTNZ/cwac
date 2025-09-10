@@ -8,6 +8,7 @@
  * @property {string} percent
  * @property {string} elapsed
  * @property {string} remaining
+ * @property {string} state
  */
 
 /**
@@ -47,7 +48,7 @@ async function updateProgress() {
   document.getElementById('scan-progress-remaining').innerText =
     `t-:${data.remaining}`;
 
-  if (data.percent === '100.0') {
+  if (data.state !== 'running') {
     clearInterval(updateProgressInterval);
     progressBar.classList.remove('bg-primary');
     progressBar.classList.add('bg-success');
