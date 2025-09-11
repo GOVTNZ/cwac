@@ -11,7 +11,9 @@
     </ol>
   </nav>
 
-  <a class="btn btn-primary btn-sm" href="{{ url_for('new_config') }}"
+  <a
+    class="btn btn-primary btn-sm rounded-pill"
+    href="{{ url_for('new_config') }}"
     >New config</a
   >
 
@@ -27,11 +29,11 @@
               {% set filename = file.removesuffix('.json') %}
               <a
                 href="{{ url_for('edit_config', filename=filename) }}"
-                class="btn btn-primary"
+                class="btn btn-primary rounded-pill"
                 >Edit</a
               >
               <button
-                class="btn btn-danger config-delete"
+                class="btn btn-danger rounded-pill config-delete"
                 data-filename="{{ filename }}"
               >
                 Delete
