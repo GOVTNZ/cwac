@@ -4,18 +4,23 @@
 {% set intro_subtitle = 'Set up different configurations for how CWAC runs on your machine.' %}
 
 {% block body %}
-  <nav aria-label="breadcrumb" class="mb-5">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Configure CWAC</li>
-    </ol>
-  </nav>
-
-  <a
-    class="btn btn-primary btn-sm rounded-pill"
-    href="{{ url_for('new_config') }}"
-    >New config</a
-  >
+  <div class="d-flex justify-content-between mb-5">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="{{ url_for('root') }}">Home</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+          Configure CWAC
+        </li>
+      </ol>
+    </nav>
+    <a
+      class="btn btn-outline-primary btn-sm rounded-pill align-self-start"
+      href="{{ url_for('new_config') }}"
+      >Add new configuration</a
+    >
+  </div>
 
   <div>
     {% if files|length != 0 %}
