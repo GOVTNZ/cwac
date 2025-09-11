@@ -41,7 +41,8 @@ h6 {
   text-decoration: none;
 }
 
-.btn-primary {
+.btn-primary,
+.btn-outline-primary {
   --bs-btn-bg: var(--cwac-primary-900);
   --bs-btn-border-color: var(--cwac-primary-950);
   --bs-btn-hover-bg: var(--cwac-primary-950);
@@ -51,6 +52,11 @@ h6 {
   --bs-btn-active-border-color: var(--cwac-primary-950);
   --bs-btn-disabled-bg: var(--cwac-primary-900-50p);
   --bs-btn-disabled-border-color: var(--cwac-primary-900-50p);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--cwac-primary-900);
+  --bs-btn-bg: white;
 }
 
 .navbar {
