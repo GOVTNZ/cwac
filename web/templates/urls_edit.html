@@ -50,7 +50,7 @@
 
     <div class="col-lg-9">
       <textarea
-        class="form-control"
+        class="form-control {% if 'contents' in validation_errors %}is-invalid{% endif %}"
         rows="20"
         id="contents"
         name="contents"
@@ -58,6 +58,12 @@
       >
 {{ contents }}</textarea
       >
+
+      {% if 'contents' in validation_errors %}
+        <div class="invalid-feedback">
+          {{ validation_errors['contents'][0] }}
+        </div>
+      {% endif %}
     </div>
   </form>
 {% endblock %}
