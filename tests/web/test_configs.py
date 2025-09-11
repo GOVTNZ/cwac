@@ -98,7 +98,7 @@ class TestNewConfig:
     response = client.get('/configs/new')
 
     assert response.status_code == 200
-    assert b'<p>New config</p>' in response.data
+    assert b'Currently creating' in response.data
 
     assert b'<form' in response.data
 
