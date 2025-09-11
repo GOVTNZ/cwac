@@ -19,19 +19,37 @@
       <label class="form-label" for="filename">Filename</label>
       <div class="input-group">
         <input
-          class="form-control"
+          class="form-control {% if 'filename' in validation_errors %}is-invalid{% endif %}"
           id="filename"
           name="filename"
           type="text"
           value="{{ filename }}"
         />
         <span class="input-group-text">.json</span>
+
+        {% if 'filename' in validation_errors %}
+          <div class="invalid-feedback">
+            {{ validation_errors['filename'][0] }}
+          </div>
+        {% endif %}
       </div>
 
       <label class="form-label" for="contents">Contents</label>
-      <textarea class="form-control" rows="20" id="contents" name="contents">
+      <textarea
+        class="form-control {% if 'contents' in validation_errors %}is-invalid{% endif %}"
+        rows="20"
+        id="contents"
+        name="contents"
+      >
 {{ contents }}</textarea
       >
+
+      {% if 'contents' in validation_errors %}
+        <div class="invalid-feedback">
+          {{ validation_errors['contents'][0] }}
+        </div>
+      {% endif %}
+
       <div class="my-2">
         <button type="submit" class="btn btn-primary">Create</button>
         <a href="{{ url_for('view_configs') }}" class="btn btn-secondary"
