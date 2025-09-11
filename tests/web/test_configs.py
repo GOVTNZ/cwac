@@ -11,6 +11,8 @@ from flask.testing import FlaskClient
 from markupsafe import escape
 from pyfakefs.fake_filesystem import FakeFilesystem
 
+from tests.web.test_helpers import assert_has_invalid_field, assert_has_valid_field
+
 
 def has_flash(client: FlaskClient, message: str, typ: str) -> bool:
   """Check that a flash message of the given type exists in the session."""
@@ -282,14 +284,18 @@ class TestCreateConfig:
     response = client.post('/configs', data={'filename': '', 'contents': '{"hello": "world"}'})
 
     assert response.status_code == 422
-    assert b'filename is required' in response.data
+
+    assert_has_invalid_field(response.data, 'filename', 'cannot be blank')
+    assert_has_valid_field(response.data, 'contents')
 
     assert os.path.exists('config/.json') is False
 
     response = client.post('/configs', data={'contents': '{"hello": "world"}'})
 
     assert response.status_code == 422
-    assert b'filename is required' in response.data
+
+    assert_has_invalid_field(response.data, 'filename', 'cannot be blank')
+    assert_has_valid_field(response.data, 'contents')
 
     assert os.path.exists('config/.json') is False
 
@@ -303,7 +309,9 @@ class TestCreateConfig:
     response = client.post('/configs', data={'filename': 'config_linux', 'contents': ''})
 
     assert response.status_code == 422
-    assert b'contents is required' in response.data
+
+    assert_has_valid_field(response.data, 'filename')
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
 
     assert os.path.exists('config/config_linux.json') is False
     assert os.path.exists('config/config_linux') is False
@@ -311,7 +319,36 @@ class TestCreateConfig:
     response = client.post('/configs', data={'filename': 'config_linux'})
 
     assert response.status_code == 422
-    assert b'contents is required' in response.data
+
+    assert_has_valid_field(response.data, 'filename')
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
+
+    assert os.path.exists('config/config_linux.json') is False
+    assert os.path.exists('config/config_linux') is False
+
+  def test_all_fields_are_validated_together(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when all fields are invalid.
+
+    An error should be returned, without the file being created.
+    """
+    fs.makedir('configs')
+
+    response = client.post('/configs', data={'filename': 'config_linux.json', 'contents': ''})
+
+    assert response.status_code == 422
+
+    assert_has_invalid_field(response.data, 'filename', 'cannot include an extension')
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
+
+    assert os.path.exists('config/config_linux.json') is False
+    assert os.path.exists('config/config_linux') is False
+
+    response = client.post('/configs', data={'filename': 'config_linux.json'})
+
+    assert response.status_code == 422
+
+    assert_has_invalid_field(response.data, 'filename', 'cannot include an extension')
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
 
     assert os.path.exists('config/config_linux.json') is False
     assert os.path.exists('config/config_linux') is False
@@ -327,7 +364,9 @@ class TestCreateConfig:
       response = client.post('/configs', data={'filename': filename, 'contents': '{}'})
 
       assert response.status_code == 422
-      assert b'filename should not include an extension' in response.data
+
+      assert_has_invalid_field(response.data, 'filename', 'cannot include an extension')
+      assert_has_valid_field(response.data, 'contents')
 
       assert os.path.exists(f'config/{filename}.json') is False
       assert os.path.exists(f'config/{filename}') is False
@@ -362,7 +401,9 @@ class TestCreateConfig:
       response = client.post('/configs', data={'filename': filename, 'contents': '{}'})
 
       assert response.status_code == 422
-      assert b'filename should only use letters, numbers, underscores, and dashes' in response.data
+
+      assert_has_invalid_field(response.data, 'filename', 'can only contain letters, numbers, dashes, and underscores')
+      assert_has_valid_field(response.data, 'contents')
 
       assert os.path.exists(f'config/{filename}.json') is False
       assert os.path.exists(f'config/{filename}') is False
@@ -409,7 +450,8 @@ class TestCreateConfig:
       response = client.post('/configs', data={'filename': filename, 'contents': '{}'})
 
       assert response.status_code == 422
-      assert b'filename should only use letters, numbers, underscores, and dashes' in response.data
+      assert_has_invalid_field(response.data, 'filename', 'can only contain letters, numbers, dashes, and underscores')
+      assert_has_valid_field(response.data, 'contents')
 
       assert os.path.exists(f'config/{filename}.json') is False
       assert os.path.exists(f'config/{filename}') is False
@@ -429,7 +471,8 @@ class TestCreateConfig:
       response = client.post('/configs', data={'filename': filename, 'contents': '{}'})
 
       assert response.status_code == 422
-      assert b'filename should only use letters, numbers, underscores, and dashes' in response.data
+      assert_has_invalid_field(response.data, 'filename', 'can only contain letters, numbers, dashes, and underscores')
+      assert_has_valid_field(response.data, 'contents')
 
       assert os.path.exists(f'config/{filename}.json') is False
       assert os.path.exists(f'config/{filename}') is False
@@ -482,21 +525,21 @@ class TestUpdateConfig:
     response = client.post('/configs/config_default')
 
     assert response.status_code == 422
-    assert b'contents is required' in response.data
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
     with open('config/config_default.json', encoding='utf-8') as f:
       assert contents_old == f.read()
 
     response = client.post('/configs/config_default', data={})
 
     assert response.status_code == 422
-    assert b'contents is required' in response.data
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
     with open('config/config_default.json', encoding='utf-8') as f:
       assert contents_old == f.read()
 
     response = client.post('/configs/config_default', data={'contents': ''})
 
     assert response.status_code == 422
-    assert b'contents is required' in response.data
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
     with open('config/config_default.json', encoding='utf-8') as f:
       assert contents_old == f.read()
 

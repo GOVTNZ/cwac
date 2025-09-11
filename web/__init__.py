@@ -184,44 +184,25 @@ def create_config() -> ResponseReturnValue:
   """Create a new config file."""
   filename = request.form.get('filename', '')
   contents = request.form.get('contents', '')
-  if not isinstance(filename, str) or filename == '':
-    flash('filename is required', 'danger')
-    return (
-      render_template(
-        'configs_new.html',
-        filename=filename,
-        contents=contents,
-      ),
-      422,
-    )
+
+  validation_errors: dict[str, list[str]] = {}
 
   if not isinstance(contents, str) or contents == '':
-    flash('contents is required', 'danger')
-    return (
-      render_template(
-        'configs_new.html',
-        filename=filename,
-        contents=contents,
-      ),
-      422,
-    )
+    validation_errors.setdefault('contents', []).append('cannot be blank')
 
-  if os.path.splitext(filename)[1] != '':
-    flash('filename should not include an extension', 'danger')
-    return (
-      render_template(
-        'configs_new.html',
-        filename=filename,
-        contents=contents,
-      ),
-      422,
-    )
+  if not isinstance(filename, str) or filename == '':
+    validation_errors.setdefault('filename', []).append('cannot be blank')
+  else:
+    if os.path.splitext(filename)[1] != '':
+      validation_errors.setdefault('filename', []).append('cannot include an extension')
+    if re.search(r'[^a-zA-Z\d_-]', filename) is not None:
+      validation_errors.setdefault('filename', []).append('can only contain letters, numbers, dashes, and underscores')
 
-  if re.search(r'[^a-zA-Z\d_-]', filename) is not None:
-    flash('filename should only use letters, numbers, underscores, and dashes', 'danger')
+  if len(validation_errors) > 0:
     return (
       render_template(
         'configs_new.html',
+        validation_errors=validation_errors,
         filename=filename,
         contents=contents,
       ),
@@ -259,10 +240,10 @@ def update_config(filename: str) -> ResponseReturnValue:
     with open(filepath, 'r+', encoding='utf-8') as f:
       contents = request.form.get('contents', '')
       if not isinstance(contents, str) or contents == '':
-        flash('contents is required', 'danger')
         return (
           render_template(
             'configs_edit.html',
+            validation_errors={'contents': ['cannot be blank']},
             filepath=filepath,
             filename=filename,
             contents=f.read(),
@@ -413,10 +394,10 @@ def update_urls(filename: str) -> ResponseReturnValue:
     with open(filepath, 'r+', encoding='utf-8-sig') as f:
       contents = request.form.get('contents', '')
       if not isinstance(contents, str) or contents == '':
-        flash('contents is required', 'danger')
         return (
           render_template(
             'urls_edit.html',
+            validation_errors={'contents': ['cannot be blank']},
             filepath=filepath,
             filename=filename,
             contents=f.read(),

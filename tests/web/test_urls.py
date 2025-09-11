@@ -11,6 +11,8 @@ from flask.testing import FlaskClient
 from markupsafe import escape
 from pyfakefs.fake_filesystem import FakeFilesystem
 
+from tests.web.test_helpers import assert_has_invalid_field
+
 
 class TestViewUrls:
   """Tests for the GET /urls endpoint."""
@@ -498,21 +500,21 @@ class TestUpdateUrls:
     response = client.post('/urls/urls')
 
     assert response.status_code == 422
-    assert b'contents is required' in response.data
+    assert b'cannot be blank' in response.data
     with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
       assert contents_old == f.read()
 
     response = client.post('/urls/urls', data={})
 
     assert response.status_code == 422
-    assert b'contents is required' in response.data
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
     with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
       assert contents_old == f.read()
 
     response = client.post('/urls/urls', data={'contents': ''})
 
     assert response.status_code == 422
-    assert b'contents is required' in response.data
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
     with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
       assert contents_old == f.read()
 
