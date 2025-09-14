@@ -77,25 +77,8 @@ class TestViewUrls:
 
     assert b'No url files found' not in response.data
 
-    assert b'./base_urls/visit/one.csv' in response.data
-
-    assert b'<td>ACME</td>' in response.data
-    assert b'<td>https://acme.com/finance</td>' in response.data
-    assert b'<td>Finance</td>' in response.data
-
-    assert b'<td>ACME</td>' in response.data
-    assert b'<td>https://acme.com/hr</td>' in response.data
-    assert b'<td>Human Resources</td>' in response.data
-
-    assert b'./base_urls/visit/two.csv' in response.data
-
-    assert b'<td>Umbrella Corp</td>' in response.data
-    assert b'<td>https://umbrella.com</td>' in response.data
-    assert b'<td>R&amp;D</td>' in response.data
-
-    assert b'<td>Buy &#39;n&#39; Large</td>' in response.data
-    assert b'<td>https://bnl.com/</td>' in response.data
-    assert b'<td>Sales</td>' in response.data
+    assert b'<pre class="m-0 ms-2">one.csv</pre>' in response.data
+    assert b'<pre class="m-0 ms-2">two.csv</pre>' in response.data
 
   def test_only_csv_files_are_listed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
     """Test handling when the base_urls/visit directory has other files.
@@ -120,50 +103,32 @@ class TestViewUrls:
     assert response.status_code == 200
 
     assert b'No url files found' not in response.data
+
+    assert b'<pre class="m-0 ms-2">urls.csv</pre>' in response.data
     assert b'example.txt' not in response.data
 
-    assert b'./base_urls/visit/urls.csv' in response.data
 
-    assert b'<td>ACME</td>' in response.data
-    assert b'<td>https://acme.com/finance</td>' in response.data
-    assert b'<td>Finance</td>' in response.data
+class TestShowUrls:
+  """Tests for the GET /urls/<filename> endpoint."""
 
-    assert b'<td>ACME</td>' in response.data
-    assert b'<td>https://acme.com/hr</td>' in response.data
-    assert b'<td>Human Resources</td>' in response.data
+  def test_missing_directory_is_handled(self, client: FlaskClient) -> None:
+    """Test handling when the base_urls/visit/ directory is missing.
 
-  def test_invalid_csv_files_are_fine(self, client: FlaskClient, fs: FakeFilesystem) -> None:
-    """Test handling when the base_urls/visit directory has an invalid CSV file.
+    The page should return a 404
+    """
 
-    All CSV files should be processed and shown, with the invalid ones having
-    an error message in their table.
+    response = client.get('/urls/urls')
+
+    assert response.status_code == 404
+
+  def test_file_does_not_exist(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the file does not exist.
+
+    The page should return a 404
     """
 
     fs.create_file(
-      'base_urls/visit/one.csv',
-      contents='\n'.join(
-        [
-          'organisation,url,sector',
-          'ACME,https://acme.com/finance,Finance',
-          'ACME,https://acme.com/hr,Human Resources',
-        ]
-      ),
-    )
-
-    # currently we require CSVs to have at least three columns
-    fs.create_file(
-      'base_urls/visit/two.csv',
-      contents='\n'.join(
-        [
-          'organisation,url',
-          'Umbrella Corp,https://umbrella.com',
-          "Buy 'n' Large,https://bnl.com/",
-        ]
-      ),
-    )
-
-    fs.create_file(
-      'base_urls/visit/three.csv',
+      'base_urls/visit/urls.csv',
       contents='\n'.join(
         [
           'organisation,url,sector',
@@ -173,43 +138,97 @@ class TestViewUrls:
       ),
     )
 
-    # this is actually a JSON file
-    fs.add_real_file('config/config_default.json', target_path='base_urls/visit/silly.csv')
+    response = client.get('/urls/does_not_exist')
 
-    response = client.get('/urls')
+    assert response.status_code == 404
+
+  def test_file_contents_are_shown(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when given the name of a csv file that exists.
+
+    The contents of the file should be read and rendered in a text area.
+    """
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
+
+    response = client.get('/urls/urls')
 
     assert response.status_code == 200
 
-    assert b'No url files found' not in response.data
+    assert b'<h2>./base_urls/visit/urls.csv</h2>' in response.data
 
-    assert b'<td>ACME</td>' in response.data
-    assert b'<td>https://acme.com/finance</td>' in response.data
-    assert b'<td>Finance</td>' in response.data
-
-    assert b'./base_urls/visit/one.csv' in response.data
-
-    assert b'./base_urls/visit/two.csv' in response.data
-    assert b'Invalid CSV: must have 3 columns' in response.data
-
-    assert b'./base_urls/visit/three.csv' in response.data
+    # the header row should not be included with the others
+    assert b'<td>organisation</td>' not in response.data
+    assert b'<td>url</td>' not in response.data
+    assert b'<td>sector</td>' not in response.data
 
     assert b'<td>Umbrella Corp</td>' in response.data
     assert b'<td>https://umbrella.com</td>' in response.data
     assert b'<td>R&amp;D</td>' in response.data
 
-    assert b'./base_urls/visit/silly.csv' in response.data
+    assert b'<td>Buy &#39;n&#39; Large</td>' in response.data
+    assert b'<td>https://bnl.com/</td>' in response.data
+    assert b'<td>Sales</td>' in response.data
+
+  def test_invalid_csvs_are_ok(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when given the name of a csv file whose contents are invalid.
+
+    The page should render with a column saying the CSV is invalid and why.
+    """
+    # currently we require CSVs to have at least three columns
+    fs.create_file(
+      'base_urls/visit/invalid-missing-column.csv',
+      contents='\n'.join(
+        [
+          'organisation,url',
+          'Umbrella Corp,https://umbrella.com',
+          "Buy 'n' Large,https://bnl.com/",
+        ]
+      ),
+    )
+
+    response = client.get('/urls/invalid-missing-column')
+
+    assert response.status_code == 200
+
+    assert b'<h2>./base_urls/visit/invalid-missing-column.csv</h2>' in response.data
 
     assert b'Invalid CSV: must have 3 columns' in response.data
 
-  def test_empty_csv_files_are_fine(self, client: FlaskClient, fs: FakeFilesystem) -> None:
-    """Test handling when the base_urls/visit directory has an empty CSV file.
+    assert b'Umbrella Corp' not in response.data
+    assert b'https://umbrella.com' not in response.data
 
-    All CSV files should be processed and shown, with the empty ones having
-    a message in their table.
+    assert b"Buy 'n' Large" not in response.data
+    assert b'Buy &#39;n&#39; Large' not in response.data
+    assert b'https://bnl.com/' not in response.data
+
+    # this is actually a JSON file
+    fs.add_real_file('config/config_default.json', target_path='base_urls/visit/invalid-is-json.csv')
+
+    response = client.get('/urls/invalid-is-json')
+
+    assert response.status_code == 200
+
+    assert b'<h2>./base_urls/visit/invalid-is-json.csv</h2>' in response.data
+
+    assert b'Invalid CSV: must have 3 columns' in response.data
+
+  def test_weird_characters_work_fine(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename has interesting characters.
+
+    The file should be resolved without issue.
     """
 
     fs.create_file(
-      'base_urls/visit/one.csv',
+      'base_urls/visit/my urls.csv',
       contents='\n'.join(
         [
           'organisation,url,sector',
@@ -218,27 +237,114 @@ class TestViewUrls:
         ]
       ),
     )
+    fs.create_file(
+      'base_urls/visit/theirs: urls.file.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
 
-    fs.create_file('base_urls/visit/two.csv', contents='organisation,url,sector')
-    fs.create_file('base_urls/visit/three.csv', contents='\n')
-
-    response = client.get('/urls')
+    response = client.get('/urls/my%20urls')
 
     assert response.status_code == 200
 
-    assert b'No url files found' not in response.data
-
-    assert b'./base_urls/visit/one.csv' in response.data
+    assert b'<h2>./base_urls/visit/my urls.csv</h2>' in response.data
 
     assert b'<td>ACME</td>' in response.data
     assert b'<td>https://acme.com/finance</td>' in response.data
     assert b'<td>Finance</td>' in response.data
 
-    assert b'./base_urls/visit/two.csv' in response.data
-    assert b'File is empty' in response.data
+    assert b'<td>ACME</td>' in response.data
+    assert b'<td>https://acme.com/hr</td>' in response.data
+    assert b'<td>Human Resources</td>' in response.data
 
-    assert b'./base_urls/visit/three.csv' in response.data
-    assert b'File is empty' in response.data
+    response = client.get('/urls/theirs:%20urls.file')
+
+    assert response.status_code == 200
+
+    assert b'<h2>./base_urls/visit/theirs: urls.file.csv</h2>' in response.data
+
+    assert b'<td>Umbrella Corp</td>' in response.data
+    assert b'<td>https://umbrella.com</td>' in response.data
+    assert b'<td>R&amp;D</td>' in response.data
+
+    assert b'<td>Buy &#39;n&#39; Large</td>' in response.data
+    assert b'<td>https://bnl.com/</td>' in response.data
+    assert b'<td>Sales</td>' in response.data
+
+  def test_parent_files_cannot_be_accessed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename includes a path attempting to traverse upwards.
+
+    The file should not be resolved.
+    """
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
+
+    fs.create_file('root_file.json', contents='{"hello": "world"}')
+
+    response = client.get('/urls/../root_file')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/..%2Froot_file')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/..\\root_file')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/..%5Croot_file')
+
+    assert response.status_code == 404
+
+  def test_child_files_cannot_be_accessed(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename includes a path attempting to traverse downwards.
+
+    The file should not be resolved.
+    """
+
+    fs.create_file(
+      'base_urls/visit/urls.csv',
+      contents='\n'.join(
+        [
+          'organisation,url,sector',
+          'Umbrella Corp,https://umbrella.com,R&D',
+          "Buy 'n' Large,https://bnl.com/,Sales",
+        ]
+      ),
+    )
+
+    fs.create_file('base_urls/visit/inner/file.csv', contents='{"hello": "world"}')
+
+    response = client.get('/urls/inner/file')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/inner%2Ffile')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/inner\\file')
+
+    assert response.status_code == 404
+
+    response = client.get('/urls/inner/%5Cfile')
+
+    assert response.status_code == 404
 
 
 class TestEditUrls:
@@ -550,6 +656,7 @@ class TestUpdateUrls:
     )
 
     assert response.status_code == 302
+    assert response.location == '/urls/urls'
 
     with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
       assert f.read() == '\n'.join(
@@ -563,6 +670,7 @@ class TestUpdateUrls:
     response = client.post('/urls/urls', data={'contents': 'this is not a valid csv'})
 
     assert response.status_code == 302
+    assert response.location == '/urls/urls'
 
     with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
       assert f.read() == 'this is not a valid csv'
@@ -590,6 +698,7 @@ class TestUpdateUrls:
     )
 
     assert response.status_code == 302
+    assert response.location == '/urls/my%20urls'
 
     with open('base_urls/visit/my urls.csv', encoding='utf-8-sig') as f:
       assert f.read() == '\n'.join(
@@ -614,6 +723,7 @@ class TestUpdateUrls:
     )
 
     assert response.status_code == 302
+    assert response.location == '/urls/theirs:%20urls.file'
 
     with open('base_urls/visit/theirs: urls.file.csv', encoding='utf-8-sig') as f:
       assert f.read() == '\n'.join(
@@ -639,6 +749,7 @@ class TestUpdateUrls:
     response = client.post('/urls/urls', data={'contents': contents.replace('\n', '\r\n')})
 
     assert response.status_code == 302
+    assert response.location == '/urls/urls'
 
     with open('base_urls/visit/urls.csv', encoding='utf-8-sig') as f:
       contents_now = f.read()

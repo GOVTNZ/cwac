@@ -1,0 +1,77 @@
+﻿{% extends 'layout.html' %}
+
+{% block body %}
+  <nav aria-label="breadcrumb" class="mb-5">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('view_urls') }}">Set URL endpoints</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">
+        visit/{{ filename }}.csv
+      </li>
+    </ol>
+  </nav>
+
+  <div class="row mb-3">
+    <div class="col-lg-9 offset-lg-3 text-primary">
+      Currently viewing
+      <h2>{{ filepath }}</h2>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-3">
+      <div class="card rounded-5">
+        <div class="card-body">
+          These are the URL endpoints that will be scanned by any configurations
+          that reference them.
+
+          <div class="d-flex justify-content-end my-3">
+            <a
+              href="{{ url_for('edit_urls', filename=filename) }}"
+              class="btn btn-sm btn-primary rounded-pill"
+            >
+              Edit
+            </a>
+          </div>
+          <a href="#" class="btn btn-sm btn-danger rounded-pill disabled w-100"
+            >Delete this endpoints file</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-9">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Organisation</th>
+            <th>URL</th>
+            <th>Sector</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for endpoint in file.endpoints %}
+            <tr>
+              <td>{{ endpoint['organisation'] }}</td>
+              <td>{{ endpoint['url'] }}</td>
+              <td>{{ endpoint['sector'] }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td class="text-center" colspan="3">
+                {% if file['invalid_reason'] %}
+                  Invalid CSV: {{ file['invalid_reason'] }}
+                {% else %}
+                  File is empty
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
