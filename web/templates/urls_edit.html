@@ -33,7 +33,7 @@
 
           <div class="d-flex justify-content-between my-3">
             <a
-              href="{{ url_for('view_urls') }}"
+              href="{{ url_for('show_urls', filename=filename) }}"
               class="btn btn-sm btn-outline-secondary rounded-pill"
               >Discard edits</a
             >
@@ -42,7 +42,7 @@
             </button>
           </div>
           <a href="#" class="btn btn-sm btn-danger rounded-pill disabled w-100"
-            >Delete this configuration</a
+            >Delete this endpoints file</a
           >
         </div>
       </div>
