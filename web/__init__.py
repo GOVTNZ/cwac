@@ -332,36 +332,51 @@ def download_report_file(name: str, file: str) -> ResponseReturnValue:
 @app.route('/urls')
 def view_urls() -> str:
   """Present contents of url CSVs."""
-  files: list[EndpointsFile] = []
-
   # todo: we should be taking the "base_urls_visit_path" of the "current config" into account
   folder_path = './base_urls/visit/'
 
-  with contextlib.suppress(FileNotFoundError):
-    for filename in os.listdir(folder_path):
-      if filename.endswith('.csv'):
-        with open(
-          os.path.join(folder_path, filename),
-          encoding='utf-8-sig',
-          newline='',
-        ) as file:
-          endpoint_file = EndpointsFile(
-            path=os.path.join(folder_path, filename),
-            endpoints=[],
-            invalid_reason='',
-          )
-          files.append(endpoint_file)
-          reader = csv.reader(file)
-          header = next(reader)
-          for row in reader:
-            if len(row) != 3:
-              endpoint_file['invalid_reason'] = 'must have 3 columns'
-              break
-
-            subject = cast(Endpoint, dict(zip(header, row)))
-            endpoint_file['endpoints'].append(subject)
+  try:
+    files = [c for c in os.listdir(folder_path) if c.endswith('.csv')]
+  except FileNotFoundError:
+    files = []
 
   return render_template('urls.html', files=files)
+
+
+@app.route('/urls/<filename>')
+def show_urls(filename: str) -> str:
+  """Show the contents of a URLs file."""
+  # todo: we should be taking the "base_urls_visit_path" of the "current config" into account
+  filepath = f'./base_urls/visit/{filename}.csv'
+
+  try:
+    with open(
+      filepath,
+      encoding='utf-8-sig',
+      newline='',
+    ) as file:
+      endpoint_file = EndpointsFile(
+        path=filepath,
+        endpoints=[],
+        invalid_reason='',
+      )
+      reader = csv.reader(file)
+      header = next(reader)
+      for row in reader:
+        if len(row) != 3:
+          endpoint_file['invalid_reason'] = 'must have 3 columns'
+          break
+
+        subject = cast(Endpoint, dict(zip(header, row)))
+        endpoint_file['endpoints'].append(subject)
+      return render_template(
+        'urls_show.html',
+        filepath=filepath,
+        filename=filename,
+        file=endpoint_file,
+      )
+  except FileNotFoundError:
+    abort(404)
 
 
 @app.route('/urls/<filename>/edit')
@@ -415,7 +430,7 @@ def update_urls(filename: str) -> ResponseReturnValue:
       f.truncate()
       f.write(contents)
       flash(f'{filepath} has been updated', 'success')
-      return redirect(url_for('view_urls'))
+      return redirect(url_for('show_urls', filename=filename))
   except FileNotFoundError:
     abort(404)
 

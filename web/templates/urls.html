@@ -13,55 +13,38 @@
     </ol>
   </nav>
 
-  <div class="col-lg-8 px-0">
-    {% include '_details_controls.html' %}
-
-    {% for file in files %}
-      <details class="my-2">
-        <summary>
-          <h5 class="d-inline-block">
-            {% set filename = file['path'].removeprefix('./base_urls/visit/').removesuffix('.csv') %}
-            <a
-              href="{{ url_for('edit_urls', filename=filename) }}"
-              class="btn btn-primary btn-sm"
-              >Edit</a
-            >
-            {{ file['path'] }}
-          </h5>
-        </summary>
-
-        <table class="table table-bordered table-striped">
-          <thead>
-            <tr>
-              <th>Organisation</th>
-              <th>URL</th>
-              <th>Sector</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {% for endpoint in file.endpoints %}
-              <tr>
-                <td>{{ endpoint['organisation'] }}</td>
-                <td>{{ endpoint['url'] }}</td>
-                <td>{{ endpoint['sector'] }}</td>
-              </tr>
-            {% else %}
-              <tr>
-                <td class="text-center" colspan="3">
-                  {% if file['invalid_reason'] %}
-                    Invalid CSV: {{ file['invalid_reason'] }}
-                  {% else %}
-                    File is empty
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </details>
+  <div>
+    {% if files|length != 0 %}
+      <ol class="list-group">
+        {% for file in files %}
+          <li
+            class="list-group-item d-flex align-items-center justify-content-between rounded-pill my-2"
+          >
+            <pre class="m-0 ms-2">{{ file }}</pre>
+            <div>
+              {% set filename = file.removeprefix('./base_urls/visit/').removesuffix('.csv') %}
+              <a
+                href="{{ url_for('show_urls', filename=filename) }}"
+                class="btn btn-primary rounded-pill"
+                >View</a
+              >
+              <a
+                href="{{ url_for('edit_urls', filename=filename) }}"
+                class="btn btn-primary rounded-pill"
+                >Edit</a
+              >
+              <button
+                class="btn btn-danger rounded-pill config-delete"
+                data-filename="{{ filename }}"
+              >
+                Delete
+              </button>
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
     {% else %}
       No url files found
-    {% endfor %}
+    {% endif %}
   </div>
 {% endblock %}
