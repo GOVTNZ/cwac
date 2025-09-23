@@ -18,7 +18,7 @@ from src.browser import Browser
 
 # import selenium.common.exceptions as sel_exceptions
 
-logging = getLogger("cwac")
+logger = getLogger("cwac")
 
 
 class ElementAudit(DefaultAudit):
@@ -44,14 +44,14 @@ class ElementAudit(DefaultAudit):
         try:
             page_source = self.browser.get_page_source()
         except Exception as exc:
-            logging.error("Error getting page source: %s", exc)
+            logger.error("Error getting page source: %s", exc)
             return False
 
         # Try to parse using BeautifulSoup
         try:
             soup = BeautifulSoup(page_source, "lxml")
         except Exception as exc:
-            logging.error("Error parsing page source: %s", exc)
+            logger.error("Error parsing page source: %s", exc)
             return False
 
         # Find all elements of the target type (css selector)

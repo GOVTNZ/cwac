@@ -13,7 +13,7 @@ from logging import INFO, FileHandler, Formatter, getLogger
 from typing import Any
 from urllib import parse
 
-logging = getLogger("cwac")
+logger = getLogger("cwac")
 
 
 class Config:
@@ -102,12 +102,12 @@ class Config:
             log_filename (str): The filename of the log file.
         """
         # remove any existing handlers
-        for h in logging.handlers[:]:
-            logging.removeHandler(h)
+        for h in logger.handlers[:]:
+            logger.removeHandler(h)
             h.close()
 
         # set the level back to INFO
-        logging.setLevel(INFO)
+        logger.setLevel(INFO)
 
         # create a new formatter with our desired format
         formatter = Formatter(
@@ -119,7 +119,7 @@ class Config:
         # add a new file handler with our desired format
         handler = FileHandler(log_filename, "w")
         handler.setFormatter(formatter)
-        logging.addHandler(handler)
+        logger.addHandler(handler)
 
     def __resolve_automatic_settings(self) -> None:
         """Resolve configuration settings which are set to 'auto'.
@@ -230,7 +230,7 @@ class Config:
         domain = parsed_url.netloc.lower()
 
         if domain not in self.url_lookup:
-            logging.warning("Agency data missing for: %s", url)
+            logger.warning("Agency data missing for: %s", url)
             return {"organisation": "Unknown", "sector": "Unknown"}
         return {
             "organisation": self.url_lookup[domain]["organisation"],
@@ -272,7 +272,7 @@ class Config:
 
                         # Protocol
                         if parsed_url.scheme == "":
-                            logging.error("URL missing protocol, skipping %s", row[1])
+                            logger.error("URL missing protocol, skipping %s", row[1])
                             continue
 
                         # Cast to lowercase
@@ -284,7 +284,7 @@ class Config:
                         # If only_allow_https is True, then only add
                         # URLs that start with https://
                         if self.only_allow_https and parsed_url.scheme != "https":
-                            logging.error(
+                            logger.error(
                                 "only_allow_https is True, skipping %s",
                                 row[1],
                             )

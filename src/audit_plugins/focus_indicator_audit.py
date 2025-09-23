@@ -22,7 +22,7 @@ from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
-logging = getLogger("cwac")
+logger = getLogger("cwac")
 
 
 class FocusIndicatorAudit(DefaultAudit):
@@ -43,38 +43,38 @@ class FocusIndicatorAudit(DefaultAudit):
         Returns:
             bool: if the page is still animating after 3 seconds
         """
-        logging.info("Waiting for page to stop animating...")
+        logger.info("Waiting for page to stop animating...")
         initial_time = time.time()
         for i in range(5):
             try:
                 # Take a screenshot
-                logging.info("Taking initial screenshot %s #%i", self.url, i)
+                logger.info("Taking initial screenshot %s #%i", self.url, i)
                 img_a_data = self.screenshot()
 
                 # Wait to see if anything animates
                 time.sleep(0.5)
 
                 # Take a second screenshot 0.5s later
-                logging.info("Taking second screenshot %s #%i", self.url, i)
+                logger.info("Taking second screenshot %s #%i", self.url, i)
                 img_b_data = self.screenshot()
 
             except Exception:  # pylint: disable=broad-exception-caught
-                logging.exception("Failed to take screenshot")
+                logger.exception("Failed to take screenshot")
                 return False
 
             # If the two images are the same, the page is still
             if np.sum(img_a_data != img_b_data) == 0:
                 # Pages are equal (0 differing pixels)
-                logging.info("Page stopped animating %s #%i", self.url, i)
+                logger.info("Page stopped animating %s #%i", self.url, i)
                 return True
-            logging.info("Page is still animating #%i", i)
+            logger.info("Page is still animating #%i", i)
 
             # If the time elapsed is greater than 15 seconds,
             # give up waiting
             if time.time() - initial_time > 15:
                 break
         # If page is still animating, return False to indicate a failure
-        logging.warning("Page didn't stop animating! %s", self.url)
+        logger.warning("Page didn't stop animating! %s", self.url)
         return False
 
     def expand_browser_to_page_height(self) -> None:
@@ -87,13 +87,13 @@ class FocusIndicatorAudit(DefaultAudit):
             scroll_height = self.browser.driver.execute_script("return document.documentElement.scrollHeight;")
             # Limit the scroll height to 10000px
             scroll_height = min(scroll_height, 10000)
-            logging.info("Setting browser height to %i", scroll_height)
+            logger.info("Setting browser height to %i", scroll_height)
             self.browser.driver.set_window_size(
                 self.browser.driver.get_window_size()["width"],
                 scroll_height,
             )
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("Failed to get scroll height")
+            logger.exception("Failed to get scroll height")
 
     def check_if_page_has_focus(self) -> bool:
         """Check if the page has focus.
@@ -108,7 +108,7 @@ class FocusIndicatorAudit(DefaultAudit):
         try:
             return bool(self.browser.driver.execute_script("return document.hasFocus()"))
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("Failed to check if page has focus")
+            logger.exception("Failed to check if page has focus")
             return False
 
     def screenshot(self) -> Any:
@@ -125,10 +125,10 @@ class FocusIndicatorAudit(DefaultAudit):
     def __find_root_content_element(self) -> WebElement | None:
         try:
             preferred_element = self.browser.driver.find_element(By.CSS_SELECTOR, self.root_element_css_selector)
-            logging.info("Checking focus indication within <%s> element", preferred_element.tag_name)
+            logger.info("Checking focus indication within <%s> element", preferred_element.tag_name)
             return preferred_element
         except WebDriverException:
-            logging.warning(
+            logger.warning(
                 "Failed to find any elements matching %s, falling back to body",
                 self.root_element_css_selector,
             )
@@ -136,7 +136,7 @@ class FocusIndicatorAudit(DefaultAudit):
         try:
             return self.browser.driver.find_element(By.TAG_NAME, "body")
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("Failed to find body element")
+            logger.exception("Failed to find body element")
             return None
 
     def run(self) -> list[dict[str, Any]] | bool:
@@ -155,7 +155,7 @@ class FocusIndicatorAudit(DefaultAudit):
 
         # If config.headless is False, log an error
         if not self.config.headless:
-            logging.error("ERROR: FocusIndicatorAudit needs headless=True in config.json")
+            logger.error("ERROR: FocusIndicatorAudit needs headless=True in config.json")
             print("ERROR: FocusIndicatorAudit needs headless=True in config.json")
             sys.exit(1)
 
@@ -189,7 +189,7 @@ class FocusIndicatorAudit(DefaultAudit):
         try:
             reference_image = self.screenshot()
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("Failed to take screenshot")
+            logger.exception("Failed to take screenshot")
             return False
 
         root_element = self.__find_root_content_element()
@@ -203,7 +203,7 @@ class FocusIndicatorAudit(DefaultAudit):
         plural = ""
         if self.pre_num_tab_presses != 1:
             plural = "s"
-        logging.info("pre-tabbing %i time%s", self.pre_num_tab_presses, plural)
+        logger.info("pre-tabbing %i time%s", self.pre_num_tab_presses, plural)
 
         # Press tab a number of times possibly before running the actual audit
         # to help ensure we're actually interacting with a meaningful element
@@ -223,7 +223,7 @@ class FocusIndicatorAudit(DefaultAudit):
             try:
                 current_image = self.screenshot()
             except Exception:  # pylint: disable=broad-exception-caught
-                logging.exception("Failed to take screenshot")
+                logger.exception("Failed to take screenshot")
                 continue
 
             # Get the difference between the reference image and the
@@ -237,7 +237,7 @@ class FocusIndicatorAudit(DefaultAudit):
                 try:
                     html = self.browser.driver.execute_script("return document.activeElement.outerHTML")
                 except Exception:  # pylint: disable=broad-exception-caught
-                    logging.exception("Failed to get html of focused element")
+                    logger.exception("Failed to get html of focused element")
                     continue
                 result_list.append({"html": html[:100], "tab_press": i + 1})
 

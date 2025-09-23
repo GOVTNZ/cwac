@@ -15,7 +15,7 @@ from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
-logging = getLogger("cwac")
+logger = getLogger("cwac")
 
 
 class AxeCoreAudit(DefaultAudit):
@@ -51,10 +51,10 @@ class AxeCoreAudit(DefaultAudit):
         if not AuditManager.axe_core_js:
             try:
                 with open("./node_modules/axe-core/axe.min.js", encoding="utf-8-sig") as file:
-                    logging.info("Reading axe.min.js")
+                    logger.info("Reading axe.min.js")
                     axe_min_js = file.read()
             except FileNotFoundError:
-                logging.exception("axe.min.js not found. Please run `npm install`")
+                logger.exception("axe.min.js not found. Please run `npm install`")
                 print("axe.min.js not found. Please run `npm install`")
                 sys.exit(1)
             run_axe = (
@@ -135,14 +135,14 @@ class AxeCoreAudit(DefaultAudit):
         self.load_axe_core()
 
         try:
-            logging.info("Injecting axe %s", self.url)
+            logger.info("Injecting axe %s", self.url)
             axe_core_results = self.browser.driver.execute_async_script(AuditManager.axe_core_js)
-            logging.info("axe-core has returned results %s", self.url)
+            logger.info("axe-core has returned results %s", self.url)
         except selenium.common.exceptions.JavascriptException:
-            logging.exception("JavaScript exception %s", self.url)
+            logger.exception("JavaScript exception %s", self.url)
             return False
         except selenium.common.exceptions.TimeoutException:
-            logging.exception("Timeout exception %s", self.url)
+            logger.exception("Timeout exception %s", self.url)
             return False
 
         # Get page information from DefaultAudit

@@ -18,7 +18,7 @@ from config import Config
 
 WebDriverType = selenium.webdriver.firefox.webdriver.WebDriver | selenium.webdriver.chrome.webdriver.WebDriver
 
-logging = getLogger("cwac")
+logger = getLogger("cwac")
 
 
 class Browser:
@@ -60,33 +60,33 @@ class Browser:
         """
         # If only_allow_https is set, check that the URL is HTTPS
         if self.config.only_allow_https and not url.startswith("https://"):
-            logging.info("Skipping %s as only_allow_https is set", url)
+            logger.info("Skipping %s as only_allow_https is set", url)
             return False
 
         for attempts in range(5):
             try:
-                logging.info("Running .get: %s", url)
+                logger.info("Running .get: %s", url)
                 self.driver.get(url)
-                logging.info(".get successful")
+                logger.info(".get successful")
                 self.driver.set_script_timeout(self.config.script_timeout)
                 self.driver.set_page_load_timeout(self.config.page_load_timeout)
                 self.last_url_req = url
                 break
             except selenium.common.exceptions.TimeoutException:
-                logging.exception("Timeout exception: %s, attempt:%i", url, attempts)
+                logger.exception("Timeout exception: %s, attempt:%i", url, attempts)
                 if attempts == self.num_retries - 1:
-                    logging.info("%i attempts failed to .get: %s", attempts + 1, url)
+                    logger.info("%i attempts failed to .get: %s", attempts + 1, url)
                     return False
             except selenium.common.exceptions.WebDriverException:
-                logging.exception("WebDriverException")
+                logger.exception("WebDriverException")
                 if attempts == self.num_retries - 1:
-                    logging.info("%i attempts failed to .get: %s", attempts + 1, url)
+                    logger.info("%i attempts failed to .get: %s", attempts + 1, url)
                     return False
                 self.safe_restart()
             except Exception:  # pylint: disable=broad-exception-caught
-                logging.exception("Unhandled exception")
+                logger.exception("Unhandled exception")
                 if attempts == self.num_retries - 1:
-                    logging.info("%i attempts failed to .get: %s", attempts + 1, url)
+                    logger.info("%i attempts failed to .get: %s", attempts + 1, url)
                     return False
 
         # Delay to allow page to load more
@@ -98,11 +98,11 @@ class Browser:
         try:
             self.driver.close()
         except selenium.common.exceptions.InvalidSessionIdException:
-            logging.exception("InvalidSessionIdException, browser probably crashed")
+            logger.exception("InvalidSessionIdException, browser probably crashed")
         except selenium.common.exceptions.WebDriverException as error:
             # check if 'message' is "disconnected: not connected to DevTools"
             if "disconnected" in str(error):
-                logging.exception(
+                logger.exception(
                     "WebDriverException, browser probably crashed %s",
                     self.last_url_req,
                 )
@@ -121,7 +121,7 @@ class Browser:
             self.driver = new_driver
             self.last_url_req = ""
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("Unhandled exception")
+            logger.exception("Unhandled exception")
             self.safe_restart()
 
     def get_doctype(self) -> str:
@@ -141,11 +141,11 @@ class Browser:
         try:
             doctype_string = self.driver.execute_script(doctype_js)
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.error(
+            logger.error(
                 ("An error occurred while trying to get this website's doctype. Defaulting to html5 for %s"),
                 self.driver.current_url,
             )
-            logging.error(traceback.format_exc())
+            logger.error(traceback.format_exc())
             doctype_string = "<!DOCTYPE html>"
         return doctype_string
 
@@ -158,7 +158,7 @@ class Browser:
         try:
             return cast(str, self.driver.execute_script("return document.baseURI"))
         except Exception as exc:
-            logging.exception("TimeoutException when getting base URI")
+            logger.exception("TimeoutException when getting base URI")
             self.safe_restart()
             raise exc
 
@@ -171,23 +171,23 @@ class Browser:
         try:
             return self.get_doctype() + "\n" + self.driver.page_source
         except selenium.common.exceptions.TimeoutException as exc:
-            logging.exception("TimeoutException when getting page source")
+            logger.exception("TimeoutException when getting page source")
             self.safe_restart()
             raise exc
 
     def close(self) -> None:
         """Close the browser."""
-        logging.info("Quitting browser")
+        logger.info("Quitting browser")
         self.driver.close()
         self.last_url_req = ""
 
     def refresh(self) -> None:
         """Refresh the browser."""
-        logging.info("Refreshing browser")
+        logger.info("Refreshing browser")
         try:
             self.driver.refresh()
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("Error refreshing browser")
+            logger.exception("Error refreshing browser")
 
     def set_window_size(self, width: int, height: int) -> None:
         """Set browser size.
@@ -200,10 +200,10 @@ class Browser:
             self.viewport_size = {"width": width, "height": height}
             self.driver.set_window_size(width, height)
         except selenium.common.exceptions.TimeoutException:
-            logging.exception("TimeoutException")
+            logger.exception("TimeoutException")
             self.safe_restart()
         except selenium.common.exceptions.WebDriverException:
-            logging.exception("WebDriverException")
+            logger.exception("WebDriverException")
             self.safe_restart()
 
     def get_window_size(self) -> dict[str, int]:
@@ -215,15 +215,15 @@ class Browser:
         try:
             return self.driver.get_window_size()
         except selenium.common.exceptions.TimeoutException:
-            logging.exception("TimeoutException")
+            logger.exception("TimeoutException")
             self.safe_restart()
             return self.driver.get_window_size()
         except selenium.common.exceptions.WebDriverException:
-            logging.exception("WebDriverException")
+            logger.exception("WebDriverException")
             self.safe_restart()
             return self.driver.get_window_size()
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("Unhandled exception")
+            logger.exception("Unhandled exception")
             self.safe_restart()
             return self.viewport_size
 
