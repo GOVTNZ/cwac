@@ -6,7 +6,7 @@ from typing import Any, Callable
 
 import requests
 
-from config import config
+from config import Config
 
 # url_filter_* functions are declared here
 # url_filter_* functions return True when a URL is acceptable
@@ -14,10 +14,11 @@ from config import config
 # by using register_url_filter(func)
 
 
-def url_filter_whitelist(url: urllib.parse.ParseResult) -> bool:
+def url_filter_whitelist(config: Config, url: urllib.parse.ParseResult) -> bool:
     """Filter out URLs not in whitelist.
 
     Args:
+        config (Config): The configuration to use
         url (urllib.parse.ParseResult): A URL to filter
 
     Returns:
@@ -33,10 +34,11 @@ def url_filter_whitelist(url: urllib.parse.ParseResult) -> bool:
     return netloc_without_www in config.url_lookup or netloc_with_www in config.url_lookup
 
 
-def url_filter_https_only(url: urllib.parse.ParseResult) -> bool:
+def url_filter_https_only(config: Config, url: urllib.parse.ParseResult) -> bool:
     """Filter out non-https URLs if config.only_allow_https is True.
 
     Args:
+        config (Config): The configuration to use
         url (urllib.parse.ParseResult): A URL to filter
 
     Returns:
@@ -47,10 +49,11 @@ def url_filter_https_only(url: urllib.parse.ParseResult) -> bool:
     return True
 
 
-def url_filter_fragment(url: urllib.parse.ParseResult) -> bool:
+def url_filter_fragment(_config: Config, url: urllib.parse.ParseResult) -> bool:
     """Filter out same-page URLs.
 
     Args:
+        _config (Config): The configuration to use
         url (urllib.parse.ParseResult): A URL to filter
 
     Returns:
@@ -59,10 +62,11 @@ def url_filter_fragment(url: urllib.parse.ParseResult) -> bool:
     return url.fragment == ""
 
 
-def url_filter_http(url: urllib.parse.ParseResult) -> bool:
+def url_filter_http(_config: Config, url: urllib.parse.ParseResult) -> bool:
     """Filter out non-http/https URLs.
 
     Args:
+        _config (Config): The configuration to use
         url (urllib.parse.ParseResult): A URL to filter
 
     Returns:
@@ -71,10 +75,11 @@ def url_filter_http(url: urllib.parse.ParseResult) -> bool:
     return url.scheme in ("http", "https")
 
 
-def url_filter_filetype(url: urllib.parse.ParseResult) -> bool:
+def url_filter_filetype(_config: Config, url: urllib.parse.ParseResult) -> bool:
     """Filter out common file extensions in URLs.
 
     Args:
+        _config (Config): The configuration to use
         url (urllib.parse.ParseResult): A URL to filter
 
     Returns:
@@ -187,7 +192,7 @@ def url_filter_by_header_content_type(url: str, headers: dict[Any, Any]) -> bool
     return True
 
 
-def process_url_headers(url: str, supports_head_requests: bool = True) -> dict[Any, Any]:
+def process_url_headers(config: Config, url: str, supports_head_requests: bool = True) -> dict[Any, Any]:
     """Process a URL by handling the headers.
 
     It does the following:
@@ -196,6 +201,7 @@ def process_url_headers(url: str, supports_head_requests: bool = True) -> dict[A
         - Redirects and resolves to final_url
 
     Args:
+        config (Config): configuration details
         url (str): A URL to filter
         supports_head_requests (bool): whether the URL supports HEAD requests
 
@@ -275,9 +281,11 @@ def url_filter_same_protocol(url_a: str, url_b: str) -> bool:
 class URLFilter:
     """Registers and runs a set of url_filter functions."""
 
-    def __init__(self) -> None:
+    def __init__(self, config: Config) -> None:
         """Init vars, and registers url_filters."""
-        self.url_filters: dict[str, Callable[[urllib.parse.ParseResult], bool]] = {}
+        self.config = config
+
+        self.url_filters: dict[str, Callable[[Config, urllib.parse.ParseResult], bool]] = {}
 
         # Register URL filtration functions defined at the top of this file
         self.register_url_filter("Non-empty fragment", url_filter_fragment)
@@ -289,7 +297,7 @@ class URLFilter:
     def register_url_filter(
         self,
         filter_name: str,
-        filter_func: Callable[[urllib.parse.ParseResult], bool],
+        filter_func: Callable[[Config, urllib.parse.ParseResult], bool],
     ) -> None:
         """Register a url_filter_* function defined in this file.
 
@@ -312,7 +320,7 @@ class URLFilter:
             return False
 
         for filter_name, filter_func in self.url_filters.items():
-            if not filter_func(parsed_url):
+            if not filter_func(self.config, parsed_url):
                 logging.info("%s filter rejected %s", filter_name, url)
                 return False
         return True

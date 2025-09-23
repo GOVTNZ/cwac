@@ -8,7 +8,6 @@ from typing import Any
 import cv2
 import numpy as np
 
-from config import config
 from src.audit_plugins.default_audit import DefaultAudit
 
 
@@ -37,14 +36,14 @@ class ScreenshotAudit(DefaultAudit):
         """
         # create ./results/{config.audit_name}/screenshots folder
         # if it doesn't exist
-        if not os.path.exists("results/" + config.audit_name + "/screenshots"):
+        if not os.path.exists("results/" + self.config.audit_name + "/screenshots"):
             with contextlib.suppress(FileExistsError):
-                os.makedirs("results/" + config.audit_name + "/screenshots")
+                os.makedirs("results/" + self.config.audit_name + "/screenshots")
 
         # Take screenshot of the browser and save it as a PNG in /screenshots
         # With a unique filename
 
-        screenshot_path = "results/" + config.audit_name + "/screenshots/" + self.audit_id + ".png"
+        screenshot_path = "results/" + self.config.audit_name + "/screenshots/" + self.audit_id + ".png"
 
         # Get browser source code
         # source = self.browser.get_page_source()

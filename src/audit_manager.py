@@ -10,7 +10,7 @@ import selenium
 from selenium.webdriver.common.by import By
 
 import src.output
-from config import config
+from config import Config
 from src.analytics import Analytics
 from src.browser import Browser
 from src.output import CSVWriter
@@ -24,12 +24,13 @@ class AuditManager:
     # Stores axe.min.js to prevent re-reading the file
     axe_core_js = ""
 
-    def __init__(self, browser: Browser, analytics: Analytics) -> None:
+    def __init__(self, config: Config, browser: Browser, analytics: Analytics) -> None:
         """Init variables."""
+        self.config = config
         self.browser = browser
         self.analytics = analytics
         self.audits: dict[Any, dict[Any, Any]] = {}
-        self.filter = src.filters.URLFilter()
+        self.filter = src.filters.URLFilter(self.config)
 
         # Stores URLs discarded as a key-value pair
         # of URL (str): reason (str). URLs are discarded
@@ -118,7 +119,7 @@ class AuditManager:
 
         if status != "Pass":
             # Get the URL's organisation
-            org = config.lookup_organisation(url)
+            org = self.config.lookup_organisation(url)
 
             # Get URL's netloc
             netloc = urllib.parse.urlparse(url).netloc
@@ -126,10 +127,10 @@ class AuditManager:
             # Save screenshot
             # Make screenshot directory if it doesn't exist
             os.makedirs(
-                f"./results/{config.audit_name}/anti_bot_ss",
+                f"./results/{self.config.audit_name}/anti_bot_ss",
                 exist_ok=True,
             )
-            self.browser.driver.save_screenshot(f"./results/{config.audit_name}/anti_bot_ss/{netloc}.png")
+            self.browser.driver.save_screenshot(f"./results/{self.config.audit_name}/anti_bot_ss/{netloc}.png")
 
             # Write to anti-bot.csv
             csv_writer = CSVWriter()
@@ -144,7 +145,7 @@ class AuditManager:
                     }
                 ]
             )
-            csv_writer.write_csv_file(f"./results/{config.audit_name}/anti_bot.csv")
+            csv_writer.write_csv_file(f"./results/{self.config.audit_name}/anti_bot.csv")
             self.discarded_urls[url] = status
 
         return status
@@ -160,7 +161,7 @@ class AuditManager:
         if len(details) != 1:
             plural = "s"
 
-        if not config.force_open_details_elements:
+        if not self.config.force_open_details_elements:
             logging.info("ignoring %i <details> element%s", len(details), plural)
             return
 
@@ -184,26 +185,26 @@ class AuditManager:
         logging.info("run_audits called")
 
         # Unique UUID string
-        page_id = config.get_unique_id()
+        page_id = self.config.get_unique_id()
 
         # Tracks if all tests successfully ran
         all_tests_successful = True
 
         # Re-run tests for each viewport size in config.json
-        for index, viewport in enumerate(config.viewport_sizes):
+        for index, viewport in enumerate(self.config.viewport_sizes):
             # Generate a unique audit ID
             audit_id = page_id + "_" + viewport
 
             self.browser.set_window_size(
-                config.viewport_sizes[viewport]["width"],
-                config.viewport_sizes[viewport]["height"],
+                self.config.viewport_sizes[viewport]["width"],
+                self.config.viewport_sizes[viewport]["height"],
             )
 
             for audit_name, audit in self.audits.items():
                 # if viewport_to_test is set
                 if (
-                    "viewport_to_test" in config.audit_plugins[audit_name]
-                    and config.audit_plugins[audit_name]["viewport_to_test"] != viewport
+                    "viewport_to_test" in self.config.audit_plugins[audit_name]
+                    and self.config.audit_plugins[audit_name]["viewport_to_test"] != viewport
                 ):
                     # If the viewport is not the one we want to test, skip
                     continue
@@ -246,12 +247,12 @@ class AuditManager:
                 audit["kwargs"]["page_id"] = page_id
 
                 # Inject the viewport size dict
-                audit["kwargs"]["viewport_size"] = config.viewport_sizes[viewport]
+                audit["kwargs"]["viewport_size"] = self.config.viewport_sizes[viewport]
 
                 start_time = time.perf_counter()
 
                 # Run the tests
-                test_instance = audit["audit_class"](browser=self.browser, **audit["kwargs"])
+                test_instance = audit["audit_class"](config=self.config, browser=self.browser, **audit["kwargs"])
 
                 try:
                     audit_result = test_instance.run()
@@ -269,8 +270,8 @@ class AuditManager:
 
                     # Set window size
                     self.browser.set_window_size(
-                        config.viewport_sizes[viewport]["width"],
-                        config.viewport_sizes[viewport]["height"],
+                        self.config.viewport_sizes[viewport]["width"],
+                        self.config.viewport_sizes[viewport]["height"],
                     )
 
                     # Reload the page
@@ -339,15 +340,15 @@ class AuditManager:
                 # Write results
                 csv_writer = CSVWriter()
                 csv_writer.add_rows(audit_result)
-                csv_writer.write_csv_file(f"./results/{config.audit_name}/{audit_name}.csv")
+                csv_writer.write_csv_file(f"./results/{self.config.audit_name}/{audit_name}.csv")
 
             # If we're not on the last viewport size
-            if index < len(config.viewport_sizes) - 1:
+            if index < len(self.config.viewport_sizes) - 1:
                 # Refresh the page
                 try:
                     self.browser.driver.refresh()
                     # Give browser time to adjust to viewport size
-                    time.sleep(config.delay_between_viewports)
+                    time.sleep(self.config.delay_between_viewports)
                 except Exception:  # pylint: disable=broad-exception-caught
                     logging.exception("Failed to refresh page")
                     self.browser.safe_restart()

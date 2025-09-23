@@ -6,7 +6,7 @@ This plugin returns basic page information.
 import urllib.parse
 from typing import Any
 
-from config import config
+from config import Config
 from src.browser import Browser
 
 # Audit classes for use with AuditManager
@@ -27,8 +27,9 @@ class DefaultAudit:
     It retrieves things such as the page title, viewport size, and base url.
     """
 
-    def __init__(self, browser: Browser, **kwargs: Any):
+    def __init__(self, config: Config, browser: Browser, **kwargs: Any):
         """Init variables."""
+        self.config = config
         self.browser = browser
         self.url = kwargs["url"]
         self.site_data = kwargs["site_data"]
@@ -40,7 +41,7 @@ class DefaultAudit:
         # If we are not crawling pages for additional links, then
         # use the subdomain + domain as the base_url
         base_url = self.site_data["url"]
-        if config.max_links_per_domain == 1:
+        if self.config.max_links_per_domain == 1:
             # Parse the url to get the subdomain and domain using urlparse
             # and then rejoin them to get the base_url
             parsed_url = urllib.parse.urlparse(base_url)

@@ -10,7 +10,7 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
-from config import config
+from config import Config
 
 # from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
@@ -24,10 +24,10 @@ class ElementAudit(DefaultAudit):
 
     audit_type = "ElementAudit"
 
-    def __init__(self, browser: Browser, **kwargs: Any) -> None:
+    def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
         """Init variables."""
-        super().__init__(browser, **kwargs)
-        self.target_element = config.audit_plugins["element_audit"]["target_element_css_selector"]
+        super().__init__(config, browser, **kwargs)
+        self.target_element = self.config.audit_plugins["element_audit"]["target_element_css_selector"]
         self.base_url = kwargs["site_data"]["url"]
         self.viewport_size = kwargs["viewport_size"]
 

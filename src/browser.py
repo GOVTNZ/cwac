@@ -14,7 +14,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.firefox.service import Service as FirefoxService
 
-from config import config
+from config import Config
 
 WebDriverType = selenium.webdriver.firefox.webdriver.WebDriver | selenium.webdriver.chrome.webdriver.WebDriver
 
@@ -22,12 +22,15 @@ WebDriverType = selenium.webdriver.firefox.webdriver.WebDriver | selenium.webdri
 class Browser:
     """A wrapper class for selenium webdriver."""
 
-    def __init__(self, thread_id: int) -> None:
+    def __init__(self, config: Config, thread_id: int) -> None:
         """Init variables and spawns webdriver."""
+        self.config = config
         self.thread_id = thread_id
         self.num_retries = 2
         self.viewport_size = {"width": 320, "height": 450}
-        self.driver: WebDriverType = self.spawn_single_webdriver(window_size=list(config.viewport_sizes.values())[0])
+        self.driver: WebDriverType = self.spawn_single_webdriver(
+            window_size=list(self.config.viewport_sizes.values())[0]
+        )
         self.last_url_req = ""
 
     def get_if_necessary(self, url: str) -> bool:
@@ -54,7 +57,7 @@ class Browser:
             bool: True if page loaded, False if something went wrong
         """
         # If only_allow_https is set, check that the URL is HTTPS
-        if config.only_allow_https and not url.startswith("https://"):
+        if self.config.only_allow_https and not url.startswith("https://"):
             logging.info("Skipping %s as only_allow_https is set", url)
             return False
 
@@ -63,8 +66,8 @@ class Browser:
                 logging.info("Running .get: %s", url)
                 self.driver.get(url)
                 logging.info(".get successful")
-                self.driver.set_script_timeout(config.script_timeout)
-                self.driver.set_page_load_timeout(config.page_load_timeout)
+                self.driver.set_script_timeout(self.config.script_timeout)
+                self.driver.set_page_load_timeout(self.config.page_load_timeout)
                 self.last_url_req = url
                 break
             except selenium.common.exceptions.TimeoutException:
@@ -85,7 +88,7 @@ class Browser:
                     return False
 
         # Delay to allow page to load more
-        time.sleep(config.delay_after_page_load)
+        time.sleep(self.config.delay_after_page_load)
         return True
 
     def safe_restart(self) -> None:
@@ -240,9 +243,9 @@ class Browser:
             null_path = "NUL"
 
         # Sets up a Chrome instance
-        if config.browser == "chrome":
+        if self.config.browser == "chrome":
             chrome_options = webdriver.ChromeOptions()
-            if config.headless or headless_override:
+            if self.config.headless or headless_override:
                 chrome_options.add_argument("--headless")
             chrome_options.add_argument(f"--window-size={window_size['width']},{window_size['height']}")
             chrome_options.add_argument("--log-level=3")
@@ -258,7 +261,7 @@ class Browser:
             )
 
             # Set fake user agent
-            chrome_options.add_argument(f"user-agent={config.user_agent}")
+            chrome_options.add_argument(f"user-agent={self.config.user_agent}")
 
             chrome_options.unhandled_prompt_behavior = "dismiss"
 
@@ -275,29 +278,29 @@ class Browser:
             chrome_options.add_experimental_option("prefs", prefs)
 
             chrome_service = Service(
-                config.chrome_driver_location,
+                self.config.chrome_driver_location,
                 service_args=[
                     "--verbose",
-                    "--log-path=./results/" + config.audit_name + "/chromedriver.log",
+                    "--log-path=./results/" + self.config.audit_name + "/chromedriver.log",
                 ],
             )
 
             # Set binary path
-            chrome_options.binary_location = config.chrome_binary_location
+            chrome_options.binary_location = self.config.chrome_binary_location
 
             driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
 
         # Sets up a Firefox instance
-        if config.browser == "firefox":
+        if self.config.browser == "firefox":
             firefox_options = selenium.webdriver.firefox.options.Options()
-            firefox_options.headless = config.headless  # type: ignore
+            firefox_options.headless = self.config.headless  # type: ignore
             if headless_override:
                 firefox_options.headless = True  # type: ignore
             firefox_options.add_argument(f"--width={window_size['width']}")
             firefox_options.add_argument(f"--height={window_size['height']}")
 
             # Set fake user agent
-            firefox_options.set_preference("general.useragent.override", config.user_agent)
+            firefox_options.set_preference("general.useragent.override", self.config.user_agent)
 
             # Disable file downloads
             firefox_options.set_preference("browser.download.dir", null_path)
@@ -305,12 +308,12 @@ class Browser:
 
             firefox_options.unhandled_prompt_behavior = "dismiss"
             firefox_service = FirefoxService(
-                log_path="./results/" + config.audit_name + "/geckodriver.log",
+                log_path="./results/" + self.config.audit_name + "/geckodriver.log",
             )
             driver = webdriver.Firefox(service=firefox_service, options=firefox_options)
 
-        driver.set_script_timeout(config.script_timeout)
-        driver.set_page_load_timeout(config.page_load_timeout)
+        driver.set_script_timeout(self.config.script_timeout)
+        driver.set_page_load_timeout(self.config.page_load_timeout)
 
         x_pos = 100 + 400 * (self.thread_id % 4)
         y_pos = 0 if self.thread_id < 4 else 400
