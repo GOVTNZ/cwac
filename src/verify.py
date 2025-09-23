@@ -1,8 +1,8 @@
 """Functions used for verifying the validity of data."""
 
-from logging import getLogger
+import logging
 
-logger = getLogger("cwac")
+logger = logging.getLogger("cwac")
 
 
 def verify_axe_results(max_links_per_domain: int, pages_scanned: dict[str, set[str]]) -> None:

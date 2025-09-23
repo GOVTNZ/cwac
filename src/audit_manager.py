@@ -1,9 +1,9 @@
 """AuditManager - runs tests on a Browser."""
 
+import logging
 import os
 import time
 import urllib.parse
-from logging import getLogger
 from typing import Any, Type
 
 import selenium
@@ -17,7 +17,7 @@ from src.output import CSVWriter
 
 # pylint: disable=too-many-branches, too-many-statements
 
-logger = getLogger("cwac")
+logger = logging.getLogger("cwac")
 
 
 class AuditManager:

@@ -6,9 +6,9 @@ This file has 3 main functions:
  - performs sentiment analysis on the text
 """
 
+import logging
 import math
 import os
-from logging import getLogger
 from typing import Any, cast
 
 import nltk  # type: ignore
@@ -27,7 +27,7 @@ nltk.download("vader_lexicon", download_dir=nltk_dir, quiet=True)
 nltk.data.path.append(nltk_dir)
 dictionary = cmudict.dict()
 
-logger = getLogger("cwac")
+logger = logging.getLogger("cwac")
 
 
 class LanguageAudit(DefaultAudit):

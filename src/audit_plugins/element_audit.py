@@ -5,7 +5,7 @@ on web pages. The element this plugin detects
 can be customised in the config file using a CSS selector.
 """
 
-from logging import getLogger
+import logging
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -18,7 +18,7 @@ from src.browser import Browser
 
 # import selenium.common.exceptions as sel_exceptions
 
-logger = getLogger("cwac")
+logger = logging.getLogger("cwac")
 
 
 class ElementAudit(DefaultAudit):

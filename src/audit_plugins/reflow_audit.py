@@ -14,16 +14,16 @@ Disclaimer:
 
 """
 
+import logging
 import sys
 import time
-from logging import getLogger
 from typing import Any
 
 from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
-logger = getLogger("cwac")
+logger = logging.getLogger("cwac")
 
 
 class ReflowAudit(DefaultAudit):

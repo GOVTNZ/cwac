@@ -1,8 +1,8 @@
 """Screenshot Audit plugin."""
 
 import contextlib
+import logging
 import os
-from logging import getLogger
 from typing import Any
 
 import cv2
@@ -10,7 +10,7 @@ import numpy as np
 
 from src.audit_plugins.default_audit import DefaultAudit
 
-logger = getLogger("cwac")
+logger = logging.getLogger("cwac")
 
 
 class ScreenshotAudit(DefaultAudit):

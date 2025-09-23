@@ -4,8 +4,8 @@ This plugin uses axe-core to test a webpage.
 """
 
 import hashlib
+import logging
 import sys
-from logging import getLogger
 from typing import Any
 
 import selenium
@@ -15,7 +15,7 @@ from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
-logger = getLogger("cwac")
+logger = logging.getLogger("cwac")
 
 
 class AxeCoreAudit(DefaultAudit):

@@ -6,9 +6,9 @@ at screenshots to see if any pixels changed. If none
 changed, then the focus indicator is invisible.
 """
 
+import logging
 import sys
 import time
-from logging import getLogger
 from typing import Any
 
 import cv2
@@ -22,7 +22,7 @@ from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
-logger = getLogger("cwac")
+logger = logging.getLogger("cwac")
 
 
 class FocusIndicatorAudit(DefaultAudit):

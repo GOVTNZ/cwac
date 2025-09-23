@@ -1,17 +1,17 @@
 """Classes and functions to output data to files, or stdout."""
 
 import csv
+import logging
 import os
 import threading
 import time
-from logging import getLogger
 from typing import Any
 
 from config import Config
 
 # pylint: disable=too-many-locals
 
-logger = getLogger("cwac")
+logger = logging.getLogger("cwac")
 
 
 class CSVWriter:
