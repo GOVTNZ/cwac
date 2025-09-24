@@ -10,6 +10,8 @@ import numpy as np
 
 from src.audit_plugins.default_audit import DefaultAudit
 
+logger = logging.getLogger("cwac")
+
 
 class ScreenshotAudit(DefaultAudit):
     """Screenshot Audit."""
@@ -68,7 +70,7 @@ class ScreenshotAudit(DefaultAudit):
                 [cv2.IMWRITE_PNG_COMPRESSION, 9],
             )
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("Failed to save screenshot")
+            logger.exception("Failed to save screenshot")
             return False
 
         return [

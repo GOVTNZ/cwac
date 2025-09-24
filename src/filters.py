@@ -14,6 +14,9 @@ from config import Config
 # by using register_url_filter(func)
 
 
+logger = logging.getLogger("cwac")
+
+
 def url_filter_whitelist(config: Config, url: urllib.parse.ParseResult) -> bool:
     """Filter out URLs not in whitelist.
 
@@ -162,7 +165,7 @@ def url_filter_not_same_domain(url_a: str, url_b: str) -> bool:
     domain_b = domain_b.removeprefix("www.")
 
     if domain_a != domain_b:
-        logging.info("url out due to domain mismatch %s %s", url_a, url_b)
+        logger.info("url out due to domain mismatch %s %s", url_a, url_b)
     return domain_a == domain_b
 
 
@@ -179,14 +182,14 @@ def url_filter_by_header_content_type(url: str, headers: dict[Any, Any]) -> bool
     try:
         headers = {k.lower(): v for k, v in headers.items()}
         if not headers["content-type"].startswith("text/html"):
-            logging.info(
+            logger.info(
                 "URL filtered due to a non-text/html response %s: %s",
                 url,
                 headers["content-type"],
             )
             return False
     except KeyError:
-        logging.error("KeyError was encountered %s %s", url, headers)
+        logger.error("KeyError was encountered %s %s", url, headers)
         return False
 
     return True
@@ -216,7 +219,7 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
 
     if not supports_head_requests:
         method = "get"
-        logging.info(
+        logger.info(
             "%s is marked as not supporting HEAD requests, using GET instead to check headers",
             url,
         )
@@ -231,7 +234,7 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
             # this response does not really make sense, but if it does happen we might as well skip remaining retries
             if headers.status_code == 405 and method != "get":
                 method = "get"
-                logging.warning(
+                logger.warning(
                     "%s does not support HEAD requests, retrying with GET (status code %i)",
                     url,
                     headers.status_code,
@@ -239,12 +242,12 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
                 continue
 
             final_url = headers.url
-            logging.info("%s has status code %i", url, headers.status_code)
+            logger.info("%s has status code %i", url, headers.status_code)
             break
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("Failed to get headers; attempt: %d, %s", i + 1, url)
+            logger.exception("Failed to get headers; attempt: %d, %s", i + 1, url)
             if i == 2:
-                logging.error("Giving up on headers check; attempt: %d, %s", i + 1, url)
+                logger.error("Giving up on headers check; attempt: %d, %s", i + 1, url)
                 return output
 
     # check content-type
@@ -272,7 +275,7 @@ def url_filter_same_protocol(url_a: str, url_b: str) -> bool:
         parsed_a = urllib.parse.urlparse(url_a)
         parsed_b = urllib.parse.urlparse(url_b)
     except Exception as e:
-        logging.error("Failed to parse URL: %s", e)
+        logger.error("Failed to parse URL: %s", e)
         return False
 
     return parsed_a.scheme == parsed_b.scheme
@@ -316,11 +319,11 @@ class URLFilter:
         try:
             parsed_url = urllib.parse.urlparse(url)
         except Exception as e:
-            logging.error("Failed to parse URL: %s", e)
+            logger.error("Failed to parse URL: %s", e)
             return False
 
         for filter_name, filter_func in self.url_filters.items():
             if not filter_func(self.config, parsed_url):
-                logging.info("%s filter rejected %s", filter_name, url)
+                logger.info("%s filter rejected %s", filter_name, url)
                 return False
         return True

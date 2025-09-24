@@ -27,6 +27,8 @@ nltk.download("vader_lexicon", download_dir=nltk_dir, quiet=True)
 nltk.data.path.append(nltk_dir)
 dictionary = cmudict.dict()
 
+logger = logging.getLogger("cwac")
+
 
 class LanguageAudit(DefaultAudit):
     """Language analysis for web pages."""
@@ -43,7 +45,7 @@ class LanguageAudit(DefaultAudit):
         lang = self.__get_document_lang()
 
         if lang != "en" and not lang.startswith("en-"):
-            logging.warning("Test can only be run on English pages but lang for this page is %s: %s", lang, self.url)
+            logger.warning("Test can only be run on English pages but lang for this page is %s: %s", lang, self.url)
             return True
 
         # Scrape main content
@@ -51,7 +53,7 @@ class LanguageAudit(DefaultAudit):
 
         # Check if test is not applicable (i.e. not enough text)
         if self.is_test_not_applicable(content):
-            logging.warning("Test is not applicable: %s", self.url)
+            logger.warning("Test is not applicable: %s", self.url)
             return True
 
         # Calculate Flesch-Kincaid Grade Level
@@ -173,11 +175,11 @@ class LanguageAudit(DefaultAudit):
         try:
             content = self.browser.driver.execute_script(final_js)
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("WebDriver exception for Readability")
+            logger.exception("WebDriver exception for Readability")
             return ""
 
         if content is False:
-            logging.warning(
+            logger.warning(
                 "Readability rejected the page. %s",
                 self.url,
             )
@@ -206,7 +208,7 @@ class LanguageAudit(DefaultAudit):
         try:
             return cast(str, self.browser.driver.execute_script("return document.documentElement.lang")).lower()
         except WebDriverException:
-            logging.exception("Could not get document element language")
+            logger.exception("Could not get document element language")
             return ""
 
     def count_syllables(self, word: str) -> int:
