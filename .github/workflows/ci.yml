@@ -110,7 +110,7 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: pylint -rn -sn $(git ls-files '*.py')
-  install:
+  test:
     permissions:
       contents: read # to fetch (actions/checkout)
     runs-on: ubuntu-latest
@@ -125,3 +125,4 @@ jobs:
       - run: pip install -r requirements.txt
       - uses: actions/setup-node@v4
       - run: npm i
+      - run: pytest .
