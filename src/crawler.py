@@ -350,7 +350,7 @@ class Crawler:
         if status_code is None:
             status_code = -1
 
-        ok_status_codes = [200, 301, 302, 307, 308]
+        ok_status_codes = [200, 202, 301, 302, 307, 308]
         if status_code not in ok_status_codes:
             logging.info(
                 "URL filtered out due to bad http status_code: %s %i",
