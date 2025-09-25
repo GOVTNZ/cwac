@@ -53,7 +53,7 @@
         },
         "screenshot_audit": {
             "class_name": "ScreenshotAudit",
-            "enabled": true
+            "enabled": false
         },
         "element_audit": {
             "class_name": "ElementAudit",
