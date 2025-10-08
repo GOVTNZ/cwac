@@ -150,7 +150,7 @@ class FocusIndicatorAudit(DefaultAudit):
         common_properties = {
             **self._default_audit_row,
             "audit_type": FocusIndicatorAudit.audit_type,
-            "helpUrl": ("https://www.w3.org/WAI/WCAG22/" "Understanding/focus-visible.html"),
+            "helpUrl": ("https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html"),
         }
 
         # If config.headless is False, log an error
@@ -181,7 +181,7 @@ class FocusIndicatorAudit(DefaultAudit):
                     ),
                     "html": "",
                     "num_issues": 1,
-                    "helpUrl": ("https://www.w3.org/WAI/WCAG21/" "Understanding/pause-stop-hide.html"),
+                    "helpUrl": ("https://www.w3.org/WAI/WCAG21/Understanding/pause-stop-hide.html"),
                 }
             ]
 
@@ -251,7 +251,7 @@ class FocusIndicatorAudit(DefaultAudit):
                     "description": "All tab presses had a focus indicator",
                     "html": "",
                     "num_issues": 0,
-                    "helpUrl": ("https://www.w3.org/WAI/WCAG22/" "Understanding/focus-visible.html"),
+                    "helpUrl": ("https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html"),
                 }
             ]
 
@@ -260,10 +260,10 @@ class FocusIndicatorAudit(DefaultAudit):
             final_results.append(
                 {
                     **common_properties,
-                    "description": (f"Tab key press #{result['tab_press']}" f" did not show a focus indicator"),
+                    "description": (f"Tab key press #{result['tab_press']} did not show a focus indicator"),
                     "html": result["html"],
                     "num_issues": 1,
-                    "helpUrl": ("https://www.w3.org/WAI/WCAG22/" "Understanding/focus-visible.html"),
+                    "helpUrl": ("https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html"),
                 }
             )
 

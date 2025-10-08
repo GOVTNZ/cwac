@@ -7,12 +7,12 @@ repos:
     hooks:
       - id: isort
         args: ["--profile black", "."]
-  - repo: https://github.com/psf/black
-    rev: 24.10.0
+  - repo: https://github.com/astral-sh/ruff
+    rev: 0.14.0
     hooks:
-    - id: black
+    - id: ruff
       args: [
-        --line-length=120
+        format
       ]
       types: ['python']
   - repo: https://github.com/PyCQA/flake8

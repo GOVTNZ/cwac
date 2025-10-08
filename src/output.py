@@ -205,7 +205,7 @@ def print_progress_bar(
         speed = 0.0001
     elapsed = generate_time_str_from_mins((time.time() - start_time) / 60)
     time_est = generate_time_str_from_mins((total - iteration) / speed / 60)
-    output = f"|{progress_bar}| {percent}% p:{iteration}/{total} " f"v:{speed:.2f}p/s " f"t:{elapsed}  t-:{time_est}"
+    output = f"|{progress_bar}| {percent}% p:{iteration}/{total} v:{speed:.2f}p/s t:{elapsed}  t-:{time_est}"
     print(output + "      ")
 
     # Write progress data to CSV file
