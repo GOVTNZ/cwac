@@ -14,6 +14,7 @@ from config import Config
 def setup_filesystem(fs: FakeFilesystem) -> None:
   """Set up the filesystem."""
   fs.add_real_file('package.json', read_only=False)
+  fs.makedirs('base_urls/nohead')
   fs.makedirs('base_urls/visit')
 
 
