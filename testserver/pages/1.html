@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="EN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Accessibility Test Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f7f7f7;
+        color: #222;
+      }
+      header {
+        background: #2c3e50;
+        color: #fff;
+        padding: 1.5rem 2rem;
+      }
+      header h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+      }
+      nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 1.5rem;
+      }
+      nav a {
+        color: #ecf0f1;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      nav a:hover,
+      nav a:focus {
+        text-decoration: underline;
+      }
+      main {
+        background: #fff;
+        margin: 2rem auto;
+        padding: 2rem;
+        max-width: 700px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(44, 62, 80, 0.08);
+      }
+      main h2 {
+        margin-top: 0;
+      }
+      button {
+        background: #2980b9;
+        color: #fff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 1rem;
+      }
+      button:hover,
+      button:focus {
+        background: #1abc9c;
+      }
+      footer {
+        background: #2c3e50;
+        color: #fff;
+        text-align: center;
+        padding: 1rem 0;
+        margin-top: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Test Page Header</h1>
+      <nav>
+        <ul>
+          <li><a href="#main-content">Skip to Content</a></li>
+          <li><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main-content">
+      <h2>Welcome to the Accessibility Test Page</h2>
+      <p>
+        This is a simple page layout for testing accessibility tools. It
+        includes a header, main content, and a footer.
+      </p>
+      <details open>
+      <button type="button">Sample Button</button>
+      </details>
+    </main>
+    <footer>
+      <p>&copy; 2024 Accessibility Test</p>
+    </footer>
+  </body>
+</html>

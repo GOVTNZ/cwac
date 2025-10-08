@@ -22,55 +22,55 @@ logger = logging.getLogger("cwac")
 
 
 class ElementAudit(DefaultAudit):
-    """element audit."""
+  """element audit."""
 
-    audit_type = "ElementAudit"
+  audit_type = "ElementAudit"
 
-    def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
-        """Init variables."""
-        super().__init__(config, browser, **kwargs)
-        self.target_element = self.config.audit_plugins["element_audit"]["target_element_css_selector"]
-        self.base_url = kwargs["site_data"]["url"]
-        self.viewport_size = kwargs["viewport_size"]
+  def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
+    """Init variables."""
+    super().__init__(config, browser, **kwargs)
+    self.target_element = self.config.audit_plugins["element_audit"]["target_element_css_selector"]
+    self.base_url = kwargs["site_data"]["url"]
+    self.viewport_size = kwargs["viewport_size"]
 
-    def run(self) -> list[dict[str, Any]] | bool:
-        """Run an element detection on a specified URL.
+  def run(self) -> list[dict[str, Any]] | bool:
+    """Run an element detection on a specified URL.
 
-        Returns:
-            list[Any]: rows of test data
-            bool: False if test fails, else a list of results
-        """
-        # Scrape the page source of the loaded browser
-        try:
-            page_source = self.browser.get_page_source()
-        except Exception as exc:
-            logger.error("Error getting page source: %s", exc)
-            return False
+    Returns:
+        list[Any]: rows of test data
+        bool: False if test fails, else a list of results
+    """
+    # Scrape the page source of the loaded browser
+    try:
+      page_source = self.browser.get_page_source()
+    except Exception as exc:
+      logger.error("Error getting page source: %s", exc)
+      return False
 
-        # Try to parse using BeautifulSoup
-        try:
-            soup = BeautifulSoup(page_source, "lxml")
-        except Exception as exc:
-            logger.error("Error parsing page source: %s", exc)
-            return False
+    # Try to parse using BeautifulSoup
+    try:
+      soup = BeautifulSoup(page_source, "lxml")
+    except Exception as exc:
+      logger.error("Error parsing page source: %s", exc)
+      return False
 
-        # Find all elements of the target type (css selector)
-        elements = soup.select(self.target_element)
+    # Find all elements of the target type (css selector)
+    elements = soup.select(self.target_element)
 
-        found_elements = []
+    found_elements = []
 
-        # For each element found, create a row of data
-        for element in elements:
-            # get element outer html
-            element_data = {"element_html": element.prettify()}
-            found_elements.append(element_data)
+    # For each element found, create a row of data
+    for element in elements:
+      # get element outer html
+      element_data = {"element_html": element.prettify()}
+      found_elements.append(element_data)
 
-        # Get page information from DefaultAudit
-        default_audit_row = self._default_audit_row
+    # Get page information from DefaultAudit
+    default_audit_row = self._default_audit_row
 
-        # Add default_test_row to all results
-        final_output = []
-        for found_element in found_elements:
-            final_output.append({**default_audit_row, **found_element})
+    # Add default_test_row to all results
+    final_output = []
+    for found_element in found_elements:
+      final_output.append({**default_audit_row, **found_element})
 
-        return final_output
+    return final_output
