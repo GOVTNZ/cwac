@@ -11,6 +11,8 @@ from config import Config
 
 # pylint: disable=too-many-locals
 
+logger = logging.getLogger("cwac")
+
 
 class CSVWriter:
     """Simple writer for CSV files."""
@@ -111,7 +113,7 @@ def output_init_message(config: Config) -> None:
         """
         for line in message:
             print(line)
-            logging.info(line)
+            logger.info(line)
 
     print_log(
         "*" * 80,

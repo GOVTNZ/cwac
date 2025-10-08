@@ -23,6 +23,8 @@ from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
+logger = logging.getLogger("cwac")
+
 
 class ReflowAudit(DefaultAudit):
     """Audit WCAG 1.4.10 Reflow."""
@@ -35,7 +37,7 @@ class ReflowAudit(DefaultAudit):
 
         # Provide warning if headless mode is not enabled
         if not self.config.headless:
-            logging.warning(
+            logger.warning(
                 "Headless mode is not enabled."
                 "ReflowAudit performance will be reduced."
                 "To enable headless mode, set headless to true in config.json."
@@ -57,13 +59,13 @@ class ReflowAudit(DefaultAudit):
         """
         if not self.config.headless:
             # Log an error and quit
-            logging.error("Headless mode must be enabled for ReflowAudit.")
+            logger.error("Headless mode must be enabled for ReflowAudit.")
             print("Headless mode must be enabled for ReflowAudit.")
             sys.exit(1)
 
         # If browser is not 320px wide
         if self.browser.driver.get_window_size()["width"] != 320:
-            logging.error("ReflowAudit must only run at 320px wide")
+            logger.error("ReflowAudit must only run at 320px wide")
             print("ReflowAudit must only run at 320px wide")
             print("Width was " + str(self.browser.driver.get_window_size()["width"]))
             sys.exit(1)
@@ -79,7 +81,7 @@ class ReflowAudit(DefaultAudit):
             self.browser.driver.execute_script("window.scrollTo(100, 0);")
             overflow_amount = self.browser.driver.execute_script("return window.scrollX;")
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception("Failed to scroll to 100px %s", self.url, exc_info=True)
+            logger.exception("Failed to scroll to 100px %s", self.url, exc_info=True)
             return False
 
         # Run a ScreenshotAudit if the page overflows
@@ -101,7 +103,7 @@ class ReflowAudit(DefaultAudit):
         try:
             self.browser.driver.execute_script("window.scrollTo(0, 0);")
         except Exception:  # pylint: disable=broad-exception-caught
-            logging.exception(
+            logger.exception(
                 "Failed to reset scroll position after test %s",
                 self.url,
                 exc_info=True,

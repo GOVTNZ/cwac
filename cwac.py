@@ -22,6 +22,8 @@ from src.browser import Browser
 from src.crawler import Crawler, SiteData
 from src.output import output_init_message
 
+logger = logging.getLogger("cwac")
+
 
 class CWAC:
     """Main CWAC class."""
@@ -48,7 +50,7 @@ class CWAC:
             }
         for result in results:
             result.result()
-        logging.info("All threads complete")
+        logger.info("All threads complete")
 
     def should_skip_row(self, row: SiteData) -> bool:
         """Check if a row being imported should be skipped.
@@ -245,7 +247,7 @@ class CWAC:
         num_websites_msg = f"Number of {things_to_scan} to be scanned: {self.url_queue.qsize()}"
         print(num_websites_msg)
         print("*" * 80)
-        logging.info(num_websites_msg)
+        logger.info(num_websites_msg)
 
         # Set the estimated number of pages in the analytics object
         self.analytics.est_num_pages_in_test = self.url_queue.qsize() * self.config.max_links_per_domain
@@ -267,7 +269,7 @@ class CWAC:
         print("-" * 80)
         print("\r\nCWAC complete! Data can be found", "in the ./results folder.")
 
-        logging.info("CWAC complete!")
+        logger.info("CWAC complete!")
 
 
 if __name__ == "__main__":
