@@ -14,7 +14,7 @@ from config import Config
 # by using register_url_filter(func)
 
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 def url_filter_whitelist(config: Config, url: urllib.parse.ParseResult) -> bool:
@@ -27,12 +27,12 @@ def url_filter_whitelist(config: Config, url: urllib.parse.ParseResult) -> bool:
   Returns:
       bool: True if URL is valid, else False
   """
-  netloc_without_www = url.netloc.removeprefix("www.").lower()
+  netloc_without_www = url.netloc.removeprefix('www.').lower()
 
   netloc_with_www = url.netloc.lower()
 
-  if not url.netloc.startswith("www."):
-    netloc_with_www = "www." + url.netloc
+  if not url.netloc.startswith('www.'):
+    netloc_with_www = 'www.' + url.netloc
 
   return netloc_without_www in config.url_lookup or netloc_with_www in config.url_lookup
 
@@ -48,7 +48,7 @@ def url_filter_https_only(config: Config, url: urllib.parse.ParseResult) -> bool
       bool: True if URL is valid, else False
   """
   if config.only_allow_https:
-    return url.scheme == "https"
+    return url.scheme == 'https'
   return True
 
 
@@ -62,7 +62,7 @@ def url_filter_fragment(_config: Config, url: urllib.parse.ParseResult) -> bool:
   Returns:
       bool: True if URL is valid, else False
   """
-  return url.fragment == ""
+  return url.fragment == ''
 
 
 def url_filter_http(_config: Config, url: urllib.parse.ParseResult) -> bool:
@@ -75,7 +75,7 @@ def url_filter_http(_config: Config, url: urllib.parse.ParseResult) -> bool:
   Returns:
       bool: True of URL is valid, else False
   """
-  return url.scheme in ("http", "https")
+  return url.scheme in ('http', 'https')
 
 
 def url_filter_filetype(_config: Config, url: urllib.parse.ParseResult) -> bool:
@@ -89,57 +89,57 @@ def url_filter_filetype(_config: Config, url: urllib.parse.ParseResult) -> bool:
       bool: True if URL is valid, else False
   """
   disallowed_file_types = {
-    ".xml",
-    ".gif",
-    ".csv",
-    ".xls",
-    ".xlsx",
-    ".dmg",
-    ".exe",
-    ".wmv",
-    ".wma",
-    ".flv",
-    ".ppt",
-    ".py",
-    ".pptx",
-    ".jpg",
-    ".jpeg",
-    ".png",
-    ".avi",
-    ".mov",
-    ".m4a",
-    ".m4v",
-    ".mp3",
-    ".mp4",
-    ".doc",
-    ".docx",
-    ".pdf",
-    ".swf",
-    ".jar",
-    ".tar.gz",
-    ".zip",
-    ".iso",
-    ".crt",
-    ".crl",
-    ".pem",
-    ".key",
-    ".pfx",
-    ".p12",
-    ".der",
-    ".cer",
-    ".psd",
-    ".ai",
-    ".eps",
-    ".ttf",
-    ".otf",
-    ".woff",
-    ".woff2",
-    ".eot",
-    ".svg",
-    ".srt",
-    ".wav",
-    ".brf",
-    ".txt",
+    '.xml',
+    '.gif',
+    '.csv',
+    '.xls',
+    '.xlsx',
+    '.dmg',
+    '.exe',
+    '.wmv',
+    '.wma',
+    '.flv',
+    '.ppt',
+    '.py',
+    '.pptx',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.avi',
+    '.mov',
+    '.m4a',
+    '.m4v',
+    '.mp3',
+    '.mp4',
+    '.doc',
+    '.docx',
+    '.pdf',
+    '.swf',
+    '.jar',
+    '.tar.gz',
+    '.zip',
+    '.iso',
+    '.crt',
+    '.crl',
+    '.pem',
+    '.key',
+    '.pfx',
+    '.p12',
+    '.der',
+    '.cer',
+    '.psd',
+    '.ai',
+    '.eps',
+    '.ttf',
+    '.otf',
+    '.woff',
+    '.woff2',
+    '.eot',
+    '.svg',
+    '.srt',
+    '.wav',
+    '.brf',
+    '.txt',
   }
 
   lowercase_path = url.path.lower()
@@ -161,11 +161,11 @@ def url_filter_not_same_domain(url_a: str, url_b: str) -> bool:
   domain_a = urllib.parse.urlparse(url_a).netloc.lower()
   domain_b = urllib.parse.urlparse(url_b).netloc.lower()
 
-  domain_a = domain_a.removeprefix("www.")
-  domain_b = domain_b.removeprefix("www.")
+  domain_a = domain_a.removeprefix('www.')
+  domain_b = domain_b.removeprefix('www.')
 
   if domain_a != domain_b:
-    logger.info("url out due to domain mismatch %s %s", url_a, url_b)
+    logger.info('url out due to domain mismatch %s %s', url_a, url_b)
   return domain_a == domain_b
 
 
@@ -181,15 +181,15 @@ def url_filter_by_header_content_type(url: str, headers: dict[Any, Any]) -> bool
   """
   try:
     headers = {k.lower(): v for k, v in headers.items()}
-    if not headers["content-type"].startswith("text/html"):
+    if not headers['content-type'].startswith('text/html'):
       logger.info(
-        "URL filtered due to a non-text/html response %s: %s",
+        'URL filtered due to a non-text/html response %s: %s',
         url,
-        headers["content-type"],
+        headers['content-type'],
       )
       return False
   except KeyError:
-    logger.error("KeyError was encountered %s %s", url, headers)
+    logger.error('KeyError was encountered %s %s', url, headers)
     return False
 
   return True
@@ -213,14 +213,14 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
   """
   success = True
   timeout = (10, 10)
-  output = {"status_code": -1, "final_url": url}
+  output = {'status_code': -1, 'final_url': url}
   final_url = None
-  method = "head"
+  method = 'head'
 
   if not supports_head_requests:
-    method = "get"
+    method = 'get'
     logger.info(
-      "%s is marked as not supporting HEAD requests, using GET instead to check headers",
+      '%s is marked as not supporting HEAD requests, using GET instead to check headers',
       url,
     )
 
@@ -228,26 +228,26 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
   for i in range(3):
     try:
       # Set the user agent string
-      ua_string = {"User-Agent": config.user_agent}
+      ua_string = {'User-Agent': config.user_agent}
       headers = requests.request(method, url, headers=ua_string, timeout=timeout, allow_redirects=True)
 
       # this response does not really make sense, but if it does happen we might as well skip remaining retries
-      if headers.status_code == 405 and method != "get":
-        method = "get"
+      if headers.status_code == 405 and method != 'get':
+        method = 'get'
         logger.warning(
-          "%s does not support HEAD requests, retrying with GET (status code %i)",
+          '%s does not support HEAD requests, retrying with GET (status code %i)',
           url,
           headers.status_code,
         )
         continue
 
       final_url = headers.url
-      logger.info("%s has status code %i", url, headers.status_code)
+      logger.info('%s has status code %i', url, headers.status_code)
       break
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Failed to get headers; attempt: %d, %s", i + 1, url)
+      logger.exception('Failed to get headers; attempt: %d, %s', i + 1, url)
       if i == 2:
-        logger.error("Giving up on headers check; attempt: %d, %s", i + 1, url)
+        logger.error('Giving up on headers check; attempt: %d, %s', i + 1, url)
         return output
 
   # check content-type
@@ -255,8 +255,8 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
     success = False
 
   if success:
-    output["status_code"] = headers.status_code
-    output["final_url"] = final_url
+    output['status_code'] = headers.status_code
+    output['final_url'] = final_url
 
   return output
 
@@ -275,7 +275,7 @@ def url_filter_same_protocol(url_a: str, url_b: str) -> bool:
     parsed_a = urllib.parse.urlparse(url_a)
     parsed_b = urllib.parse.urlparse(url_b)
   except Exception as e:
-    logger.error("Failed to parse URL: %s", e)
+    logger.error('Failed to parse URL: %s', e)
     return False
 
   return parsed_a.scheme == parsed_b.scheme
@@ -291,11 +291,11 @@ class URLFilter:
     self.url_filters: dict[str, Callable[[Config, urllib.parse.ParseResult], bool]] = {}
 
     # Register URL filtration functions defined at the top of this file
-    self.register_url_filter("Non-empty fragment", url_filter_fragment)
-    self.register_url_filter("HTTPS only", url_filter_https_only)
-    self.register_url_filter("Non-http/s path", url_filter_http)
-    self.register_url_filter("Non-allowed file extension", url_filter_filetype)
-    self.register_url_filter("Whitelist", url_filter_whitelist)
+    self.register_url_filter('Non-empty fragment', url_filter_fragment)
+    self.register_url_filter('HTTPS only', url_filter_https_only)
+    self.register_url_filter('Non-http/s path', url_filter_http)
+    self.register_url_filter('Non-allowed file extension', url_filter_filetype)
+    self.register_url_filter('Whitelist', url_filter_whitelist)
 
   def register_url_filter(
     self,
@@ -319,11 +319,11 @@ class URLFilter:
     try:
       parsed_url = urllib.parse.urlparse(url)
     except Exception as e:
-      logger.error("Failed to parse URL: %s", e)
+      logger.error('Failed to parse URL: %s', e)
       return False
 
     for filter_name, filter_func in self.url_filters.items():
       if not filter_func(self.config, parsed_url):
-        logger.info("%s filter rejected %s", filter_name, url)
+        logger.info('%s filter rejected %s', filter_name, url)
         return False
     return True

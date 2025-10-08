@@ -22,7 +22,7 @@ from src.browser import Browser
 from src.crawler import Crawler, SiteData
 from src.output import output_init_message
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 class CWAC:
@@ -48,7 +48,7 @@ class CWAC:
       results = {executor.submit(self.thread, thread_id): thread_id for thread_id in range(self.config.thread_count)}
     for result in results:
       result.result()
-    logger.info("All threads complete")
+    logger.info('All threads complete')
 
   def should_skip_row(self, row: SiteData) -> bool:
     """Check if a row being imported should be skipped.
@@ -67,14 +67,14 @@ class CWAC:
     found_org = False
     if self.config.filter_to_organisations:
       for org in self.config.filter_to_organisations:
-        if org in row["organisation"]:
+        if org in row['organisation']:
           found_org = True
           break
 
     found_url = False
     if self.config.filter_to_urls:
       for url in self.config.filter_to_urls:
-        if url in row["url"]:
+        if url in row['url']:
           found_url = True
           break
 
@@ -123,7 +123,7 @@ class CWAC:
 
     # Iterate through the list and add back to queue
     for item in queue_list:
-      current_netloc = urlparse(item["url"]).netloc
+      current_netloc = urlparse(item['url']).netloc
 
       # If it looks like the net location of the last item we saw is
       # the same as the net location of the current item, skip adding
@@ -155,11 +155,11 @@ class CWAC:
     base_urls = set()
 
     for filename in os.listdir(folder_path):
-      if filename.endswith(".csv"):
+      if filename.endswith('.csv'):
         with open(
           os.path.join(folder_path, filename),
-          encoding="utf-8-sig",
-          newline="",
+          encoding='utf-8-sig',
+          newline='',
         ) as file:
           reader = csv.reader(file)
           header = next(reader)
@@ -167,12 +167,12 @@ class CWAC:
             dict_row = cast(dict[str, str], dict(zip(header, row)))
 
             # Strip whitespace from URL
-            dict_row["url"] = dict_row["url"].strip()
+            dict_row['url'] = dict_row['url'].strip()
 
             # Make the URL lowercase
-            dict_row["url"] = self.lowercase_url(dict_row["url"])
+            dict_row['url'] = self.lowercase_url(dict_row['url'])
 
-            base_urls.add(dict_row["url"])
+            base_urls.add(dict_row['url'])
     return base_urls
 
   def import_base_urls(self) -> SimpleQueue[SiteData]:
@@ -191,11 +191,11 @@ class CWAC:
     url_queue: SimpleQueue[SiteData] = SimpleQueue()
 
     for filename in os.listdir(folder_path):
-      if filename.endswith(".csv"):
+      if filename.endswith('.csv'):
         with open(
           os.path.join(folder_path, filename),
-          encoding="utf-8-sig",
-          newline="",
+          encoding='utf-8-sig',
+          newline='',
         ) as file:
           reader = csv.reader(file)
           header = next(reader)
@@ -205,14 +205,14 @@ class CWAC:
               continue
 
             # Strip whitespace from URL
-            dict_row["url"] = dict_row["url"].strip()
+            dict_row['url'] = dict_row['url'].strip()
 
             # Make the URL lowercase
-            dict_row["url"] = self.lowercase_url(dict_row["url"])
+            dict_row['url'] = self.lowercase_url(dict_row['url'])
 
-            dict_row["supports_head"] = dict_row["url"] not in headless_base_urls
+            dict_row['supports_head'] = dict_row['url'] not in headless_base_urls
 
-            self.analytics.add_base_url(dict_row["url"])
+            self.analytics.add_base_url(dict_row['url'])
 
             url_queue.put(dict_row)
 
@@ -237,14 +237,14 @@ class CWAC:
     # Import base_urls for this run
     self.url_queue = self.import_base_urls()
 
-    things_to_scan = "websites"
+    things_to_scan = 'websites'
     if self.config.max_links_per_domain == 1:
-      things_to_scan = "pages"
+      things_to_scan = 'pages'
 
     # Print the number of URLs to be scanned
-    num_websites_msg = f"Number of {things_to_scan} to be scanned: {self.url_queue.qsize()}"
+    num_websites_msg = f'Number of {things_to_scan} to be scanned: {self.url_queue.qsize()}'
     print(num_websites_msg)
-    print("*" * 80)
+    print('*' * 80)
     logger.info(num_websites_msg)
 
     # Set the estimated number of pages in the analytics object
@@ -263,24 +263,24 @@ class CWAC:
       pages_scanned=self.analytics.pages_scanned,
     )
 
-    print("\r\n")
-    print("-" * 80)
-    print("\r\nCWAC complete! Data can be found", "in the ./results folder.")
+    print('\r\n')
+    print('-' * 80)
+    print('\r\nCWAC complete! Data can be found', 'in the ./results folder.')
 
-    logger.info("CWAC complete!")
+    logger.info('CWAC complete!')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
   def resolve_config_filename() -> str:
     """Resolve the config filename when being invoked directly."""
-    config_filename = "config_default.json"
+    config_filename = 'config_default.json'
     # First arg passed to CWAC is the config filename
     if len(sys.argv) > 1:
       config_filename = sys.argv[1]
       # Only accept alphanumeric, underscores, dots, and hyphens
-      if not re.match(r"^[a-zA-Z0-9_.-]+$", config_filename):
-        raise ValueError("config_filename must be alphanumeric, underscores, and hyphens")
+      if not re.match(r'^[a-zA-Z0-9_.-]+$', config_filename):
+        raise ValueError('config_filename must be alphanumeric, underscores, and hyphens')
     return config_filename
 
   cwac: CWAC = CWAC(resolve_config_filename())

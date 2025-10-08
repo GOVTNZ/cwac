@@ -22,20 +22,20 @@ from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 class FocusIndicatorAudit(DefaultAudit):
   """Focus indiactor audit."""
 
-  audit_type = "FocusIndicatorAudit"
+  audit_type = 'FocusIndicatorAudit'
 
   def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
     """Init variables."""
     super().__init__(config, browser, **kwargs)
-    self.root_element_css_selector = self.config.audit_plugins["focus_indicator_audit"]["root_element_css_selector"]
-    self.pre_num_tab_presses = self.config.audit_plugins["focus_indicator_audit"]["pre_tab_key_presses"]
-    self.max_num_tab_presses = self.config.audit_plugins["focus_indicator_audit"]["max_tab_key_presses"]
+    self.root_element_css_selector = self.config.audit_plugins['focus_indicator_audit']['root_element_css_selector']
+    self.pre_num_tab_presses = self.config.audit_plugins['focus_indicator_audit']['pre_tab_key_presses']
+    self.max_num_tab_presses = self.config.audit_plugins['focus_indicator_audit']['max_tab_key_presses']
 
   def wait_for_page_to_stop_animating(self) -> bool:
     """Wait for animations to finish on the page.
@@ -43,31 +43,31 @@ class FocusIndicatorAudit(DefaultAudit):
     Returns:
         bool: if the page is still animating after 3 seconds
     """
-    logger.info("Waiting for page to stop animating...")
+    logger.info('Waiting for page to stop animating...')
     initial_time = time.time()
     for i in range(5):
       try:
         # Take a screenshot
-        logger.info("Taking initial screenshot %s #%i", self.url, i)
+        logger.info('Taking initial screenshot %s #%i', self.url, i)
         img_a_data = self.screenshot()
 
         # Wait to see if anything animates
         time.sleep(0.5)
 
         # Take a second screenshot 0.5s later
-        logger.info("Taking second screenshot %s #%i", self.url, i)
+        logger.info('Taking second screenshot %s #%i', self.url, i)
         img_b_data = self.screenshot()
 
       except Exception:  # pylint: disable=broad-exception-caught
-        logger.exception("Failed to take screenshot")
+        logger.exception('Failed to take screenshot')
         return False
 
       # If the two images are the same, the page is still
       if np.sum(img_a_data != img_b_data) == 0:
         # Pages are equal (0 differing pixels)
-        logger.info("Page stopped animating %s #%i", self.url, i)
+        logger.info('Page stopped animating %s #%i', self.url, i)
         return True
-      logger.info("Page is still animating #%i", i)
+      logger.info('Page is still animating #%i', i)
 
       # If the time elapsed is greater than 15 seconds,
       # give up waiting
@@ -84,16 +84,16 @@ class FocusIndicatorAudit(DefaultAudit):
     when the Tab key is pressed.
     """
     try:
-      scroll_height = self.browser.driver.execute_script("return document.documentElement.scrollHeight;")
+      scroll_height = self.browser.driver.execute_script('return document.documentElement.scrollHeight;')
       # Limit the scroll height to 10000px
       scroll_height = min(scroll_height, 10000)
-      logger.info("Setting browser height to %i", scroll_height)
+      logger.info('Setting browser height to %i', scroll_height)
       self.browser.driver.set_window_size(
-        self.browser.driver.get_window_size()["width"],
+        self.browser.driver.get_window_size()['width'],
         scroll_height,
       )
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Failed to get scroll height")
+      logger.exception('Failed to get scroll height')
 
   def check_if_page_has_focus(self) -> bool:
     """Check if the page has focus.
@@ -106,9 +106,9 @@ class FocusIndicatorAudit(DefaultAudit):
         bool: if the page has focus
     """
     try:
-      return bool(self.browser.driver.execute_script("return document.hasFocus()"))
+      return bool(self.browser.driver.execute_script('return document.hasFocus()'))
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Failed to check if page has focus")
+      logger.exception('Failed to check if page has focus')
       return False
 
   def screenshot(self) -> Any:
@@ -125,18 +125,18 @@ class FocusIndicatorAudit(DefaultAudit):
   def __find_root_content_element(self) -> WebElement | None:
     try:
       preferred_element = self.browser.driver.find_element(By.CSS_SELECTOR, self.root_element_css_selector)
-      logger.info("Checking focus indication within <%s> element", preferred_element.tag_name)
+      logger.info('Checking focus indication within <%s> element', preferred_element.tag_name)
       return preferred_element
     except WebDriverException:
       logger.warning(
-        "Failed to find any elements matching %s, falling back to body",
+        'Failed to find any elements matching %s, falling back to body',
         self.root_element_css_selector,
       )
 
     try:
-      return self.browser.driver.find_element(By.TAG_NAME, "body")
+      return self.browser.driver.find_element(By.TAG_NAME, 'body')
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Failed to find body element")
+      logger.exception('Failed to find body element')
       return None
 
   def run(self) -> list[dict[str, Any]] | bool:
@@ -149,14 +149,14 @@ class FocusIndicatorAudit(DefaultAudit):
     # Get page information from DefaultAudit
     common_properties = {
       **self._default_audit_row,
-      "audit_type": FocusIndicatorAudit.audit_type,
-      "helpUrl": ("https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html"),
+      'audit_type': FocusIndicatorAudit.audit_type,
+      'helpUrl': ('https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html'),
     }
 
     # If config.headless is False, log an error
     if not self.config.headless:
-      logger.error("ERROR: FocusIndicatorAudit needs headless=True in config.json")
-      print("ERROR: FocusIndicatorAudit needs headless=True in config.json")
+      logger.error('ERROR: FocusIndicatorAudit needs headless=True in config.json')
+      print('ERROR: FocusIndicatorAudit needs headless=True in config.json')
       sys.exit(1)
 
     original_window_size = self.browser.driver.get_window_size()
@@ -173,15 +173,15 @@ class FocusIndicatorAudit(DefaultAudit):
       return [
         {
           **common_properties,
-          "description": (
-            "Page never stopped animating. "
-            "FocusIndicatorAudit could not run as "
-            "a result. Potential WCAG SC Pause, Stop, "
-            "Hide failure (SC 2.2.2) (Level A)."
+          'description': (
+            'Page never stopped animating. '
+            'FocusIndicatorAudit could not run as '
+            'a result. Potential WCAG SC Pause, Stop, '
+            'Hide failure (SC 2.2.2) (Level A).'
           ),
-          "html": "",
-          "num_issues": 1,
-          "helpUrl": ("https://www.w3.org/WAI/WCAG21/Understanding/pause-stop-hide.html"),
+          'html': '',
+          'num_issues': 1,
+          'helpUrl': ('https://www.w3.org/WAI/WCAG21/Understanding/pause-stop-hide.html'),
         }
       ]
 
@@ -189,7 +189,7 @@ class FocusIndicatorAudit(DefaultAudit):
     try:
       reference_image = self.screenshot()
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Failed to take screenshot")
+      logger.exception('Failed to take screenshot')
       return False
 
     root_element = self.__find_root_content_element()
@@ -200,10 +200,10 @@ class FocusIndicatorAudit(DefaultAudit):
     # Store which # of tab key press has no focus indicator
     result_list = []
 
-    plural = ""
+    plural = ''
     if self.pre_num_tab_presses != 1:
-      plural = "s"
-    logger.info("pre-tabbing %i time%s", self.pre_num_tab_presses, plural)
+      plural = 's'
+    logger.info('pre-tabbing %i time%s', self.pre_num_tab_presses, plural)
 
     # Press tab a number of times possibly before running the actual audit
     # to help ensure we're actually interacting with a meaningful element
@@ -223,7 +223,7 @@ class FocusIndicatorAudit(DefaultAudit):
       try:
         current_image = self.screenshot()
       except Exception:  # pylint: disable=broad-exception-caught
-        logger.exception("Failed to take screenshot")
+        logger.exception('Failed to take screenshot')
         continue
 
       # Get the difference between the reference image and the
@@ -235,11 +235,11 @@ class FocusIndicatorAudit(DefaultAudit):
         # No focus indicator was seen
         # Get the html of the element that has focus
         try:
-          html = self.browser.driver.execute_script("return document.activeElement.outerHTML")
+          html = self.browser.driver.execute_script('return document.activeElement.outerHTML')
         except Exception:  # pylint: disable=broad-exception-caught
-          logger.exception("Failed to get html of focused element")
+          logger.exception('Failed to get html of focused element')
           continue
-        result_list.append({"html": html[:100], "tab_press": i + 1})
+        result_list.append({'html': html[:100], 'tab_press': i + 1})
 
     final_results = []
 
@@ -248,10 +248,10 @@ class FocusIndicatorAudit(DefaultAudit):
       return [
         {
           **common_properties,
-          "description": "All tab presses had a focus indicator",
-          "html": "",
-          "num_issues": 0,
-          "helpUrl": ("https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html"),
+          'description': 'All tab presses had a focus indicator',
+          'html': '',
+          'num_issues': 0,
+          'helpUrl': ('https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html'),
         }
       ]
 
@@ -260,10 +260,10 @@ class FocusIndicatorAudit(DefaultAudit):
       final_results.append(
         {
           **common_properties,
-          "description": (f"Tab key press #{result['tab_press']} did not show a focus indicator"),
-          "html": result["html"],
-          "num_issues": 1,
-          "helpUrl": ("https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html"),
+          'description': (f'Tab key press #{result["tab_press"]} did not show a focus indicator'),
+          'html': result['html'],
+          'num_issues': 1,
+          'helpUrl': ('https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html'),
         }
       )
 

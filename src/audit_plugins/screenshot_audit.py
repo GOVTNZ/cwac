@@ -10,13 +10,13 @@ import numpy as np
 
 from src.audit_plugins.default_audit import DefaultAudit
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 class ScreenshotAudit(DefaultAudit):
   """Screenshot Audit."""
 
-  audit_type = "ScreenshotAudit"
+  audit_type = 'ScreenshotAudit'
 
   def screenshot(self) -> Any:
     """Take a screenshot of the page that's loaded in the browser.
@@ -38,14 +38,14 @@ class ScreenshotAudit(DefaultAudit):
     """
     # create ./results/{config.audit_name}/screenshots folder
     # if it doesn't exist
-    if not os.path.exists("results/" + self.config.audit_name + "/screenshots"):
+    if not os.path.exists('results/' + self.config.audit_name + '/screenshots'):
       with contextlib.suppress(FileExistsError):
-        os.makedirs("results/" + self.config.audit_name + "/screenshots")
+        os.makedirs('results/' + self.config.audit_name + '/screenshots')
 
     # Take screenshot of the browser and save it as a PNG in /screenshots
     # With a unique filename
 
-    screenshot_path = "results/" + self.config.audit_name + "/screenshots/" + self.audit_id + ".png"
+    screenshot_path = 'results/' + self.config.audit_name + '/screenshots/' + self.audit_id + '.png'
 
     # Get browser source code
     # source = self.browser.get_page_source()
@@ -70,13 +70,13 @@ class ScreenshotAudit(DefaultAudit):
         [cv2.IMWRITE_PNG_COMPRESSION, 9],
       )
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Failed to save screenshot")
+      logger.exception('Failed to save screenshot')
       return False
 
     return [
       {
         **self._default_audit_row,
-        "audit_type": ScreenshotAudit.audit_type,
-        "screenshot": self.audit_id + ".png",
+        'audit_type': ScreenshotAudit.audit_type,
+        'screenshot': self.audit_id + '.png',
       }
     ]

@@ -23,13 +23,13 @@ from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 class ReflowAudit(DefaultAudit):
   """Audit WCAG 1.4.10 Reflow."""
 
-  audit_type = "ReflowAudit"
+  audit_type = 'ReflowAudit'
 
   def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
     """Init variables."""
@@ -38,9 +38,9 @@ class ReflowAudit(DefaultAudit):
     # Provide warning if headless mode is not enabled
     if not self.config.headless:
       logger.warning(
-        "Headless mode is not enabled."
-        "ReflowAudit performance will be reduced."
-        "To enable headless mode, set headless to true in config.json."
+        'Headless mode is not enabled.'
+        'ReflowAudit performance will be reduced.'
+        'To enable headless mode, set headless to true in config.json.'
       )
 
   def run(self) -> list[dict[str, Any]] | bool:
@@ -59,15 +59,15 @@ class ReflowAudit(DefaultAudit):
     """
     if not self.config.headless:
       # Log an error and quit
-      logger.error("Headless mode must be enabled for ReflowAudit.")
-      print("Headless mode must be enabled for ReflowAudit.")
+      logger.error('Headless mode must be enabled for ReflowAudit.')
+      print('Headless mode must be enabled for ReflowAudit.')
       sys.exit(1)
 
     # If browser is not 320px wide
-    if self.browser.driver.get_window_size()["width"] != 320:
-      logger.error("ReflowAudit must only run at 320px wide")
-      print("ReflowAudit must only run at 320px wide")
-      print("Width was " + str(self.browser.driver.get_window_size()["width"]))
+    if self.browser.driver.get_window_size()['width'] != 320:
+      logger.error('ReflowAudit must only run at 320px wide')
+      print('ReflowAudit must only run at 320px wide')
+      print('Width was ' + str(self.browser.driver.get_window_size()['width']))
       sys.exit(1)
 
     # Only load the page if it's not already loaded
@@ -78,14 +78,14 @@ class ReflowAudit(DefaultAudit):
 
     # Determine if there is a horisontal overflow
     try:
-      self.browser.driver.execute_script("window.scrollTo(100, 0);")
-      overflow_amount = self.browser.driver.execute_script("return window.scrollX;")
+      self.browser.driver.execute_script('window.scrollTo(100, 0);')
+      overflow_amount = self.browser.driver.execute_script('return window.scrollX;')
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Failed to scroll to 100px %s", self.url, exc_info=True)
+      logger.exception('Failed to scroll to 100px %s', self.url, exc_info=True)
       return False
 
     # Run a ScreenshotAudit if the page overflows
-    if self.config.audit_plugins["reflow_audit"]["screenshot_failures"] and overflow_amount > 0:
+    if self.config.audit_plugins['reflow_audit']['screenshot_failures'] and overflow_amount > 0:
       # pylint: disable=import-outside-toplevel
       from src.audit_plugins.screenshot_audit import ScreenshotAudit
 
@@ -101,10 +101,10 @@ class ReflowAudit(DefaultAudit):
 
     # Reset scroll position
     try:
-      self.browser.driver.execute_script("window.scrollTo(0, 0);")
+      self.browser.driver.execute_script('window.scrollTo(0, 0);')
     except Exception:  # pylint: disable=broad-exception-caught
       logger.exception(
-        "Failed to reset scroll position after test %s",
+        'Failed to reset scroll position after test %s',
         self.url,
         exc_info=True,
       )
@@ -112,10 +112,10 @@ class ReflowAudit(DefaultAudit):
     return [
       {
         **self._default_audit_row,
-        "audit_type": ReflowAudit.audit_type,
-        "url": self.url,
-        "overflows": overflow_amount > 0,
-        "num_issues": 1 if overflow_amount > 0 else 0,
-        "overflow_amount_px": overflow_amount,
+        'audit_type': ReflowAudit.audit_type,
+        'url': self.url,
+        'overflows': overflow_amount > 0,
+        'num_issues': 1 if overflow_amount > 0 else 0,
+        'overflow_amount_px': overflow_amount,
       }
     ]

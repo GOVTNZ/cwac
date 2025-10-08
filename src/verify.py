@@ -2,7 +2,7 @@
 
 import logging
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 def verify_axe_results(max_links_per_domain: int, pages_scanned: dict[str, set[str]]) -> None:
@@ -20,7 +20,7 @@ def verify_axe_results(max_links_per_domain: int, pages_scanned: dict[str, set[s
     correct_len = max_links_per_domain
     if len(value) != correct_len:
       logger.warning(
-        "VERIFY: %s had %i pages scanned, not %i",
+        'VERIFY: %s had %i pages scanned, not %i',
         key,
         len(value),
         correct_len,

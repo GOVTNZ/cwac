@@ -18,7 +18,7 @@ from config import Config
 
 WebDriverType = selenium.webdriver.firefox.webdriver.WebDriver | selenium.webdriver.chrome.webdriver.WebDriver
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 class Browser:
@@ -29,9 +29,9 @@ class Browser:
     self.config = config
     self.thread_id = thread_id
     self.num_retries = 2
-    self.viewport_size = {"width": 320, "height": 450}
+    self.viewport_size = {'width': 320, 'height': 450}
     self.driver: WebDriverType = self.spawn_single_webdriver(window_size=list(self.config.viewport_sizes.values())[0])
-    self.last_url_req = ""
+    self.last_url_req = ''
 
   def get_if_necessary(self, url: str) -> bool:
     """Load a URL in the webdriver if it is not already loaded.
@@ -57,34 +57,34 @@ class Browser:
         bool: True if page loaded, False if something went wrong
     """
     # If only_allow_https is set, check that the URL is HTTPS
-    if self.config.only_allow_https and not url.startswith("https://"):
-      logger.info("Skipping %s as only_allow_https is set", url)
+    if self.config.only_allow_https and not url.startswith('https://'):
+      logger.info('Skipping %s as only_allow_https is set', url)
       return False
 
     for attempts in range(5):
       try:
-        logger.info("Running .get: %s", url)
+        logger.info('Running .get: %s', url)
         self.driver.get(url)
-        logger.info(".get successful")
+        logger.info('.get successful')
         self.driver.set_script_timeout(self.config.script_timeout)
         self.driver.set_page_load_timeout(self.config.page_load_timeout)
         self.last_url_req = url
         break
       except selenium.common.exceptions.TimeoutException:
-        logger.exception("Timeout exception: %s, attempt:%i", url, attempts)
+        logger.exception('Timeout exception: %s, attempt:%i', url, attempts)
         if attempts == self.num_retries - 1:
-          logger.info("%i attempts failed to .get: %s", attempts + 1, url)
+          logger.info('%i attempts failed to .get: %s', attempts + 1, url)
           return False
       except selenium.common.exceptions.WebDriverException:
-        logger.exception("WebDriverException")
+        logger.exception('WebDriverException')
         if attempts == self.num_retries - 1:
-          logger.info("%i attempts failed to .get: %s", attempts + 1, url)
+          logger.info('%i attempts failed to .get: %s', attempts + 1, url)
           return False
         self.safe_restart()
       except Exception:  # pylint: disable=broad-exception-caught
-        logger.exception("Unhandled exception")
+        logger.exception('Unhandled exception')
         if attempts == self.num_retries - 1:
-          logger.info("%i attempts failed to .get: %s", attempts + 1, url)
+          logger.info('%i attempts failed to .get: %s', attempts + 1, url)
           return False
 
     # Delay to allow page to load more
@@ -96,16 +96,16 @@ class Browser:
     try:
       self.driver.close()
     except selenium.common.exceptions.InvalidSessionIdException:
-      logger.exception("InvalidSessionIdException, browser probably crashed")
+      logger.exception('InvalidSessionIdException, browser probably crashed')
     except selenium.common.exceptions.WebDriverException as error:
       # check if 'message' is "disconnected: not connected to DevTools"
-      if "disconnected" in str(error):
+      if 'disconnected' in str(error):
         logger.exception(
-          "WebDriverException, browser probably crashed %s",
+          'WebDriverException, browser probably crashed %s',
           self.last_url_req,
         )
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
-    self.last_url_req = ""
+    self.last_url_req = ''
 
   def restart(self) -> None:
     """Restart the webdriver and restore its dimensions."""
@@ -117,9 +117,9 @@ class Browser:
       new_driver.set_window_position(**window_pos)
       new_driver.set_window_size(**window_size)
       self.driver = new_driver
-      self.last_url_req = ""
+      self.last_url_req = ''
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Unhandled exception")
+      logger.exception('Unhandled exception')
       self.safe_restart()
 
   def get_doctype(self) -> str:
@@ -128,7 +128,7 @@ class Browser:
     Returns:
         str: the doctype of the loaded page
     """
-    doctype_string = ""
+    doctype_string = ''
     doctype_js = """return "<!DOCTYPE " + document.doctype.name \
             + (document.doctype.publicId ? ' PUBLIC "' \
             + document.doctype.publicId + '"' : '') \
@@ -144,7 +144,7 @@ class Browser:
         self.driver.current_url,
       )
       logger.error(traceback.format_exc())
-      doctype_string = "<!DOCTYPE html>"
+      doctype_string = '<!DOCTYPE html>'
     return doctype_string
 
   def get_base_uri(self) -> str:
@@ -154,9 +154,9 @@ class Browser:
         str: base URI of current page.
     """
     try:
-      return cast(str, self.driver.execute_script("return document.baseURI"))
+      return cast(str, self.driver.execute_script('return document.baseURI'))
     except Exception as exc:
-      logger.exception("TimeoutException when getting base URI")
+      logger.exception('TimeoutException when getting base URI')
       self.safe_restart()
       raise exc
 
@@ -167,25 +167,25 @@ class Browser:
         str: page source
     """
     try:
-      return self.get_doctype() + "\n" + self.driver.page_source
+      return self.get_doctype() + '\n' + self.driver.page_source
     except selenium.common.exceptions.TimeoutException as exc:
-      logger.exception("TimeoutException when getting page source")
+      logger.exception('TimeoutException when getting page source')
       self.safe_restart()
       raise exc
 
   def close(self) -> None:
     """Close the browser."""
-    logger.info("Quitting browser")
+    logger.info('Quitting browser')
     self.driver.close()
-    self.last_url_req = ""
+    self.last_url_req = ''
 
   def refresh(self) -> None:
     """Refresh the browser."""
-    logger.info("Refreshing browser")
+    logger.info('Refreshing browser')
     try:
       self.driver.refresh()
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Error refreshing browser")
+      logger.exception('Error refreshing browser')
 
   def set_window_size(self, width: int, height: int) -> None:
     """Set browser size.
@@ -195,13 +195,13 @@ class Browser:
         height (int): height of browser.
     """
     try:
-      self.viewport_size = {"width": width, "height": height}
+      self.viewport_size = {'width': width, 'height': height}
       self.driver.set_window_size(width, height)
     except selenium.common.exceptions.TimeoutException:
-      logger.exception("TimeoutException")
+      logger.exception('TimeoutException')
       self.safe_restart()
     except selenium.common.exceptions.WebDriverException:
-      logger.exception("WebDriverException")
+      logger.exception('WebDriverException')
       self.safe_restart()
 
   def get_window_size(self) -> dict[str, int]:
@@ -213,15 +213,15 @@ class Browser:
     try:
       return self.driver.get_window_size()
     except selenium.common.exceptions.TimeoutException:
-      logger.exception("TimeoutException")
+      logger.exception('TimeoutException')
       self.safe_restart()
       return self.driver.get_window_size()
     except selenium.common.exceptions.WebDriverException:
-      logger.exception("WebDriverException")
+      logger.exception('WebDriverException')
       self.safe_restart()
       return self.driver.get_window_size()
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Unhandled exception")
+      logger.exception('Unhandled exception')
       self.safe_restart()
       return self.viewport_size
 
@@ -238,50 +238,50 @@ class Browser:
     driver: WebDriverType
 
     # Get appropriate null path for OS
-    null_path = "/dev/null"
-    if platform.system() == "Windows":
-      null_path = "NUL"
+    null_path = '/dev/null'
+    if platform.system() == 'Windows':
+      null_path = 'NUL'
 
     # Sets up a Chrome instance
-    if self.config.browser == "chrome":
+    if self.config.browser == 'chrome':
       chrome_options = webdriver.ChromeOptions()
       if self.config.headless or headless_override:
-        chrome_options.add_argument("--headless")
-      chrome_options.add_argument(f"--window-size={window_size['width']},{window_size['height']}")
-      chrome_options.add_argument("--log-level=3")
-      chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
-      chrome_options.add_argument("--disable-notifications")
-      chrome_options.add_argument("--disable-popup-blocking")
+        chrome_options.add_argument('--headless')
+      chrome_options.add_argument(f'--window-size={window_size["width"]},{window_size["height"]}')
+      chrome_options.add_argument('--log-level=3')
+      chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+      chrome_options.add_argument('--disable-notifications')
+      chrome_options.add_argument('--disable-popup-blocking')
       chrome_options.add_experimental_option(
-        "prefs",
+        'prefs',
         {
-          "profile.default_content_setting_values.notifications": 1,
-          "profile.default_content_setting_values.javascript": 2,
+          'profile.default_content_setting_values.notifications': 1,
+          'profile.default_content_setting_values.javascript': 2,
         },
       )
 
       # Set fake user agent
-      chrome_options.add_argument(f"user-agent={self.config.user_agent}")
+      chrome_options.add_argument(f'user-agent={self.config.user_agent}')
 
-      chrome_options.unhandled_prompt_behavior = "dismiss"
+      chrome_options.unhandled_prompt_behavior = 'dismiss'
 
       # Disable downloads
 
       prefs = {
-        "profile.default_content_settings_values\
-                    .automatic_downloads": 2,
-        "download.default_directory": null_path,
-        "download.prompt_for_download": False,
-        "download.directory_upgrade": True,
+        'profile.default_content_settings_values\
+                    .automatic_downloads': 2,
+        'download.default_directory': null_path,
+        'download.prompt_for_download': False,
+        'download.directory_upgrade': True,
       }
 
-      chrome_options.add_experimental_option("prefs", prefs)
+      chrome_options.add_experimental_option('prefs', prefs)
 
       chrome_service = Service(
         self.config.chrome_driver_location,
         service_args=[
-          "--verbose",
-          "--log-path=./results/" + self.config.audit_name + "/chromedriver.log",
+          '--verbose',
+          '--log-path=./results/' + self.config.audit_name + '/chromedriver.log',
         ],
       )
 
@@ -291,24 +291,24 @@ class Browser:
       driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
 
     # Sets up a Firefox instance
-    if self.config.browser == "firefox":
+    if self.config.browser == 'firefox':
       firefox_options = selenium.webdriver.firefox.options.Options()
       firefox_options.headless = self.config.headless  # type: ignore
       if headless_override:
         firefox_options.headless = True  # type: ignore
-      firefox_options.add_argument(f"--width={window_size['width']}")
-      firefox_options.add_argument(f"--height={window_size['height']}")
+      firefox_options.add_argument(f'--width={window_size["width"]}')
+      firefox_options.add_argument(f'--height={window_size["height"]}')
 
       # Set fake user agent
-      firefox_options.set_preference("general.useragent.override", self.config.user_agent)
+      firefox_options.set_preference('general.useragent.override', self.config.user_agent)
 
       # Disable file downloads
-      firefox_options.set_preference("browser.download.dir", null_path)
-      firefox_options.set_preference("browser.download.folderList", 2)
+      firefox_options.set_preference('browser.download.dir', null_path)
+      firefox_options.set_preference('browser.download.folderList', 2)
 
-      firefox_options.unhandled_prompt_behavior = "dismiss"
+      firefox_options.unhandled_prompt_behavior = 'dismiss'
       firefox_service = FirefoxService(
-        log_path="./results/" + self.config.audit_name + "/geckodriver.log",
+        log_path='./results/' + self.config.audit_name + '/geckodriver.log',
       )
       driver = webdriver.Firefox(service=firefox_service, options=firefox_options)
 

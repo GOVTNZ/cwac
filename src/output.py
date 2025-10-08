@@ -11,7 +11,7 @@ from config import Config
 
 # pylint: disable=too-many-locals
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 class CSVWriter:
@@ -51,7 +51,7 @@ class CSVWriter:
     Returns:
         list[dict[Any, Any]]: list of dictionaries
     """
-    with self.get_file_lock(path), open(path, "r", encoding="utf-8-sig") as csvfile:
+    with self.get_file_lock(path), open(path, 'r', encoding='utf-8-sig') as csvfile:
       reader = csv.DictReader(csvfile)
       rows = list(reader)
     return rows
@@ -90,8 +90,8 @@ class CSVWriter:
 
     with self.get_file_lock(path):
       file_exists = False if overwrite else os.path.exists(path)
-      file_mode = "w" if overwrite else "a"
-      with open(path, file_mode, encoding="utf-8-sig") as csvfile:
+      file_mode = 'w' if overwrite else 'a'
+      with open(path, file_mode, encoding='utf-8-sig') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=keys)
         if not file_exists:
           writer.writeheader()
@@ -116,45 +116,45 @@ def output_init_message(config: Config) -> None:
       logger.info(line)
 
   print_log(
-    "*" * 80,
-    "Centralised Web Accessibility Checker (CWAC)",
-    "Te Tari Taiwhenua | Department of Internal Affairs",
+    '*' * 80,
+    'Centralised Web Accessibility Checker (CWAC)',
+    'Te Tari Taiwhenua | Department of Internal Affairs',
   )
-  print_log(f"Run time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-  print_log("*" * 80)
-  print_log("Configuration")
-  print_log(f"Audit name: {config.audit_name}")
-  print_log("Viewport sizes:")
+  print_log(f'Run time: {time.strftime("%Y-%m-%d %H:%M:%S")}')
+  print_log('*' * 80)
+  print_log('Configuration')
+  print_log(f'Audit name: {config.audit_name}')
+  print_log('Viewport sizes:')
   for viewport_name, viewport_size in config.viewport_sizes.items():
-    print_log(f"    {viewport_name}: {viewport_size}")
+    print_log(f'    {viewport_name}: {viewport_size}')
   for _, audit_plugin in config.audit_plugins.items():
-    print_log(f"Audit plugin: {audit_plugin['class_name']}")
+    print_log(f'Audit plugin: {audit_plugin["class_name"]}')
     for setting_key, setting_value in audit_plugin.items():
-      if setting_key == audit_plugin["class_name"]:
+      if setting_key == audit_plugin['class_name']:
         continue
-      print_log(f"    {setting_key}: {setting_value}")
-  print_log(f"Headless: {config.headless}")
-  print_log(f"Thread count: {config.thread_count}")
-  print_log(f"Browser: {config.browser}")
-  print_log(f"Filter to orgs: {config.filter_to_organisations}")
-  print_log(f"Filter to urls: {config.filter_to_urls}")
-  print_log(f"Max links per domain: {config.max_links_per_domain}")
-  print_log(f"Chrome binary location: {config.chrome_binary_location}")
-  print_log(f"Chrome driver location: {config.chrome_driver_location}")
-  print_log(f"User agent: {config.user_agent}")
-  print_log(f"User agent product token: {config.user_agent_product_token}")
-  print_log(f"Follow robots.txt: {config.follow_robots_txt}")
-  print_log(f"Script timeout: {config.script_timeout} seconds")
-  print_log(f"Page load timeout: {config.page_load_timeout} seconds")
-  print_log(f"Delay between page_loads: {config.delay_between_page_loads} seconds")
-  print_log(f"Delay between viewports: {config.delay_between_viewports} seconds")
-  print_log(f"Delay after page load: {config.delay_after_page_load} seconds")
-  print_log(f"Only allow HTTPS: {config.only_allow_https}")
-  print_log(f"Perform header checks: {config.perform_header_check}")
-  print_log(f"Shuffle base urls: {config.shuffle_base_urls}")
-  print_log(f"Base urls visit path: {config.base_urls_visit_path}")
-  print_log(f"Recording unexpected response codes: {config.record_unexpected_response_codes}")
-  print_log("*" * 80)
+      print_log(f'    {setting_key}: {setting_value}')
+  print_log(f'Headless: {config.headless}')
+  print_log(f'Thread count: {config.thread_count}')
+  print_log(f'Browser: {config.browser}')
+  print_log(f'Filter to orgs: {config.filter_to_organisations}')
+  print_log(f'Filter to urls: {config.filter_to_urls}')
+  print_log(f'Max links per domain: {config.max_links_per_domain}')
+  print_log(f'Chrome binary location: {config.chrome_binary_location}')
+  print_log(f'Chrome driver location: {config.chrome_driver_location}')
+  print_log(f'User agent: {config.user_agent}')
+  print_log(f'User agent product token: {config.user_agent_product_token}')
+  print_log(f'Follow robots.txt: {config.follow_robots_txt}')
+  print_log(f'Script timeout: {config.script_timeout} seconds')
+  print_log(f'Page load timeout: {config.page_load_timeout} seconds')
+  print_log(f'Delay between page_loads: {config.delay_between_page_loads} seconds')
+  print_log(f'Delay between viewports: {config.delay_between_viewports} seconds')
+  print_log(f'Delay after page load: {config.delay_after_page_load} seconds')
+  print_log(f'Only allow HTTPS: {config.only_allow_https}')
+  print_log(f'Perform header checks: {config.perform_header_check}')
+  print_log(f'Shuffle base urls: {config.shuffle_base_urls}')
+  print_log(f'Base urls visit path: {config.base_urls_visit_path}')
+  print_log(f'Recording unexpected response codes: {config.record_unexpected_response_codes}')
+  print_log('*' * 80)
 
 
 def generate_time_str_from_mins(mins: float) -> str:
@@ -168,7 +168,7 @@ def generate_time_str_from_mins(mins: float) -> str:
   """
   hours = mins / 60
   mins = mins % 60
-  return f"{int(hours)}h {int(mins)}m"
+  return f'{int(hours)}h {int(mins)}m'
 
 
 def print_progress_bar(
@@ -193,37 +193,37 @@ def print_progress_bar(
   except ZeroDivisionError:
     percentage_calc = 0
 
-  percent = ("{0:." + str(decimals) + "f}").format(percentage_calc)
+  percent = ('{0:.' + str(decimals) + 'f}').format(percentage_calc)
 
   try:
     filled_length = int(length * iteration // total)
   except ZeroDivisionError:
     filled_length = 0
-  progress_bar = "█" * filled_length + "-" * (length - filled_length)
+  progress_bar = '█' * filled_length + '-' * (length - filled_length)
   speed = iteration / (time.time() - start_time)
   if speed == 0:
     speed = 0.0001
   elapsed = generate_time_str_from_mins((time.time() - start_time) / 60)
   time_est = generate_time_str_from_mins((total - iteration) / speed / 60)
-  output = f"|{progress_bar}| {percent}% p:{iteration}/{total} v:{speed:.2f}p/s t:{elapsed}  t-:{time_est}"
-  print(output + "      ")
+  output = f'|{progress_bar}| {percent}% p:{iteration}/{total} v:{speed:.2f}p/s t:{elapsed}  t-:{time_est}'
+  print(output + '      ')
 
   # Write progress data to CSV file
   csv_writer = CSVWriter()
 
   output_row = {
-    "time": time.time(),
-    "iteration": iteration,
-    "total": total,
-    "speed": f"{speed:.2f}",
-    "percent": percent,
-    "elapsed": f"{elapsed}",
-    "remaining": f"{time_est}",
+    'time': time.time(),
+    'iteration': iteration,
+    'total': total,
+    'speed': f'{speed:.2f}',
+    'percent': percent,
+    'elapsed': f'{elapsed}',
+    'remaining': f'{time_est}',
   }
 
   csv_writer.add_row(output_row)
 
-  csv_writer.write_csv_file(f"./results/{config.audit_name}/progress.csv")
+  csv_writer.write_csv_file(f'./results/{config.audit_name}/progress.csv')
 
   # Print New Line on Complete
   if iteration == total:

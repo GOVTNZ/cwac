@@ -31,7 +31,7 @@ from src.output import CSVWriter
 # pylint: disable=too-many-branches, too-many-statements, too-many-locals
 
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 class SiteData(TypedDict):
@@ -71,10 +71,10 @@ class Crawler:
       with self.config.lock:
         site_data = self.url_queue.get()
 
-      logger.info("Starting test %s", site_data["url"])
+      logger.info('Starting test %s', site_data['url'])
 
       # Crawl the url (the crawler also initiates tests)
-      self.crawl(site_data, site_data["url"])
+      self.crawl(site_data, site_data['url'])
 
       # Restart the browser between each website
       self.browser.safe_restart()
@@ -90,13 +90,13 @@ class Crawler:
     """
     # Get the final URL after redirects
     try:
-      ua_string = {"User-Agent": self.config.user_agent}
+      ua_string = {'User-Agent': self.config.user_agent}
       response = requests.get(url, headers=ua_string, timeout=(10, 10))
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("Failed to get final URL %s", url)
+      logger.exception('Failed to get final URL %s', url)
 
     if response.url != url:
-      logger.info("URL %s resolved to %s", url, response.url)
+      logger.info('URL %s resolved to %s', url, response.url)
     return str(response.url)
 
   def url_sanitise(self, url: str) -> str:
@@ -111,24 +111,24 @@ class Crawler:
     try:
       parsed_url = urllib.parse.urlparse(url)
     except ValueError as exc:
-      raise ValueError("Invalid URL") from exc
+      raise ValueError('Invalid URL') from exc
 
     # Ensure scheme is either http or https
-    if parsed_url.scheme not in ["http", "https"]:
-      raise ValueError("Invalid URL scheme")
+    if parsed_url.scheme not in ['http', 'https']:
+      raise ValueError('Invalid URL scheme')
 
     # Save if it was trailing slash
-    was_trailing_slash = url.endswith("/")
+    was_trailing_slash = url.endswith('/')
 
     # Encode the URL path to handle special characters
-    parsed_url = parsed_url._replace(path=urllib.parse.quote(parsed_url.path, safe="/"))
+    parsed_url = parsed_url._replace(path=urllib.parse.quote(parsed_url.path, safe='/'))
 
     # Prevent path traversal using posixpath.normpath
     parsed_url = parsed_url._replace(path=posixpath.normpath(parsed_url.path))
 
     # Add trailing slash if it was there
-    if was_trailing_slash and not parsed_url.path.endswith("/"):
-      parsed_url = parsed_url._replace(path=parsed_url.path + "/")
+    if was_trailing_slash and not parsed_url.path.endswith('/'):
+      parsed_url = parsed_url._replace(path=parsed_url.path + '/')
 
     # Rebuild URL
     url = urllib.parse.urlunparse(parsed_url)
@@ -161,8 +161,8 @@ class Crawler:
       Returns:
           str: URL with file removed
       """
-      if not url.endswith("/"):
-        url = url[: url.rfind("/") + 1]
+      if not url.endswith('/'):
+        url = url[: url.rfind('/') + 1]
       return url
 
     def lowercase_protocol_and_domain(url: str) -> str:
@@ -178,7 +178,7 @@ class Crawler:
       scheme = parsed_url.scheme.lower()
       netloc = parsed_url.netloc.lower()
       path = parsed_url.path
-      return f"{scheme}://{netloc}{path}"
+      return f'{scheme}://{netloc}{path}'
 
     # Prepares the base_url and url for the matching algorithm
     current_base_url = lowercase_protocol_and_domain(current_base_url)
@@ -191,7 +191,7 @@ class Crawler:
     # scope of the current_base_url
     if not current_url.startswith(current_base_url):
       logger.info(
-        "URL filtered out due to not starting with base_url %s %s",
+        'URL filtered out due to not starting with base_url %s %s',
         current_base_url,
         current_url,
       )
@@ -210,8 +210,8 @@ class Crawler:
         # this means that the current_url is within the scope of
         # another base_url that is more specific than current_base_url
         logger.info(
-          "URL filtered out due to being within \
-                            the scope of another base_url %s %s",
+          'URL filtered out due to being within \
+                            the scope of another base_url %s %s',
           base_url,
           current_url,
         )
@@ -224,13 +224,13 @@ class Crawler:
     try:
       base_element = self.browser.get_base_uri()
     except Exception:
-      logger.exception("Failed to get base element %s", url)
+      logger.exception('Failed to get base element %s', url)
       return url
 
     # Check that the base_element has same domain as base_url
     if not src.filters.url_filter_not_same_domain(base_element, url):
       logger.info(
-        "get_links skipped due to equality of: %s %s",
+        'get_links skipped due to equality of: %s %s',
         base_element,
         url,
       )
@@ -239,7 +239,7 @@ class Crawler:
     # Check that the protocol is equal between base_element and url
     if not src.filters.url_filter_same_protocol(base_element, url):
       logger.info(
-        "get_links skipped due to different protocol of: %s %s",
+        'get_links skipped due to different protocol of: %s %s',
         base_element,
         url,
       )
@@ -258,13 +258,13 @@ class Crawler:
         list[str]: a list of links on the page
     """
     try:
-      soup = BeautifulSoup(self.browser.driver.page_source, "lxml")
+      soup = BeautifulSoup(self.browser.driver.page_source, 'lxml')
     except selenium.common.exceptions.TimeoutException:
-      logger.exception("Failed to get page source, TimeoutException%s", url)
+      logger.exception('Failed to get page source, TimeoutException%s', url)
       return []
     links = []
 
-    all_a_elements = soup.find_all("a", href=True)
+    all_a_elements = soup.find_all('a', href=True)
 
     # Handles if <base> element is manipulating relative URLs
     # otherwise, it is simply the 'url' value.
@@ -272,12 +272,12 @@ class Crawler:
 
     for new_url in all_a_elements:
       # Compiles the full URL
-      href = new_url.get("href").strip()
+      href = new_url.get('href').strip()
       try:
         href = urllib.parse.urljoin(base_uri, href)
       except ValueError as exc:
         # Log base_uri, href, and the exception
-        logger.exception("Failed to join URL %s %s %s", base_uri, href, exc)
+        logger.exception('Failed to join URL %s %s %s', base_uri, href, exc)
         continue
 
       # Run a range of filters on the URL
@@ -294,7 +294,7 @@ class Crawler:
 
       if len(href) > 2 and base_url == href[:-1]:
         logger.info(
-          "get_links skipped due to equality of: %s %s",
+          'get_links skipped due to equality of: %s %s',
           base_url,
           href,
         )
@@ -324,12 +324,12 @@ class Crawler:
       # Unpack the config for the audit,
       # and skip the audit if the second arg
       # in config.json for the audit is False
-      should_run: bool = audit_config["enabled"]
+      should_run: bool = audit_config['enabled']
       if not should_run:
         continue
 
-      audit_module = importlib.import_module(f"src.audit_plugins.{filename}")
-      audit_class = getattr(audit_module, self.config.audit_plugins[filename]["class_name"])
+      audit_module = importlib.import_module(f'src.audit_plugins.{filename}')
+      audit_class = getattr(audit_module, self.config.audit_plugins[filename]['class_name'])
       audit_manager.register_audit(
         audit_name=filename,
         audit_class=audit_class,
@@ -356,7 +356,7 @@ class Crawler:
     ok_status_codes = [200, 301, 302, 307, 308]
     if status_code not in ok_status_codes:
       logger.info(
-        "URL filtered out due to bad http status_code: %s %i",
+        'URL filtered out due to bad http status_code: %s %i',
         url,
         status_code,
       )
@@ -364,14 +364,14 @@ class Crawler:
       csv_writer = src.output.CSVWriter()
       csv_writer.add_row(
         {
-          "base_url": base_url,
-          "parent_url": parent_url,
-          "url": url,
-          "status_code": status_code,
+          'base_url': base_url,
+          'parent_url': parent_url,
+          'url': url,
+          'status_code': status_code,
         }
       )
       if self.config.record_unexpected_response_codes:
-        csv_writer.write_csv_file(f"./results/{self.config.audit_name}/unexpected_response_codes.csv")
+        csv_writer.write_csv_file(f'./results/{self.config.audit_name}/unexpected_response_codes.csv')
 
       return False
     return status_code is not None
@@ -391,29 +391,29 @@ class Crawler:
     """
     # Fetch the robots.txt file
     try:
-      logger.info("Fetching robots.txt %s", robots_txt_url)
-      response = requests.get(robots_txt_url, headers={"User-Agent": self.config.user_agent}, timeout=10)
+      logger.info('Fetching robots.txt %s', robots_txt_url)
+      response = requests.get(robots_txt_url, headers={'User-Agent': self.config.user_agent}, timeout=10)
       response.raise_for_status()
 
       # Check Content-Type is text/plain (in a safe way)
-      is_content_type_set = "Content-Type" in response.headers
-      if is_content_type_set and not re.search("^text/plain(?:;|$)", response.headers["Content-Type"], re.IGNORECASE):
-        raise ValueError(f"robots.txt has invalid Content-Type {robots_txt_url} {response.headers['Content-Type']}")
+      is_content_type_set = 'Content-Type' in response.headers
+      if is_content_type_set and not re.search('^text/plain(?:;|$)', response.headers['Content-Type'], re.IGNORECASE):
+        raise ValueError(f'robots.txt has invalid Content-Type {robots_txt_url} {response.headers["Content-Type"]}')
     except requests.exceptions.RequestException as exc:
-      logger.error("Failed to fetch robots.txt %s", robots_txt_url)
+      logger.error('Failed to fetch robots.txt %s', robots_txt_url)
       raise exc
 
-    logger.info("Fetched robots.txt %s", robots_txt_url)
+    logger.info('Fetched robots.txt %s', robots_txt_url)
 
     robots_txt_content = response.text
 
     # If the response is > 500 KB
     if len(robots_txt_content) > 1024 * 500:
-      logger.warning("robots.txt file is too large (>500 KB) on %s", robots_txt_url)
-      raise ValueError(f"robots.txt file is too large (>500 KB) on {robots_txt_url}")
+      logger.warning('robots.txt file is too large (>500 KB) on %s', robots_txt_url)
+      raise ValueError(f'robots.txt file is too large (>500 KB) on {robots_txt_url}')
 
     # Remove any non-UTF-8 characters
-    file = robots_txt_content.encode("utf-8", errors="ignore").decode("utf-8")
+    file = robots_txt_content.encode('utf-8', errors='ignore').decode('utf-8')
 
     return file
 
@@ -435,9 +435,9 @@ class Crawler:
     # If the domain is in config.robots_txt_cache, use that
     if domain in self.config.robots_txt_cache:
       robot_parser = self.config.robots_txt_cache[domain]
-      logger.info("Using cached robots.txt for %s", domain)
+      logger.info('Using cached robots.txt for %s', domain)
       result = robot_parser.can_fetch(self.config.user_agent_product_token, url)
-      logger.info("robots.txt result for %s was %s", url, "allow" if result else "disallow")
+      logger.info('robots.txt result for %s was %s', url, 'allow' if result else 'disallow')
       return result
 
     # Use urllib.robotparser to parse the robots.txt file
@@ -445,12 +445,12 @@ class Crawler:
 
     # Fetch the robots.txt file
     try:
-      robots_txt = self.fetch_robots_txt(f"{protocol}://{domain}/robots.txt")
+      robots_txt = self.fetch_robots_txt(f'{protocol}://{domain}/robots.txt')
       robot_parser.parse(robots_txt.splitlines())
     except (requests.exceptions.RequestException, ValueError):
-      robot_parser.parse("")
+      robot_parser.parse('')
       self.config.robots_txt_cache[domain] = robot_parser
-      logger.exception("Failed to fetch or parse robots.txt - default to allow! %s", domain)
+      logger.exception('Failed to fetch or parse robots.txt - default to allow! %s', domain)
       return True
 
     # Cache the robotparser object
@@ -460,7 +460,7 @@ class Crawler:
     result = robot_parser.can_fetch(self.config.user_agent_product_token, url)
 
     # Log the outcome
-    logger.info("robots.txt result for %s was %s", url, "allow" if result else "disallow")
+    logger.info('robots.txt result for %s was %s', url, 'allow' if result else 'disallow')
 
     return result
 
@@ -477,10 +477,10 @@ class Crawler:
         site_data (SiteData): contains info about the site
         base_url (str): the first url to crawl
     """
-    action = "crawl"
+    action = 'crawl'
     if self.config.max_links_per_domain == 1:
-      action = "visit"
-    logger.info("Starting %s of %s", action, base_url)
+      action = 'visit'
+    logger.info('Starting %s of %s', action, base_url)
 
     # Create an AuditManager instance
     audit_manager = AuditManager(config=self.config, browser=self.browser, analytics=self.analytics)
@@ -501,14 +501,14 @@ class Crawler:
     # Filter and sanitise the initial URL
     if not self.url_filter.run_url_filters(base_url):
       self.record_pages_scanned(site_data, pages_scanned)
-      logger.error("base_url was filtered out! %s", base_url)
+      logger.error('base_url was filtered out! %s', base_url)
       return
 
     while queue:
       parent_url, url, depth = queue.pop()
 
       if pages_scanned >= self.config.max_links_per_domain:
-        logger.info("Max pages scanned reached %s", base_url)
+        logger.info('Max pages scanned reached %s', base_url)
         break
 
       # Delay
@@ -522,7 +522,7 @@ class Crawler:
 
       # Check if URL is allowed by robots.txt
       if not self.is_url_allowed_by_robots_txt(url):
-        logger.info("URL disallowed by robots.txt %s", url)
+        logger.info('URL disallowed by robots.txt %s', url)
         continue
 
       # process_url_headers returns a dict with
@@ -532,10 +532,10 @@ class Crawler:
         url_data = src.filters.process_url_headers(
           self.config,
           url,
-          supports_head_requests=site_data["supports_head"],
+          supports_head_requests=site_data['supports_head'],
         )
-        url_status_code = url_data["status_code"]
-        url = url_data["final_url"]
+        url_status_code = url_data['status_code']
+        url = url_data['final_url']
         if not self.are_url_headers_acceptable(
           base_url=base_url, parent_url=parent_url, url=url, status_code=url_status_code
         ):
@@ -552,7 +552,7 @@ class Crawler:
 
       # Check that page has not been scanned before
       if self.analytics.is_url_in_pages_scanned(base_url, url):
-        logger.info("URL has been scanned before %s for %s", url, base_url)
+        logger.info('URL has been scanned before %s for %s', url, base_url)
         continue
 
       # Write to audit_log.csv
@@ -560,14 +560,14 @@ class Crawler:
       csv_writer.add_rows(
         [
           {
-            "organisation": site_data["organisation"],
-            "base_url": site_data["url"],
-            "url": url,
-            "sector": site_data["sector"],
+            'organisation': site_data['organisation'],
+            'base_url': site_data['url'],
+            'url': url,
+            'sector': site_data['sector'],
           }
         ]
       )
-      csv_writer.write_csv_file(f"./results/{self.config.audit_name}/audit_log.csv")
+      csv_writer.write_csv_file(f'./results/{self.config.audit_name}/audit_log.csv')
 
       self.register_audit_plugins(audit_manager, url, site_data)
       test_success = audit_manager.run_audits()
@@ -581,7 +581,7 @@ class Crawler:
         if test_failures >= 3:
           self.analytics.record_test_failure(base_url)
           self.record_pages_scanned(site_data, pages_scanned)
-          logger.error("Too many sequential test failures, skipping %s", url)
+          logger.error('Too many sequential test failures, skipping %s', url)
           return
 
       # don't bother getting links if we are only scanning one link per base url
@@ -599,7 +599,7 @@ class Crawler:
     self.analytics.record_test_failure(base_url)
     self.record_pages_scanned(site_data, pages_scanned)
     if self.config.max_links_per_domain != 1:
-      logger.info("Crawl exhausted all links %s", base_url)
+      logger.info('Crawl exhausted all links %s', base_url)
 
   def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
     """Record the number of pages that were scanned for the site."""
@@ -608,14 +608,14 @@ class Crawler:
       csv_writer.add_rows(
         [
           {
-            "organisation": site_data["organisation"],
-            "base_url": site_data["url"],
-            "number_of_pages": pages_scanned,
-            "sector": site_data["sector"],
+            'organisation': site_data['organisation'],
+            'base_url': site_data['url'],
+            'number_of_pages': pages_scanned,
+            'sector': site_data['sector'],
           }
         ]
       )
-      csv_writer.write_csv_file(f"./results/{self.config.audit_name}/pages_scanned.csv")
+      csv_writer.write_csv_file(f'./results/{self.config.audit_name}/pages_scanned.csv')
 
 
 class RandomQueue:

@@ -24,15 +24,15 @@ class DataExporter:
 
     input_results_folder_name = self.__determine_results_folder_name()
 
-    self.input_path = "./results/" + input_results_folder_name + "/"
-    self.output_path = "./reports/" + input_results_folder_name + "/"
+    self.input_path = './results/' + input_results_folder_name + '/'
+    self.output_path = './reports/' + input_results_folder_name + '/'
     # assert the input_path exists
     if not os.path.exists(self.input_path):
-      raise FileNotFoundError(f"Input path {self.input_path} does not exist.")
+      raise FileNotFoundError(f'Input path {self.input_path} does not exist.')
     # create ouptut folder if it doesn't exist
     if not os.path.exists(self.output_path):
       os.makedirs(self.output_path)
-    self.output_prefix = self.output_path + self.config["output_filename_prefix"]
+    self.output_prefix = self.output_path + self.config['output_filename_prefix']
     self.iterate_export_formats()
 
   def __determine_results_folder_name(self) -> str:
@@ -43,15 +43,15 @@ class DataExporter:
     # ascending order so that the latest results will be the last item
     convert: Callable[[str], int | str] = lambda text: int(text) if text.isdigit() else text
     existing_results = sorted(
-      [d for d in os.listdir("./results") if os.path.isdir(f"./results/{d}")],
-      key=lambda key: [convert(c) for c in re.split("([0-9]+)", key)],
+      [d for d in os.listdir('./results') if os.path.isdir(f'./results/{d}')],
+      key=lambda key: [convert(c) for c in re.split('([0-9]+)', key)],
     )
 
     if len(existing_results) == 0:
-      raise ValueError("could not determine latest results folder - have you run an audit?")
+      raise ValueError('could not determine latest results folder - have you run an audit?')
     latest_result = existing_results[-1]
 
-    print(f"Processing ./results/{latest_result}")
+    print(f'Processing ./results/{latest_result}')
 
     return latest_result
 
@@ -62,7 +62,7 @@ class DataExporter:
     columns = list(
       filter(
         lambda key: key in df.columns,
-        columns + ["organisation", "base_url", "url"],
+        columns + ['organisation', 'base_url', 'url'],
       )
     )
 
@@ -78,10 +78,10 @@ class DataExporter:
         pd.DataFrame: The resulting DataFrame
     """
     # Create a new sqlite3 connection to count how many pages scanned
-    page_count_conn = sqlite3.connect(":memory:")
+    page_count_conn = sqlite3.connect(':memory:')
 
     # Get a sqlite3 db of the data frame as it should have all the unique urls scanned
-    df.to_sql("cwac_table", page_count_conn, index=False)
+    df.to_sql('cwac_table', page_count_conn, index=False)
 
     # Query how many unique 'url' values each 'base_url' has
     url_count_query = """
@@ -93,7 +93,7 @@ class DataExporter:
     url_count_result = page_count_conn.execute(url_count_query).fetchall()
 
     # Convert the result to a DataFrame
-    url_count_df = pd.DataFrame(url_count_result, columns=["base_url", "num_pages_scanned"])
+    url_count_df = pd.DataFrame(url_count_result, columns=['base_url', 'num_pages_scanned'])
 
     return url_count_df
 
@@ -103,10 +103,10 @@ class DataExporter:
     query = self.generate_axe_core_template_aware_query()
 
     # Convert df to sqlite3 in-mem db
-    leaderboard_conn = sqlite3.connect(":memory:")
+    leaderboard_conn = sqlite3.connect(':memory:')
 
     # Write the data to the in-memory database
-    df.to_sql("cwac_table", leaderboard_conn, index=False)
+    df.to_sql('cwac_table', leaderboard_conn, index=False)
 
     # Run query with conn.execute
     leaderboard = leaderboard_conn.execute(query).fetchall()
@@ -115,13 +115,13 @@ class DataExporter:
     url_count_df = self.get_num_unique_pages_scanned(df)
 
     # Convert results to DataFrame
-    leaderboard_df = pd.DataFrame(leaderboard, columns=["organisation", "base_url", "num_issues"])
+    leaderboard_df = pd.DataFrame(leaderboard, columns=['organisation', 'base_url', 'num_issues'])
 
     # Add the 'num_pages_scanned' column to the leaderboard_df
-    leaderboard_df = pd.merge(leaderboard_df, url_count_df, on="base_url")
+    leaderboard_df = pd.merge(leaderboard_df, url_count_df, on='base_url')
 
     # Add a column of 'count' / 'num_pages_scanned' to the DataFrame
-    leaderboard_df["average_count"] = (leaderboard_df["num_issues"] / leaderboard_df["num_pages_scanned"]).round(2)
+    leaderboard_df['average_count'] = (leaderboard_df['num_issues'] / leaderboard_df['num_pages_scanned']).round(2)
 
     # Add rank column
     # leaderboard_df["rank"] = leaderboard_df["average_count"].rank(method="dense", ascending=True)
@@ -130,20 +130,20 @@ class DataExporter:
     # leaderboard_df["rank"] = leaderboard_df["rank"].astype(int)
 
     # Add percentile column
-    leaderboard_df["percentile"] = (leaderboard_df["average_count"].rank(pct=True) * 100).round(2)
+    leaderboard_df['percentile'] = (leaderboard_df['average_count'].rank(pct=True) * 100).round(2)
 
     # Rename columns to be more descriptive
-    leaderboard_df = leaderboard_df.rename(columns={"average_count": "average_num_issues_per_page"})
+    leaderboard_df = leaderboard_df.rename(columns={'average_count': 'average_num_issues_per_page'})
 
     # Reorder so num_issues and average_num_issues_per_page are next to each other
     leaderboard_df = leaderboard_df[
       [
-        "organisation",
-        "base_url",
-        "num_pages_scanned",
-        "num_issues",
-        "average_num_issues_per_page",
-        "percentile",
+        'organisation',
+        'base_url',
+        'num_pages_scanned',
+        'num_issues',
+        'average_num_issues_per_page',
+        'percentile',
       ]
     ]
 
@@ -160,10 +160,10 @@ class DataExporter:
         pd.DataFrame: The resulting leaderboard DataFrame
     """
     # Make a sqlite3 connection
-    conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect(':memory:')
 
     # Write input_df to the in-memory database
-    input_df.to_sql("cwac_table", conn, index=False)
+    input_df.to_sql('cwac_table', conn, index=False)
 
     # Run query
     leaderboard = conn.execute(query).fetchall()
@@ -178,11 +178,11 @@ class DataExporter:
     url_count_df = self.get_num_unique_pages_scanned(input_df)
 
     # Merge the url_count_df with the leaderboard_df
-    leaderboard_df = pd.merge(leaderboard_df, url_count_df, on="base_url")
+    leaderboard_df = pd.merge(leaderboard_df, url_count_df, on='base_url')
 
     # Add average issue count per page (if it has a 'num_issues' column)
-    if "num_issues" in leaderboard_df.columns:
-      leaderboard_df["average_count"] = (leaderboard_df["num_issues"] / leaderboard_df["num_pages_scanned"]).round(2)
+    if 'num_issues' in leaderboard_df.columns:
+      leaderboard_df['average_count'] = (leaderboard_df['num_issues'] / leaderboard_df['num_pages_scanned']).round(2)
 
     return leaderboard_df
 
@@ -194,8 +194,8 @@ class DataExporter:
         output_filename (str): The output filename.
     """
     with (
-      open(self.input_path + input_filename, "r", encoding="utf-8-sig") as input_file,
-      open(self.output_prefix + output_filename, "w", encoding="utf-8-sig") as output_file,
+      open(self.input_path + input_filename, 'r', encoding='utf-8-sig') as input_file,
+      open(self.output_prefix + output_filename, 'w', encoding='utf-8-sig') as output_file,
     ):
       output_file.write(input_file.read())
 
@@ -203,60 +203,60 @@ class DataExporter:
     """Iterate through the export formats."""
     axe_core_template_aware_df: pd.DataFrame | None = None
 
-    for export_format in self.config["export_formats"]:
+    for export_format in self.config['export_formats']:
       # if 'enabled' is False, skip the export format
-      if not export_format["enabled"]:
-        print(f"Skipping {export_format['export_type']} for {export_format['output_filename']}")
+      if not export_format['enabled']:
+        print(f'Skipping {export_format["export_type"]} for {export_format["output_filename"]}')
         continue
 
       # print(f"Exporting {export_format['export_type']} to {export_format['output_filename']}")
-      print(f"Exporting {export_format['export_type']} to {self.output_path}")
+      print(f'Exporting {export_format["export_type"]} to {self.output_path}')
 
       # Check if export_format["input_filename"] exists
-      if "input_filename" in export_format and not os.path.exists(self.input_path + export_format["input_filename"]):
-        print(f"WARNING: File {self.input_path + export_format['input_filename']} does not exist.")
+      if 'input_filename' in export_format and not os.path.exists(self.input_path + export_format['input_filename']):
+        print(f'WARNING: File {self.input_path + export_format["input_filename"]} does not exist.')
         continue
 
-      if export_format["export_type"] == "leaderboard":
+      if export_format['export_type'] == 'leaderboard':
         output_df = self.generate_leaderboard(
-          query=export_format["query"],
-          input_df=self.import_audit_csv_to_df(export_format["input_filename"]),
+          query=export_format['query'],
+          input_df=self.import_audit_csv_to_df(export_format['input_filename']),
         )
 
-        output_df = self.sort_with_default(output_df, ["average_count"])
+        output_df = self.sort_with_default(output_df, ['average_count'])
 
         # Write leaderboard to CSV
         output_df.to_csv(
-          self.output_prefix + export_format["output_filename"],
+          self.output_prefix + export_format['output_filename'],
           index=False,
         )
 
-      if export_format["export_type"] == "raw_data":
+      if export_format['export_type'] == 'raw_data':
         self.export_raw_data(
-          input_filename=export_format["input_filename"],
-          output_filename=export_format["output_filename"],
+          input_filename=export_format['input_filename'],
+          output_filename=export_format['output_filename'],
         )
 
-      if export_format["export_type"] == "generate_axe_core_template_aware_file":
+      if export_format['export_type'] == 'generate_axe_core_template_aware_file':
         # Run the axe-core template-aware algorithm
         # to generate the template-aware CSV
         axe_core_template_aware_df = self.run_axe_core_audit_template_aware()
         continue
 
-      if export_format["export_type"] == "axe_core_template_aware_leaderboard":
+      if export_format['export_type'] == 'axe_core_template_aware_leaderboard':
         if axe_core_template_aware_df is None:
           raise ValueError(
-            "The generate_axe_core_template_aware_file export must happen before"
-            " the axe_core_template_aware_leaderboard export can run"
+            'The generate_axe_core_template_aware_file export must happen before'
+            ' the axe_core_template_aware_leaderboard export can run'
           )
 
         # Generate the axe-core leaderboard
         leaderboard_df = self.generate_axe_core_leaderboard(axe_core_template_aware_df)
-        leaderboard_df = self.sort_with_default(leaderboard_df, ["average_num_issues_per_page"])
+        leaderboard_df = self.sort_with_default(leaderboard_df, ['average_num_issues_per_page'])
 
         # Write the leaderboard to a CSV file
         leaderboard_df.to_csv(
-          self.output_prefix + export_format["output_filename"],
+          self.output_prefix + export_format['output_filename'],
           index=False,
         )
 
@@ -267,7 +267,7 @@ class DataExporter:
 
   def import_config_file(self) -> dict[str, Any]:
     """Import export_report_data_config.json."""
-    with open("export_report_data_config.json", "r", encoding="utf-8-sig") as file:
+    with open('export_report_data_config.json', 'r', encoding='utf-8-sig') as file:
       config = cast(dict[str, Any], json.load(file))
     return config
 
@@ -285,24 +285,24 @@ class DataExporter:
         pd.DataFrame: The grouped and aggregated dataframe.
     """
     # Collect all rows where count is 0
-    zero_count_rows = input_df[input_df["num_issues"] == 0]
+    zero_count_rows = input_df[input_df['num_issues'] == 0]
 
     # Remove the zero count rows from the input_df
-    no_zero_count_df = input_df[input_df["num_issues"] != 0]
+    no_zero_count_df = input_df[input_df['num_issues'] != 0]
 
     # Group the data
     grouped_df = no_zero_count_df.groupby(groupby_cols)
 
     # Generate the aggregation dictionary
-    agg_dict = {"num_issues": "sum"}
+    agg_dict = {'num_issues': 'sum'}
 
     # Add in 'first' for all other columns
     for col in input_df.columns:
       if col not in agg_dict and col not in groupby_cols:
-        agg_dict[col] = "first"
+        agg_dict[col] = 'first'
 
     # Aggregate the data
-    agg_df = grouped_df.agg(agg_dict).rename(columns={"num_issues": "num_pages"})
+    agg_df = grouped_df.agg(agg_dict).rename(columns={'num_issues': 'num_pages'})
 
     # Reset the index
     agg_df = agg_df.reset_index()
@@ -321,11 +321,11 @@ class DataExporter:
         export_path (str): The path to the audit folder.
     """
     # Read the CSV file into a list of dicts
-    file_path = self.input_path + "/axe_core_audit.csv"
+    file_path = self.input_path + '/axe_core_audit.csv'
 
     # If file doesn't exist, return
     if not os.path.exists(file_path):
-      raise FileNotFoundError(f"File {file_path} does not exist.")
+      raise FileNotFoundError(f'File {file_path} does not exist.')
 
     # Read the CSV file into a DataFrame
     data_frame = pd.read_csv(file_path)
@@ -334,20 +334,20 @@ class DataExporter:
     original_column_order = list(data_frame.columns)
 
     for i, _ in enumerate(original_column_order):
-      if original_column_order[i] == "num_issues":
-        original_column_order[i] = "num_pages"
+      if original_column_order[i] == 'num_issues':
+        original_column_order[i] = 'num_pages'
 
     # Group and aggregate the data
     data_frame = self.template_aware_algorithm(
       input_df=data_frame,
-      groupby_cols=["base_url", "id", "html", "viewport_size"],
+      groupby_cols=['base_url', 'id', 'html', 'viewport_size'],
     )
 
-    data_frame = self.sort_with_default(data_frame, ["num_pages"])
+    data_frame = self.sort_with_default(data_frame, ['num_pages'])
 
     # Write the data to CSV file with original column order
     data_frame.to_csv(
-      self.input_path + "/axe_core_audit_template_aware.csv",
+      self.input_path + '/axe_core_audit_template_aware.csv',
       index=False,
       columns=list(original_column_order),
     )
@@ -381,5 +381,5 @@ class DataExporter:
     return query
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   exporter = DataExporter()

@@ -2,4 +2,4 @@ indent-width = 2
 line-length = 120
 
 [format]
-quote-style = 'double'
+quote-style = 'single'

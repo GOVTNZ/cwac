@@ -18,20 +18,20 @@ from src.browser import Browser
 
 # import selenium.common.exceptions as sel_exceptions
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 class ElementAudit(DefaultAudit):
   """element audit."""
 
-  audit_type = "ElementAudit"
+  audit_type = 'ElementAudit'
 
   def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
     """Init variables."""
     super().__init__(config, browser, **kwargs)
-    self.target_element = self.config.audit_plugins["element_audit"]["target_element_css_selector"]
-    self.base_url = kwargs["site_data"]["url"]
-    self.viewport_size = kwargs["viewport_size"]
+    self.target_element = self.config.audit_plugins['element_audit']['target_element_css_selector']
+    self.base_url = kwargs['site_data']['url']
+    self.viewport_size = kwargs['viewport_size']
 
   def run(self) -> list[dict[str, Any]] | bool:
     """Run an element detection on a specified URL.
@@ -44,14 +44,14 @@ class ElementAudit(DefaultAudit):
     try:
       page_source = self.browser.get_page_source()
     except Exception as exc:
-      logger.error("Error getting page source: %s", exc)
+      logger.error('Error getting page source: %s', exc)
       return False
 
     # Try to parse using BeautifulSoup
     try:
-      soup = BeautifulSoup(page_source, "lxml")
+      soup = BeautifulSoup(page_source, 'lxml')
     except Exception as exc:
-      logger.error("Error parsing page source: %s", exc)
+      logger.error('Error parsing page source: %s', exc)
       return False
 
     # Find all elements of the target type (css selector)
@@ -62,7 +62,7 @@ class ElementAudit(DefaultAudit):
     # For each element found, create a row of data
     for element in elements:
       # get element outer html
-      element_data = {"element_html": element.prettify()}
+      element_data = {'element_html': element.prettify()}
       found_elements.append(element_data)
 
     # Get page information from DefaultAudit

@@ -5,7 +5,7 @@ import socketserver
 import typing
 
 PORT = 8000
-DIRECTORY = "pages"
+DIRECTORY = 'pages'
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -16,6 +16,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     super().__init__(*args, directory=DIRECTORY, **kwargs)
 
 
-with socketserver.TCPServer(("", PORT), Handler) as httpd:
-  print(f"Serving at http://localhost:{PORT}/ from ./{DIRECTORY}")
+with socketserver.TCPServer(('', PORT), Handler) as httpd:
+  print(f'Serving at http://localhost:{PORT}/ from ./{DIRECTORY}')
   httpd.serve_forever()

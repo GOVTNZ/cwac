@@ -20,20 +20,20 @@ from selenium.common import WebDriverException
 from src.audit_plugins.default_audit import DefaultAudit
 
 # Download Natural Language Toolkit data
-nltk_dir = os.getcwd() + "/nltk_data/"
-nltk.download("punkt_tab", download_dir=nltk_dir, quiet=True)
-nltk.download("cmudict", download_dir=nltk_dir, quiet=True)
-nltk.download("vader_lexicon", download_dir=nltk_dir, quiet=True)
+nltk_dir = os.getcwd() + '/nltk_data/'
+nltk.download('punkt_tab', download_dir=nltk_dir, quiet=True)
+nltk.download('cmudict', download_dir=nltk_dir, quiet=True)
+nltk.download('vader_lexicon', download_dir=nltk_dir, quiet=True)
 nltk.data.path.append(nltk_dir)
 dictionary = cmudict.dict()
 
-logger = logging.getLogger("cwac")
+logger = logging.getLogger('cwac')
 
 
 class LanguageAudit(DefaultAudit):
   """Language analysis for web pages."""
 
-  audit_type = "LanguageAudit"
+  audit_type = 'LanguageAudit'
 
   def run(self) -> list[dict[str, Any]] | bool:
     """Run the audit.
@@ -44,8 +44,8 @@ class LanguageAudit(DefaultAudit):
     """
     lang = self.__get_document_lang()
 
-    if lang != "en" and not lang.startswith("en-"):
-      logger.warning("Test can only be run on English pages but lang for this page is %s: %s", lang, self.url)
+    if lang != 'en' and not lang.startswith('en-'):
+      logger.warning('Test can only be run on English pages but lang for this page is %s: %s', lang, self.url)
       return True
 
     # Scrape main content
@@ -53,7 +53,7 @@ class LanguageAudit(DefaultAudit):
 
     # Check if test is not applicable (i.e. not enough text)
     if self.is_test_not_applicable(content):
-      logger.warning("Test is not applicable: %s", self.url)
+      logger.warning('Test is not applicable: %s', self.url)
       return True
 
     # Calculate Flesch-Kincaid Grade Level
@@ -63,17 +63,17 @@ class LanguageAudit(DefaultAudit):
     smog = self.simple_measure_of_gobbledygook(content)
 
     # Create output rows
-    output_rows = [{**fkgl, "smog_gl": smog}]
+    output_rows = [{**fkgl, 'smog_gl': smog}]
 
     # Inject helpUrl
-    output_rows[0]["helpUrl"] = (
-      "https://www.digital.govt.nz/standards-and-guidance/"
-      "design-and-ux/content-design-guidance/writing-style/"
-      "plain-language/"
+    output_rows[0]['helpUrl'] = (
+      'https://www.digital.govt.nz/standards-and-guidance/'
+      'design-and-ux/content-design-guidance/writing-style/'
+      'plain-language/'
     )
 
     # Perform sentiment analysis
-    if self.config.audit_plugins["language_audit"]["run_sentiment_analysis"]:
+    if self.config.audit_plugins['language_audit']['run_sentiment_analysis']:
       sentiment = self.sentiment_analysis(content)
       for key, value in sentiment.items():
         output_rows[0][key] = str(value)
@@ -102,15 +102,15 @@ class LanguageAudit(DefaultAudit):
       output = output[0].upper() + output[1:]
 
     # If it ends with a colon, remove it
-    if output.endswith(":"):
+    if output.endswith(':'):
       output = output[:-1]
 
     # Common punctuation that ends a sentence
-    end_punct = set([".", "!", "?"])
+    end_punct = set(['.', '!', '?'])
 
     # If the element's content doesn't end with punctuation, add a period
     if not output.endswith(tuple(end_punct)):
-      output += "."
+      output += '.'
 
     return output
 
@@ -121,19 +121,19 @@ class LanguageAudit(DefaultAudit):
         soup (BeautifulSoup): the soup to filter
     """
     # Remove all SVGs
-    for svg in soup.find_all("svg"):
+    for svg in soup.find_all('svg'):
       svg.decompose()
 
     # Remove all tables
-    for table in soup.find_all("table"):
+    for table in soup.find_all('table'):
       table.decompose()
 
     # Replace all img with <p> of alt text
-    for img in soup.find_all("img"):
+    for img in soup.find_all('img'):
       try:
-        text_for_p = img.get("alt")
+        text_for_p = img.get('alt')
         if text_for_p is not None:
-          p = soup.new_tag("p")
+          p = soup.new_tag('p')
           p.string = text_for_p
           img.replace_with(p)
           continue
@@ -152,12 +152,12 @@ class LanguageAudit(DefaultAudit):
         str: the main content of the page
     """
     # Read Readability.js
-    path_1 = "./node_modules/@mozilla/readability/Readability.js"
-    with open(path_1, "r", encoding="utf-8-sig") as file:
+    path_1 = './node_modules/@mozilla/readability/Readability.js'
+    with open(path_1, 'r', encoding='utf-8-sig') as file:
       readability_js = file.read()
 
-    path_2 = "./node_modules/@mozilla/readability/Readability-readerable.js"
-    with open(path_2, "r", encoding="utf-8-sig") as file:
+    path_2 = './node_modules/@mozilla/readability/Readability-readerable.js'
+    with open(path_2, 'r', encoding='utf-8-sig') as file:
       readability_js += file.read()
 
     # JavaScript to execute Readability
@@ -175,41 +175,41 @@ class LanguageAudit(DefaultAudit):
     try:
       content = self.browser.driver.execute_script(final_js)
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception("WebDriver exception for Readability")
-      return ""
+      logger.exception('WebDriver exception for Readability')
+      return ''
 
     if content is False:
       logger.warning(
-        "Readability rejected the page. %s",
+        'Readability rejected the page. %s',
         self.url,
       )
-      return ""
+      return ''
 
     # Parse the HTML
-    soup = BeautifulSoup(content[1], "html.parser")
+    soup = BeautifulSoup(content[1], 'html.parser')
 
     # Remove all SVGs
     self.filter_out_non_text(soup)
 
     # Accepted element types
-    accepted_elements = ["p", "li", "h1", "h2", "h3", "h4", "h5", "h6"]
+    accepted_elements = ['p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
 
-    flat_output = ""
+    flat_output = ''
 
     for element in soup.find_all(accepted_elements):
-      flat_output += self.sentence_ify(element.text) + " "
+      flat_output += self.sentence_ify(element.text) + ' '
 
     # Add the title
-    flat_output = self.sentence_ify(content[0]) + " " + flat_output
+    flat_output = self.sentence_ify(content[0]) + ' ' + flat_output
 
     return str(flat_output)
 
   def __get_document_lang(self) -> str:
     try:
-      return cast(str, self.browser.driver.execute_script("return document.documentElement.lang")).lower()
+      return cast(str, self.browser.driver.execute_script('return document.documentElement.lang')).lower()
     except WebDriverException:
-      logger.exception("Could not get document element language")
-      return ""
+      logger.exception('Could not get document element language')
+      return ''
 
   def count_syllables(self, word: str) -> int:
     """Count num of syllables in a word.
@@ -284,10 +284,10 @@ class LanguageAudit(DefaultAudit):
     fk_score = 0.39 * words_per_sentence + 11.8 * syllables_per_word - 15.59
 
     return {
-      "flesch_kincaid_gl": f"{fk_score:.3f}",
-      "num_sentences": len(sentences),
-      "words_per_sentence": f"{words_per_sentence:.3f}",
-      "syllables_per_word": f"{syllables_per_word:.3f}",
+      'flesch_kincaid_gl': f'{fk_score:.3f}',
+      'num_sentences': len(sentences),
+      'words_per_sentence': f'{words_per_sentence:.3f}',
+      'syllables_per_word': f'{syllables_per_word:.3f}',
     }
 
   def sentiment_analysis(self, text: str) -> dict[str, float]:
@@ -310,7 +310,7 @@ class LanguageAudit(DefaultAudit):
     scores: dict[str, float] = sia.polarity_scores(text)
 
     # Prefix keys with "sentiment_" for clarity
-    scores = {f"sentiment_{k}": v for k, v in scores.items()}
+    scores = {f'sentiment_{k}': v for k, v in scores.items()}
     return scores
 
   def simple_measure_of_gobbledygook(self, text: str) -> str:
@@ -339,4 +339,4 @@ class LanguageAudit(DefaultAudit):
     sqrt = math.sqrt(polysyllabic_words * (30.0 / len(sentences)))
     smog = 1.043 * sqrt + 3.1291
 
-    return f"{smog:.3f}"
+    return f'{smog:.3f}'

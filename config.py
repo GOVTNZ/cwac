@@ -13,7 +13,7 @@ from logging import INFO, FileHandler, Formatter, getLogger
 from typing import Any
 from urllib import parse
 
-logger = getLogger("cwac")
+logger = getLogger('cwac')
 
 
 class Config:
@@ -55,38 +55,38 @@ class Config:
 
   def __init__(self, config_filename: str) -> None:
     """Read config.json into self.config."""
-    with open("./config/" + config_filename, "r", encoding="utf-8-sig") as file:
+    with open('./config/' + config_filename, 'r', encoding='utf-8-sig') as file:
       self.config = json.load(file)
 
     self.unique_id = 0
 
     # Sanitise audit_name
-    self.config["audit_name"] = self.sanitise_string(self.audit_name)
+    self.config['audit_name'] = self.sanitise_string(self.audit_name)
 
     # Add a timestamp to the test name
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    self.config["audit_name"] = timestamp + "_" + self.audit_name
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    self.config['audit_name'] = timestamp + '_' + self.audit_name
 
     # Create the results folder
-    folder_path = "./results/" + self.audit_name + "/"
+    folder_path = './results/' + self.audit_name + '/'
     os.makedirs(folder_path, exist_ok=True)
 
     # Configure logging
-    self.__setup_logger(f"./{folder_path}/{self.audit_name}.log")
+    self.__setup_logger(f'./{folder_path}/{self.audit_name}.log')
 
     # Write self.config to the results folder for reference
-    with open(f"{folder_path}/config.json", "w", encoding="utf-8-sig") as file:
+    with open(f'{folder_path}/config.json', 'w', encoding='utf-8-sig') as file:
       json.dump(self.config, file, indent=4)
 
     self.__resolve_automatic_settings()
 
     # Ensure base_urls_visit_path is within base_urls folder
-    if not self.is_path_subdir(self.base_urls_visit_path, "./base_urls"):
-      raise ValueError("base_urls_visit_path must be within base_urls folder")
+    if not self.is_path_subdir(self.base_urls_visit_path, './base_urls'):
+      raise ValueError('base_urls_visit_path must be within base_urls folder')
 
     # Ensure base_urls_nohead_path is within base_urls folder
-    if not self.is_path_subdir(self.base_urls_nohead_path, "./base_urls"):
-      raise ValueError("base_urls_nohead_path must be within base_urls folder")
+    if not self.is_path_subdir(self.base_urls_nohead_path, './base_urls'):
+      raise ValueError('base_urls_nohead_path must be within base_urls folder')
 
     self.url_lookup = self.import_url_lookup_files()
 
@@ -111,13 +111,13 @@ class Config:
 
     # create a new formatter with our desired format
     formatter = Formatter(
-      "[{%(asctime)s} %(levelname)-7s %(filename)10s : %(lineno)-4s] %(funcName)30s %(message)s %(threadName)s",
+      '[{%(asctime)s} %(levelname)-7s %(filename)10s : %(lineno)-4s] %(funcName)30s %(message)s %(threadName)s',
       # Log timestamp format (ISO 8601)
-      "%Y-%m-%dT%H:%M:%S%z",
+      '%Y-%m-%dT%H:%M:%S%z',
     )
 
     # add a new file handler with our desired format
-    handler = FileHandler(log_filename, "w")
+    handler = FileHandler(log_filename, 'w')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
@@ -130,36 +130,36 @@ class Config:
     """
     info = platform.uname()
 
-    if self.chrome_binary_location == "auto":
+    if self.chrome_binary_location == 'auto':
       chrome_version = self.__determine_chrome_version()
 
-      if info.system == "Linux" and info.machine == "x86_64":
-        self.chrome_binary_location = f"./chrome/linux-{chrome_version}/chrome-linux64/chrome"
-      elif info.system == "Darwin" and info.machine == "arm64":
+      if info.system == 'Linux' and info.machine == 'x86_64':
+        self.chrome_binary_location = f'./chrome/linux-{chrome_version}/chrome-linux64/chrome'
+      elif info.system == 'Darwin' and info.machine == 'arm64':
         # pylint: disable-next=line-too-long
-        self.chrome_binary_location = f"./chrome/mac_arm-{chrome_version}/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"  # noqa: E501
+        self.chrome_binary_location = f'./chrome/mac_arm-{chrome_version}/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'  # noqa: E501
       else:
         raise ValueError(
-          f"chrome_binary_location cannot be automatically determined for {info.system} {info.machine} "
-          f"- please set chrome_binary_location manually"
+          f'chrome_binary_location cannot be automatically determined for {info.system} {info.machine} '
+          f'- please set chrome_binary_location manually'
         )
 
-    if self.chrome_driver_location == "auto":
-      if info.system == "Linux" and info.machine == "x86_64":
-        self.chrome_driver_location = "./drivers/chromedriver_linux_x64"
-      elif info.system == "Darwin" and info.machine == "arm64":
-        self.chrome_driver_location = "./drivers/chromedriver_mac_arm64"
+    if self.chrome_driver_location == 'auto':
+      if info.system == 'Linux' and info.machine == 'x86_64':
+        self.chrome_driver_location = './drivers/chromedriver_linux_x64'
+      elif info.system == 'Darwin' and info.machine == 'arm64':
+        self.chrome_driver_location = './drivers/chromedriver_mac_arm64'
       else:
         raise ValueError(
-          f"chrome_driver_location cannot be automatically determined for {info.system} {info.machine} "
-          f"- please set chrome_driver_location manually"
+          f'chrome_driver_location cannot be automatically determined for {info.system} {info.machine} '
+          f'- please set chrome_driver_location manually'
         )
 
   def __determine_chrome_version(self) -> str:
-    with open("package.json", "r", encoding="utf-8-sig") as file:
+    with open('package.json', 'r', encoding='utf-8-sig') as file:
       package_json = json.load(file)
 
-      return str(package_json["config"]["chromeVersion"])
+      return str(package_json['config']['chromeVersion'])
 
   def sanitise_string(self, string: str) -> str:
     """Sanitise a string for use in a folder/filename.
@@ -171,8 +171,8 @@ class Config:
         str: a sanitised string
     """
     temp_str = string.strip()
-    temp_str = re.sub(r"[^a-zA-Z0-9_\-.]", "_", temp_str)
-    temp_str = re.sub(r"_+", "_", temp_str)
+    temp_str = re.sub(r'[^a-zA-Z0-9_\-.]', '_', temp_str)
+    temp_str = re.sub(r'_+', '_', temp_str)
     temp_str = temp_str[:50]
     return temp_str
 
@@ -192,7 +192,7 @@ class Config:
     Args:
         name (str): the name of the attribute (in config.json)
     """
-    if name == "lock":
+    if name == 'lock':
       return self.config.lock
     return self.config[name]
 
@@ -206,11 +206,11 @@ class Config:
     if len(sys.argv) > 1:
       config_filename = sys.argv[1]
       # Only accept alphanumeric, underscores, dots, and hyphens
-      if not re.match(r"^[a-zA-Z0-9_.-]+$", config_filename):
-        raise ValueError("config_filename must be alphanumeric, underscores, and hyphens")
+      if not re.match(r'^[a-zA-Z0-9_.-]+$', config_filename):
+        raise ValueError('config_filename must be alphanumeric, underscores, and hyphens')
     else:
-      config_filename = "config_default.json"
-    with open("./config/" + config_filename, "r", encoding="utf-8-sig") as file:
+      config_filename = 'config_default.json'
+    with open('./config/' + config_filename, 'r', encoding='utf-8-sig') as file:
       # Write the config file to the results folder
       return json.load(file)
 
@@ -230,11 +230,11 @@ class Config:
     domain = parsed_url.netloc.lower()
 
     if domain not in self.url_lookup:
-      logger.warning("Agency data missing for: %s", url)
-      return {"organisation": "Unknown", "sector": "Unknown"}
+      logger.warning('Agency data missing for: %s', url)
+      return {'organisation': 'Unknown', 'sector': 'Unknown'}
     return {
-      "organisation": self.url_lookup[domain]["organisation"],
-      "sector": self.url_lookup[domain]["sector"],
+      'organisation': self.url_lookup[domain]['organisation'],
+      'sector': self.url_lookup[domain]['sector'],
     }
 
   def import_url_lookup_files(self) -> dict[str, dict[str, str]]:
@@ -251,18 +251,18 @@ class Config:
     base_urls: dict[str, dict[str, str]] = {}
 
     for filename in os.listdir(self.base_urls_visit_path):
-      if filename.endswith(".csv"):
+      if filename.endswith('.csv'):
         with open(
           os.path.join(self.base_urls_visit_path, filename),
-          encoding="utf-8-sig",
-          newline="",
+          encoding='utf-8-sig',
+          newline='',
         ) as file:
           reader = csv.reader(file)
           next(reader)
           for row in reader:
             if len(row) != 3:
               raise ValueError(
-                "CSV files must have 3 columns",
+                'CSV files must have 3 columns',
                 row,
                 filename,
               )
@@ -271,8 +271,8 @@ class Config:
             parsed_url = parse.urlparse(row[1])
 
             # Protocol
-            if parsed_url.scheme == "":
-              logger.error("URL missing protocol, skipping %s", row[1])
+            if parsed_url.scheme == '':
+              logger.error('URL missing protocol, skipping %s', row[1])
               continue
 
             # Cast to lowercase
@@ -283,16 +283,16 @@ class Config:
 
             # If only_allow_https is True, then only add
             # URLs that start with https://
-            if self.only_allow_https and parsed_url.scheme != "https":
+            if self.only_allow_https and parsed_url.scheme != 'https':
               logger.error(
-                "only_allow_https is True, skipping %s",
+                'only_allow_https is True, skipping %s',
                 row[1],
               )
               continue
 
             base_urls[domain] = {
-              "organisation": row[0],
-              "sector": row[2],
+              'organisation': row[0],
+              'sector': row[2],
             }
     return base_urls
 
