@@ -10,10 +10,19 @@ import sys
 import threading
 import urllib.robotparser
 from logging import INFO, FileHandler, Formatter, getLogger
-from typing import Any
+from typing import Any, TypedDict, cast
 from urllib import parse
 
 logger = getLogger('cwac')
+
+
+class SiteData(TypedDict):
+  """Holds data for a site that should be crawled and audited."""
+
+  organisation: str
+  url: str
+  sector: str
+  supports_head: bool
 
 
 class Config:
@@ -88,7 +97,9 @@ class Config:
     if not self.is_path_subdir(self.base_urls_nohead_path, './base_urls'):
       raise ValueError('base_urls_nohead_path must be within base_urls folder')
 
-    self.url_lookup = self.import_url_lookup_files()
+    self.audit_subjects: list[SiteData] = self.__import_base_urls()
+
+    self.url_lookup = self.__map_base_urls_by_domain()
 
     # global variable to store robots.txt data
     # the Crawler queries this and populates it
@@ -120,6 +131,139 @@ class Config:
     handler = FileHandler(log_filename, 'w')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+  def __normalize_url(self, url: str) -> str:
+    """Normalize a URL, making it lowercase and stripping out any extra whitespace.
+
+    Args:
+        url (str): URL to normalize
+
+    Returns:
+        str: normalize URL
+    """
+    parsed = parse.urlparse(url)
+    modified = parsed._replace(scheme=parsed.scheme.lower(), netloc=parsed.netloc.lower())
+    return parse.urlunparse(modified)
+
+  def __import_base_urls_without_head_support(self) -> set[str]:
+    """Import base urls that don't support HEAD requests.
+
+    Returns:
+        set[str]: a list of base urls that don't support HEAD requests
+    """
+    folder_path = self.base_urls_nohead_path
+    base_urls = set()
+
+    for filename in os.listdir(folder_path):
+      if filename.endswith('.csv'):
+        with open(
+          os.path.join(folder_path, filename),
+          encoding='utf-8-sig',
+          newline='',
+        ) as file:
+          reader = csv.reader(file)
+          header = next(reader)
+          for row in reader:
+            dict_row = cast(dict[str, str], dict(zip(header, row)))
+
+            # Strip whitespace from URL
+            dict_row['url'] = dict_row['url'].strip()
+
+            # Make the URL lowercase
+            dict_row['url'] = self.__normalize_url(dict_row['url'])
+
+            base_urls.add(dict_row['url'])
+    return base_urls
+
+  def __should_skip_row(self, row: SiteData) -> bool:
+    """Check if a row should be skipped.
+
+    Checks if a URL/Organisation should be included
+    in the audit according to config_default.json's
+    filter_to_organisations and
+    filter_to_urls.
+
+    Args:
+        subject (AuditSubject): an audit subject parsed from a CSV
+
+    Returns:
+        bool: True if the subject should be skipped, False otherwise
+    """
+    found_org = False
+    if self.filter_to_organisations:
+      for org in self.filter_to_organisations:
+        if org in row['organisation']:
+          found_org = True
+          break
+
+    found_url = False
+    if self.filter_to_urls:
+      for url in self.filter_to_urls:
+        if url in row['url']:
+          found_url = True
+          break
+
+    if self.filter_to_organisations and self.filter_to_urls:
+      return not (found_org and found_url)
+    if self.filter_to_organisations:
+      return not found_org
+    if self.filter_to_urls:
+      return not found_url
+
+    return False
+
+  def __import_base_urls(self) -> list[SiteData]:
+    subjects: list[SiteData] = []
+
+    folder_path = self.base_urls_visit_path
+
+    headless_base_urls = self.__import_base_urls_without_head_support()
+
+    for filename in os.listdir(folder_path):
+      if filename.endswith('.csv'):
+        with open(
+          os.path.join(folder_path, filename),
+          encoding='utf-8-sig',
+          newline='',
+        ) as file:
+          reader = csv.reader(file)
+          header = next(reader)
+          for row in reader:
+            if len(row) != 3:
+              raise ValueError(
+                'CSV files must have 3 columns',
+                row,
+                filename,
+              )
+
+            subject = cast(SiteData, dict(zip(header, row)))
+
+            # Parse the URL to get just the domain
+            parsed_url = parse.urlparse(subject['url'])
+
+            if parsed_url.scheme == '':
+              logger.error('URL missing protocol, skipping %s', subject['url'])
+              continue
+
+            # If only_allow_https is True, then only add
+            # URLs that start with https://
+            if self.only_allow_https and parsed_url.scheme != 'https':
+              logger.error(
+                'only_allow_https is True, skipping %s',
+                subject['url'],
+              )
+              continue
+
+            if self.__should_skip_row(subject):
+              continue
+
+            subject['url'] = self.__normalize_url(subject['url'])
+
+            subject['supports_head'] = subject['url'] not in headless_base_urls
+
+            subjects.append(subject)
+
+    return subjects
 
   def __resolve_automatic_settings(self) -> None:
     """Resolve configuration settings which are set to 'auto'.
@@ -237,8 +381,8 @@ class Config:
       'sector': self.url_lookup[domain]['sector'],
     }
 
-  def import_url_lookup_files(self) -> dict[str, dict[str, str]]:
-    """Import all CSV files in base_urls_visit_path.
+  def __map_base_urls_by_domain(self) -> dict[str, dict[str, str]]:
+    """Build a dictionary mapping base url information to their domain.
 
     This data is primarily used for looking up the agency details
     given a URL by using the lookup_organisation() method.
@@ -250,50 +394,20 @@ class Config:
     """
     base_urls: dict[str, dict[str, str]] = {}
 
-    for filename in os.listdir(self.base_urls_visit_path):
-      if filename.endswith('.csv'):
-        with open(
-          os.path.join(self.base_urls_visit_path, filename),
-          encoding='utf-8-sig',
-          newline='',
-        ) as file:
-          reader = csv.reader(file)
-          next(reader)
-          for row in reader:
-            if len(row) != 3:
-              raise ValueError(
-                'CSV files must have 3 columns',
-                row,
-                filename,
-              )
+    for subject in self.audit_subjects:
+      # Parse the URL to get just the domain
+      parsed_url = parse.urlparse(subject['url'])
 
-            # Parse the URL to get just the domain
-            parsed_url = parse.urlparse(row[1])
+      # Cast to lowercase
+      domain = parsed_url.netloc.lower()
 
-            # Protocol
-            if parsed_url.scheme == '':
-              logger.error('URL missing protocol, skipping %s', row[1])
-              continue
+      # Strip whitespace
+      domain = domain.strip()
 
-            # Cast to lowercase
-            domain = parsed_url.netloc.lower()
-
-            # Strip whitespace
-            domain = domain.strip()
-
-            # If only_allow_https is True, then only add
-            # URLs that start with https://
-            if self.only_allow_https and parsed_url.scheme != 'https':
-              logger.error(
-                'only_allow_https is True, skipping %s',
-                row[1],
-              )
-              continue
-
-            base_urls[domain] = {
-              'organisation': row[0],
-              'sector': row[2],
-            }
+      base_urls[domain] = {
+        'organisation': subject['organisation'],
+        'sector': subject['sector'],
+      }
     return base_urls
 
   def is_path_subdir(self, path: str, parent_path: str) -> bool:
