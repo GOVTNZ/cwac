@@ -232,7 +232,7 @@ You can also provide the name of a directory in the `./results` folder to genera
 ## Checking CWAC's source code
 
 CWAC uses several tools to maintain the quality and integrity of its source code, including:
-- [black](https://github.com/psf/black), an uncompromising code formatter
+- [ruff](https://github.com/astral-sh/ruff), an uncompromising code formatter
 - [pydocstyle](https://github.com/PyCQA/pydocstyle), for linting docstrings
 - [isort](https://github.com/pycqa/isort), for sorting import statements
 - [bandit](https://github.com/PyCQA/bandit), for detecting potential security vulnerabilities

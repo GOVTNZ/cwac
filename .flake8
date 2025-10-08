@@ -2,6 +2,8 @@
 extend-ignore=
   # goes against PEP8
   E203
+  E114
+  E111
 max-line-length = 120
 exclude =
     __pycache__
