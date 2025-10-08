@@ -16,353 +16,349 @@ import pandas as pd
 
 
 class DataExporter:
-    """Outputs CSV data from ./results/ to ./reports/."""
+  """Outputs CSV data from ./results/ to ./reports/."""
 
-    def __init__(self) -> None:
-        """Init vars."""
-        self.config = self.import_config_file()
+  def __init__(self) -> None:
+    """Init vars."""
+    self.config = self.import_config_file()
 
-        input_results_folder_name = self.__determine_results_folder_name()
+    input_results_folder_name = self.__determine_results_folder_name()
 
-        self.input_path = "./results/" + input_results_folder_name + "/"
-        self.output_path = "./reports/" + input_results_folder_name + "/"
-        # assert the input_path exists
-        if not os.path.exists(self.input_path):
-            raise FileNotFoundError(f"Input path {self.input_path} does not exist.")
-        # create ouptut folder if it doesn't exist
-        if not os.path.exists(self.output_path):
-            os.makedirs(self.output_path)
-        self.output_prefix = self.output_path + self.config["output_filename_prefix"]
-        self.iterate_export_formats()
+    self.input_path = './results/' + input_results_folder_name + '/'
+    self.output_path = './reports/' + input_results_folder_name + '/'
+    # assert the input_path exists
+    if not os.path.exists(self.input_path):
+      raise FileNotFoundError(f'Input path {self.input_path} does not exist.')
+    # create ouptut folder if it doesn't exist
+    if not os.path.exists(self.output_path):
+      os.makedirs(self.output_path)
+    self.output_prefix = self.output_path + self.config['output_filename_prefix']
+    self.iterate_export_formats()
 
-    def __determine_results_folder_name(self) -> str:
-        if len(sys.argv) > 1:
-            return sys.argv[1]
+  def __determine_results_folder_name(self) -> str:
+    if len(sys.argv) > 1:
+      return sys.argv[1]
 
-        # get all the directories in the results folder, sorted naturally in
-        # ascending order so that the latest results will be the last item
-        convert: Callable[[str], int | str] = lambda text: int(text) if text.isdigit() else text
-        existing_results = sorted(
-            [d for d in os.listdir("./results") if os.path.isdir(f"./results/{d}")],
-            key=lambda key: [convert(c) for c in re.split("([0-9]+)", key)],
-        )
+    # get all the directories in the results folder, sorted naturally in
+    # ascending order so that the latest results will be the last item
+    convert: Callable[[str], int | str] = lambda text: int(text) if text.isdigit() else text
+    existing_results = sorted(
+      [d for d in os.listdir('./results') if os.path.isdir(f'./results/{d}')],
+      key=lambda key: [convert(c) for c in re.split('([0-9]+)', key)],
+    )
 
-        if len(existing_results) == 0:
-            raise ValueError("could not determine latest results folder - have you run an audit?")
-        latest_result = existing_results[-1]
+    if len(existing_results) == 0:
+      raise ValueError('could not determine latest results folder - have you run an audit?')
+    latest_result = existing_results[-1]
 
-        print(f"Processing ./results/{latest_result}")
+    print(f'Processing ./results/{latest_result}')
 
-        return latest_result
+    return latest_result
 
-    # noinspection PyDefaultArgument
-    def sort_with_default(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
-        """Sort the data frame by the given columns in descending order followed by default columns for consistency."""
-        ascending = [False] * len(columns) + [True, True, True]
-        columns = list(
-            filter(
-                lambda key: key in df.columns,
-                columns + ["organisation", "base_url", "url"],
-            )
-        )
+  # noinspection PyDefaultArgument
+  def sort_with_default(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    """Sort the data frame by the given columns in descending order followed by default columns for consistency."""
+    ascending = [False] * len(columns) + [True, True, True]
+    columns = list(
+      filter(
+        lambda key: key in df.columns,
+        columns + ['organisation', 'base_url', 'url'],
+      )
+    )
 
-        return df.sort_values(by=columns, ascending=ascending[0 : len(columns)])
+    return df.sort_values(by=columns, ascending=ascending[0 : len(columns)])
 
-    def get_num_unique_pages_scanned(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Returns a DF with num of unique pages scanned for each base_url.
+  def get_num_unique_pages_scanned(self, df: pd.DataFrame) -> pd.DataFrame:
+    """Returns a DF with num of unique pages scanned for each base_url.
 
-        Args:
-            df (pd.DataFrame): The input DataFrame
+    Args:
+        df (pd.DataFrame): The input DataFrame
 
-        Returns:
-            pd.DataFrame: The resulting DataFrame
-        """
-        # Create a new sqlite3 connection to count how many pages scanned
-        page_count_conn = sqlite3.connect(":memory:")
+    Returns:
+        pd.DataFrame: The resulting DataFrame
+    """
+    # Create a new sqlite3 connection to count how many pages scanned
+    page_count_conn = sqlite3.connect(':memory:')
 
-        # Get a sqlite3 db of the data frame as it should have all the unique urls scanned
-        df.to_sql("cwac_table", page_count_conn, index=False)
+    # Get a sqlite3 db of the data frame as it should have all the unique urls scanned
+    df.to_sql('cwac_table', page_count_conn, index=False)
 
-        # Query how many unique 'url' values each 'base_url' has
-        url_count_query = """
+    # Query how many unique 'url' values each 'base_url' has
+    url_count_query = """
         SELECT base_url, COUNT(DISTINCT url) as num_pages_scanned
         FROM cwac_table
         GROUP BY base_url
         """
-        # Run the query
-        url_count_result = page_count_conn.execute(url_count_query).fetchall()
+    # Run the query
+    url_count_result = page_count_conn.execute(url_count_query).fetchall()
 
-        # Convert the result to a DataFrame
-        url_count_df = pd.DataFrame(url_count_result, columns=["base_url", "num_pages_scanned"])
+    # Convert the result to a DataFrame
+    url_count_df = pd.DataFrame(url_count_result, columns=['base_url', 'num_pages_scanned'])
 
-        return url_count_df
+    return url_count_df
 
-    def generate_axe_core_leaderboard(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Generates the axe-core leaderboard dataframe."""
-        # Generate the SQL query for the axe-core template aware report
-        query = self.generate_axe_core_template_aware_query()
+  def generate_axe_core_leaderboard(self, df: pd.DataFrame) -> pd.DataFrame:
+    """Generates the axe-core leaderboard dataframe."""
+    # Generate the SQL query for the axe-core template aware report
+    query = self.generate_axe_core_template_aware_query()
 
-        # Convert df to sqlite3 in-mem db
-        leaderboard_conn = sqlite3.connect(":memory:")
+    # Convert df to sqlite3 in-mem db
+    leaderboard_conn = sqlite3.connect(':memory:')
 
-        # Write the data to the in-memory database
-        df.to_sql("cwac_table", leaderboard_conn, index=False)
+    # Write the data to the in-memory database
+    df.to_sql('cwac_table', leaderboard_conn, index=False)
 
-        # Run query with conn.execute
-        leaderboard = leaderboard_conn.execute(query).fetchall()
+    # Run query with conn.execute
+    leaderboard = leaderboard_conn.execute(query).fetchall()
 
-        # Convert the result to a DataFrame
-        url_count_df = self.get_num_unique_pages_scanned(df)
+    # Convert the result to a DataFrame
+    url_count_df = self.get_num_unique_pages_scanned(df)
 
-        # Convert results to DataFrame
-        leaderboard_df = pd.DataFrame(leaderboard, columns=["organisation", "base_url", "num_issues"])
+    # Convert results to DataFrame
+    leaderboard_df = pd.DataFrame(leaderboard, columns=['organisation', 'base_url', 'num_issues'])
 
-        # Add the 'num_pages_scanned' column to the leaderboard_df
-        leaderboard_df = pd.merge(leaderboard_df, url_count_df, on="base_url")
+    # Add the 'num_pages_scanned' column to the leaderboard_df
+    leaderboard_df = pd.merge(leaderboard_df, url_count_df, on='base_url')
 
-        # Add a column of 'count' / 'num_pages_scanned' to the DataFrame
-        leaderboard_df["average_count"] = (leaderboard_df["num_issues"] / leaderboard_df["num_pages_scanned"]).round(2)
+    # Add a column of 'count' / 'num_pages_scanned' to the DataFrame
+    leaderboard_df['average_count'] = (leaderboard_df['num_issues'] / leaderboard_df['num_pages_scanned']).round(2)
 
-        # Add rank column
-        # leaderboard_df["rank"] = leaderboard_df["average_count"].rank(method="dense", ascending=True)
+    # Add rank column
+    # leaderboard_df["rank"] = leaderboard_df["average_count"].rank(method="dense", ascending=True)
 
-        # Ensure "rank" is an integer
-        # leaderboard_df["rank"] = leaderboard_df["rank"].astype(int)
+    # Ensure "rank" is an integer
+    # leaderboard_df["rank"] = leaderboard_df["rank"].astype(int)
 
-        # Add percentile column
-        leaderboard_df["percentile"] = (leaderboard_df["average_count"].rank(pct=True) * 100).round(2)
+    # Add percentile column
+    leaderboard_df['percentile'] = (leaderboard_df['average_count'].rank(pct=True) * 100).round(2)
 
-        # Rename columns to be more descriptive
-        leaderboard_df = leaderboard_df.rename(columns={"average_count": "average_num_issues_per_page"})
+    # Rename columns to be more descriptive
+    leaderboard_df = leaderboard_df.rename(columns={'average_count': 'average_num_issues_per_page'})
 
-        # Reorder so num_issues and average_num_issues_per_page are next to each other
-        leaderboard_df = leaderboard_df[
-            [
-                "organisation",
-                "base_url",
-                "num_pages_scanned",
-                "num_issues",
-                "average_num_issues_per_page",
-                "percentile",
-            ]
-        ]
+    # Reorder so num_issues and average_num_issues_per_page are next to each other
+    leaderboard_df = leaderboard_df[
+      [
+        'organisation',
+        'base_url',
+        'num_pages_scanned',
+        'num_issues',
+        'average_num_issues_per_page',
+        'percentile',
+      ]
+    ]
 
-        return leaderboard_df
+    return leaderboard_df
 
-    def generate_leaderboard(self, query: str, input_df: pd.DataFrame) -> pd.DataFrame:
-        """Generates a leaderboard by performing the query on the input_df.
+  def generate_leaderboard(self, query: str, input_df: pd.DataFrame) -> pd.DataFrame:
+    """Generates a leaderboard by performing the query on the input_df.
 
-        Args:
-            query (str): SQL query to perform on input_df
-            input_df (pd.DataFrame): Input DataFrame
+    Args:
+        query (str): SQL query to perform on input_df
+        input_df (pd.DataFrame): Input DataFrame
 
-        Returns:
-            pd.DataFrame: The resulting leaderboard DataFrame
-        """
-        # Make a sqlite3 connection
-        conn = sqlite3.connect(":memory:")
+    Returns:
+        pd.DataFrame: The resulting leaderboard DataFrame
+    """
+    # Make a sqlite3 connection
+    conn = sqlite3.connect(':memory:')
 
-        # Write input_df to the in-memory database
-        input_df.to_sql("cwac_table", conn, index=False)
+    # Write input_df to the in-memory database
+    input_df.to_sql('cwac_table', conn, index=False)
 
-        # Run query
-        leaderboard = conn.execute(query).fetchall()
+    # Run query
+    leaderboard = conn.execute(query).fetchall()
 
-        # Get columns from leadeboard
-        columns = conn.execute(query).description
+    # Get columns from leadeboard
+    columns = conn.execute(query).description
 
-        # Convert to df and preserve columns
-        leaderboard_df = pd.DataFrame(leaderboard, columns=[col[0] for col in columns])
+    # Convert to df and preserve columns
+    leaderboard_df = pd.DataFrame(leaderboard, columns=[col[0] for col in columns])
 
-        # Convert the result to a DataFrame
-        url_count_df = self.get_num_unique_pages_scanned(input_df)
+    # Convert the result to a DataFrame
+    url_count_df = self.get_num_unique_pages_scanned(input_df)
 
-        # Merge the url_count_df with the leaderboard_df
-        leaderboard_df = pd.merge(leaderboard_df, url_count_df, on="base_url")
+    # Merge the url_count_df with the leaderboard_df
+    leaderboard_df = pd.merge(leaderboard_df, url_count_df, on='base_url')
 
-        # Add average issue count per page (if it has a 'num_issues' column)
-        if "num_issues" in leaderboard_df.columns:
-            leaderboard_df["average_count"] = (
-                leaderboard_df["num_issues"] / leaderboard_df["num_pages_scanned"]
-            ).round(2)
+    # Add average issue count per page (if it has a 'num_issues' column)
+    if 'num_issues' in leaderboard_df.columns:
+      leaderboard_df['average_count'] = (leaderboard_df['num_issues'] / leaderboard_df['num_pages_scanned']).round(2)
 
-        return leaderboard_df
+    return leaderboard_df
 
-    def export_raw_data(self, input_filename: str, output_filename: str) -> None:
-        """Export the raw data from the input_filename to the output_filename.
+  def export_raw_data(self, input_filename: str, output_filename: str) -> None:
+    """Export the raw data from the input_filename to the output_filename.
 
-        Args:
-            input_filename (str): The input filename.
-            output_filename (str): The output filename.
-        """
-        with (
-            open(self.input_path + input_filename, "r", encoding="utf-8-sig") as input_file,
-            open(self.output_prefix + output_filename, "w", encoding="utf-8-sig") as output_file,
-        ):
-            output_file.write(input_file.read())
+    Args:
+        input_filename (str): The input filename.
+        output_filename (str): The output filename.
+    """
+    with (
+      open(self.input_path + input_filename, 'r', encoding='utf-8-sig') as input_file,
+      open(self.output_prefix + output_filename, 'w', encoding='utf-8-sig') as output_file,
+    ):
+      output_file.write(input_file.read())
 
-    def iterate_export_formats(self) -> None:
-        """Iterate through the export formats."""
-        axe_core_template_aware_df: pd.DataFrame | None = None
+  def iterate_export_formats(self) -> None:
+    """Iterate through the export formats."""
+    axe_core_template_aware_df: pd.DataFrame | None = None
 
-        for export_format in self.config["export_formats"]:
-            # if 'enabled' is False, skip the export format
-            if not export_format["enabled"]:
-                print(f"Skipping {export_format['export_type']} for {export_format['output_filename']}")
-                continue
+    for export_format in self.config['export_formats']:
+      # if 'enabled' is False, skip the export format
+      if not export_format['enabled']:
+        print(f'Skipping {export_format["export_type"]} for {export_format["output_filename"]}')
+        continue
 
-            # print(f"Exporting {export_format['export_type']} to {export_format['output_filename']}")
-            print(f"Exporting {export_format['export_type']} to {self.output_path}")
+      # print(f"Exporting {export_format['export_type']} to {export_format['output_filename']}")
+      print(f'Exporting {export_format["export_type"]} to {self.output_path}')
 
-            # Check if export_format["input_filename"] exists
-            if "input_filename" in export_format and not os.path.exists(
-                self.input_path + export_format["input_filename"]
-            ):
-                print(f"WARNING: File {self.input_path + export_format['input_filename']} does not exist.")
-                continue
+      # Check if export_format["input_filename"] exists
+      if 'input_filename' in export_format and not os.path.exists(self.input_path + export_format['input_filename']):
+        print(f'WARNING: File {self.input_path + export_format["input_filename"]} does not exist.')
+        continue
 
-            if export_format["export_type"] == "leaderboard":
-                output_df = self.generate_leaderboard(
-                    query=export_format["query"],
-                    input_df=self.import_audit_csv_to_df(export_format["input_filename"]),
-                )
-
-                output_df = self.sort_with_default(output_df, ["average_count"])
-
-                # Write leaderboard to CSV
-                output_df.to_csv(
-                    self.output_prefix + export_format["output_filename"],
-                    index=False,
-                )
-
-            if export_format["export_type"] == "raw_data":
-                self.export_raw_data(
-                    input_filename=export_format["input_filename"],
-                    output_filename=export_format["output_filename"],
-                )
-
-            if export_format["export_type"] == "generate_axe_core_template_aware_file":
-                # Run the axe-core template-aware algorithm
-                # to generate the template-aware CSV
-                axe_core_template_aware_df = self.run_axe_core_audit_template_aware()
-                continue
-
-            if export_format["export_type"] == "axe_core_template_aware_leaderboard":
-                if axe_core_template_aware_df is None:
-                    raise ValueError(
-                        "The generate_axe_core_template_aware_file export must happen before"
-                        " the axe_core_template_aware_leaderboard export can run"
-                    )
-
-                # Generate the axe-core leaderboard
-                leaderboard_df = self.generate_axe_core_leaderboard(axe_core_template_aware_df)
-                leaderboard_df = self.sort_with_default(leaderboard_df, ["average_num_issues_per_page"])
-
-                # Write the leaderboard to a CSV file
-                leaderboard_df.to_csv(
-                    self.output_prefix + export_format["output_filename"],
-                    index=False,
-                )
-
-    def import_audit_csv_to_df(self, input_filename: str) -> pd.DataFrame:
-        """Import the audit CSV file to a DataFrame."""
-        audit_df = pd.read_csv(self.input_path + input_filename)
-        return audit_df
-
-    def import_config_file(self) -> dict[str, Any]:
-        """Import export_report_data_config.json."""
-        with open("export_report_data_config.json", "r", encoding="utf-8-sig") as file:
-            config = cast(dict[str, Any], json.load(file))
-        return config
-
-    def template_aware_algorithm(self, input_df: pd.DataFrame, groupby_cols: list[str]) -> pd.DataFrame:
-        """Template aware algorithm - finds template-level issues.
-
-        Uses pandas to group/aggregate axe-core data to show template
-        level issues within websites.
-
-        Args:
-            input_df (pd.DataFrame): The input dataframe.
-            groupby_cols (list[str]): The columns to group by.
-
-        Returns:
-            pd.DataFrame: The grouped and aggregated dataframe.
-        """
-        # Collect all rows where count is 0
-        zero_count_rows = input_df[input_df["num_issues"] == 0]
-
-        # Remove the zero count rows from the input_df
-        no_zero_count_df = input_df[input_df["num_issues"] != 0]
-
-        # Group the data
-        grouped_df = no_zero_count_df.groupby(groupby_cols)
-
-        # Generate the aggregation dictionary
-        agg_dict = {"num_issues": "sum"}
-
-        # Add in 'first' for all other columns
-        for col in input_df.columns:
-            if col not in agg_dict and col not in groupby_cols:
-                agg_dict[col] = "first"
-
-        # Aggregate the data
-        agg_df = grouped_df.agg(agg_dict).rename(columns={"num_issues": "num_pages"})
-
-        # Reset the index
-        agg_df = agg_df.reset_index()
-
-        # Concatenate the zero count rows with the agg data
-        agg_df = pd.concat([agg_df, zero_count_rows])
-
-        return agg_df
-
-    def run_axe_core_audit_template_aware(self) -> pd.DataFrame:
-        """Combine repeated axe-core issues.
-
-        Used for detecting template-level errors.
-
-        Args:
-            export_path (str): The path to the audit folder.
-        """
-        # Read the CSV file into a list of dicts
-        file_path = self.input_path + "/axe_core_audit.csv"
-
-        # If file doesn't exist, return
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File {file_path} does not exist.")
-
-        # Read the CSV file into a DataFrame
-        data_frame = pd.read_csv(file_path)
-
-        # Get original column order for later use
-        original_column_order = list(data_frame.columns)
-
-        for i, _ in enumerate(original_column_order):
-            if original_column_order[i] == "num_issues":
-                original_column_order[i] = "num_pages"
-
-        # Group and aggregate the data
-        data_frame = self.template_aware_algorithm(
-            input_df=data_frame,
-            groupby_cols=["base_url", "id", "html", "viewport_size"],
+      if export_format['export_type'] == 'leaderboard':
+        output_df = self.generate_leaderboard(
+          query=export_format['query'],
+          input_df=self.import_audit_csv_to_df(export_format['input_filename']),
         )
 
-        data_frame = self.sort_with_default(data_frame, ["num_pages"])
+        output_df = self.sort_with_default(output_df, ['average_count'])
 
-        # Write the data to CSV file with original column order
-        data_frame.to_csv(
-            self.input_path + "/axe_core_audit_template_aware.csv",
-            index=False,
-            columns=list(original_column_order),
+        # Write leaderboard to CSV
+        output_df.to_csv(
+          self.output_prefix + export_format['output_filename'],
+          index=False,
         )
 
-        return data_frame
+      if export_format['export_type'] == 'raw_data':
+        self.export_raw_data(
+          input_filename=export_format['input_filename'],
+          output_filename=export_format['output_filename'],
+        )
 
-    def generate_axe_core_template_aware_query(
-        self,
-    ) -> str:
-        """Generate the SQL query for the axe-core template aware report."""
-        query = """
+      if export_format['export_type'] == 'generate_axe_core_template_aware_file':
+        # Run the axe-core template-aware algorithm
+        # to generate the template-aware CSV
+        axe_core_template_aware_df = self.run_axe_core_audit_template_aware()
+        continue
+
+      if export_format['export_type'] == 'axe_core_template_aware_leaderboard':
+        if axe_core_template_aware_df is None:
+          raise ValueError(
+            'The generate_axe_core_template_aware_file export must happen before'
+            ' the axe_core_template_aware_leaderboard export can run'
+          )
+
+        # Generate the axe-core leaderboard
+        leaderboard_df = self.generate_axe_core_leaderboard(axe_core_template_aware_df)
+        leaderboard_df = self.sort_with_default(leaderboard_df, ['average_num_issues_per_page'])
+
+        # Write the leaderboard to a CSV file
+        leaderboard_df.to_csv(
+          self.output_prefix + export_format['output_filename'],
+          index=False,
+        )
+
+  def import_audit_csv_to_df(self, input_filename: str) -> pd.DataFrame:
+    """Import the audit CSV file to a DataFrame."""
+    audit_df = pd.read_csv(self.input_path + input_filename)
+    return audit_df
+
+  def import_config_file(self) -> dict[str, Any]:
+    """Import export_report_data_config.json."""
+    with open('export_report_data_config.json', 'r', encoding='utf-8-sig') as file:
+      config = cast(dict[str, Any], json.load(file))
+    return config
+
+  def template_aware_algorithm(self, input_df: pd.DataFrame, groupby_cols: list[str]) -> pd.DataFrame:
+    """Template aware algorithm - finds template-level issues.
+
+    Uses pandas to group/aggregate axe-core data to show template
+    level issues within websites.
+
+    Args:
+        input_df (pd.DataFrame): The input dataframe.
+        groupby_cols (list[str]): The columns to group by.
+
+    Returns:
+        pd.DataFrame: The grouped and aggregated dataframe.
+    """
+    # Collect all rows where count is 0
+    zero_count_rows = input_df[input_df['num_issues'] == 0]
+
+    # Remove the zero count rows from the input_df
+    no_zero_count_df = input_df[input_df['num_issues'] != 0]
+
+    # Group the data
+    grouped_df = no_zero_count_df.groupby(groupby_cols)
+
+    # Generate the aggregation dictionary
+    agg_dict = {'num_issues': 'sum'}
+
+    # Add in 'first' for all other columns
+    for col in input_df.columns:
+      if col not in agg_dict and col not in groupby_cols:
+        agg_dict[col] = 'first'
+
+    # Aggregate the data
+    agg_df = grouped_df.agg(agg_dict).rename(columns={'num_issues': 'num_pages'})
+
+    # Reset the index
+    agg_df = agg_df.reset_index()
+
+    # Concatenate the zero count rows with the agg data
+    agg_df = pd.concat([agg_df, zero_count_rows])
+
+    return agg_df
+
+  def run_axe_core_audit_template_aware(self) -> pd.DataFrame:
+    """Combine repeated axe-core issues.
+
+    Used for detecting template-level errors.
+
+    Args:
+        export_path (str): The path to the audit folder.
+    """
+    # Read the CSV file into a list of dicts
+    file_path = self.input_path + '/axe_core_audit.csv'
+
+    # If file doesn't exist, return
+    if not os.path.exists(file_path):
+      raise FileNotFoundError(f'File {file_path} does not exist.')
+
+    # Read the CSV file into a DataFrame
+    data_frame = pd.read_csv(file_path)
+
+    # Get original column order for later use
+    original_column_order = list(data_frame.columns)
+
+    for i, _ in enumerate(original_column_order):
+      if original_column_order[i] == 'num_issues':
+        original_column_order[i] = 'num_pages'
+
+    # Group and aggregate the data
+    data_frame = self.template_aware_algorithm(
+      input_df=data_frame,
+      groupby_cols=['base_url', 'id', 'html', 'viewport_size'],
+    )
+
+    data_frame = self.sort_with_default(data_frame, ['num_pages'])
+
+    # Write the data to CSV file with original column order
+    data_frame.to_csv(
+      self.input_path + '/axe_core_audit_template_aware.csv',
+      index=False,
+      columns=list(original_column_order),
+    )
+
+    return data_frame
+
+  def generate_axe_core_template_aware_query(
+    self,
+  ) -> str:
+    """Generate the SQL query for the axe-core template aware report."""
+    query = """
              SELECT organisation, base_url, COUNT(*) as num_count
                     FROM cwac_table
                     WHERE num_pages > 0
@@ -382,8 +378,8 @@ class DataExporter:
                     )
                     ORDER BY num_count DESC
                 """
-        return query
+    return query
 
 
-if __name__ == "__main__":
-    exporter = DataExporter()
+if __name__ == '__main__':
+  exporter = DataExporter()

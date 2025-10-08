@@ -12,7 +12,6 @@ updates:
       tools:
         patterns:
           - bandit
-          - black
           - flake8
           - flake8-simplify
           - isort
@@ -20,13 +19,13 @@ updates:
           - pre-commit
           - pylint
           - pydocstyle
+          - ruff
         update-types:
           - minor
           - patch
       production:
         exclude-patterns:
           - bandit
-          - black
           - flake8
           - flake8-simplify
           - isort
@@ -34,6 +33,7 @@ updates:
           - pre-commit
           - pylint
           - pydocstyle
+          - ruff
         update-types:
           - minor
           - patch

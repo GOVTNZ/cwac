@@ -1,0 +1,16 @@
+curl 'https://gg.govt.nz/' \
+  -H 'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7' \
+  -H 'accept-language: en-NZ,en;q=0.9,en-GB;q=0.8,en-US;q=0.7' \
+  -H 'cache-control: no-cache' \
+  -b 'cf_clearance=IHZoEOIjRjr0nBFQ59QCC8NAtkCW18HmTc2YIKZw_mM-1749604845-1.2.1.1-stxxWEK4prZVXfCrv5NtV_HPf5rLtUssxDt0yKk8cNY80xupAK.v5XsRiFtWkXIVXAd2HtfxufZ8txmyoRwJP.91hnq9.7GSzvpVbELjcV3zmW.Wv173Iao8bHVR_pOO.XSCwiHuDfxsA.ujweJMweYqFPy.CjmPf.AjVudq7tB1cs430entQfWl8R2zBBL7EQICl.oyqXKiT8sSrs7xUhIukwPaIo69Sg6Rd95UsUZjDmfzZuGruvkOWbw9RsGrh_U.VVa8e7vwKJUVER.eJOUDV.cTRMFAEoudD9OB8RPJQTvqxjtybKCESNQcOY6NiRHe4QhWnh6RNafW6W_kPLFAcavFX81LvkGEq.xucSA' \
+  -H 'pragma: no-cache' \
+  -H 'priority: u=0, i' \
+  -H 'sec-ch-ua: "Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: document' \
+  -H 'sec-fetch-mode: navigate' \
+  -H 'sec-fetch-site: none' \
+  -H 'sec-fetch-user: ?1' \
+  -H 'upgrade-insecure-requests: 1' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'

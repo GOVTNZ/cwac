@@ -28,19 +28,6 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: bandit -r .
-  black:
-    permissions:
-      contents: read # to fetch (actions/checkout)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: psf/black@stable
-        with:
-          version: 24.8.0
-          options: '--line-length=120 --check --diff'
   flake8:
     permissions:
       contents: read # to fetch (actions/checkout)
@@ -110,6 +97,19 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: pylint -rn -sn $(git ls-files '*.py')
+  ruff:
+    permissions:
+      contents: read # to fetch code (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/ruff-action@v3 # v3.5.1
+        with:
+          version-file: 'pyproject.toml'
+          args: 'format --check --diff'
   test:
     permissions:
       contents: read # to fetch (actions/checkout)
