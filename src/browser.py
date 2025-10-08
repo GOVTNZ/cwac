@@ -8,15 +8,18 @@ import platform
 import time
 import traceback
 from typing import Any, cast
+from urllib import parse
 
 import selenium
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.remote.webelement import WebElement
 
 from config import Config
 
-WebDriverType = selenium.webdriver.firefox.webdriver.WebDriver | selenium.webdriver.chrome.webdriver.WebDriver
+WebDriverType = selenium.webdriver.Firefox | selenium.webdriver.Chrome
 
 logger = logging.getLogger('cwac')
 
@@ -87,9 +90,30 @@ class Browser:
           logger.info('%i attempts failed to .get: %s', attempts + 1, url)
           return False
 
+    return self.__ensure_loaded()
+
+  def __ensure_loaded(self) -> bool:
+    """Ensure the page had been loaded."""
+
     # Delay to allow page to load more
     time.sleep(self.config.delay_after_page_load)
-    return True
+
+    if not (parse.urlparse(self.driver.current_url).hostname or '').endswith('.shinyapps.io'):
+      return True
+
+    logging.info('shinyapp.io detected, waiting for _router_ui to have elements...')
+    waited_time = 0
+    while waited_time < 10:
+      time.sleep(self.config.delay_after_page_load)
+      waited_time += self.config.delay_after_page_load
+
+      el = self.driver.find_element(By.ID, '_router_ui')
+      children = cast(list[WebElement], el.get_property('children'))
+      if len(children) > 0:
+        logging.info('shinyapp.io page finished loading with %d elements', len(children))
+        return True
+    logging.error('shinyapp.io did not seem to finish loading within 10 seconds')
+    return False
 
   def safe_restart(self) -> None:
     """Restart the webdriver."""
