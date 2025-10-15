@@ -2,7 +2,7 @@
 
 import logging
 import urllib.parse
-from typing import Any, Callable
+from typing import Any, Callable, TypedDict
 
 import requests
 
@@ -195,12 +195,19 @@ def url_filter_by_header_content_type(url: str, headers: dict[Any, Any]) -> bool
   return True
 
 
-def process_url_headers(config: Config, url: str, supports_head_requests: bool = True) -> dict[Any, Any]:
+class UrlData(TypedDict):
+  """Data about a request made for a particular url."""
+
+  status_code: int
+  final_url: str
+  headers: dict[str, str]
+
+
+def process_url_headers(config: Config, url: str, supports_head_requests: bool = True) -> UrlData:
   """Process a URL by handling the headers.
 
   It does the following:
       - checks HTTP status code
-      - checks Content-Type
       - Redirects and resolves to final_url
 
   Args:
@@ -209,12 +216,10 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
       supports_head_requests (bool): whether the URL supports HEAD requests
 
   Returns:
-      dict[Any, Any]]: A dict of status_code, final_url
+      UrlData: A dict of status_code, final_url, and headers from the final request
   """
-  success = True
   timeout = (10, 10)
-  output = {'status_code': -1, 'final_url': url}
-  final_url = None
+  final_url = url
   method = 'head'
 
   if not supports_head_requests:
@@ -248,17 +253,13 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
       logger.exception('Failed to get headers; attempt: %d, %s', i + 1, url)
       if i == 2:
         logger.error('Giving up on headers check; attempt: %d, %s', i + 1, url)
-        return output
+        return {'status_code': -1, 'final_url': url, 'headers': {}}
 
-  # check content-type
-  if success and not url_filter_by_header_content_type(url, dict(headers.headers)):
-    success = False
-
-  if success:
-    output['status_code'] = headers.status_code
-    output['final_url'] = final_url
-
-  return output
+  return {
+    'status_code': headers.status_code,
+    'final_url': final_url,
+    'headers': dict(headers.headers),
+  }
 
 
 def url_filter_same_protocol(url_a: str, url_b: str) -> bool:
