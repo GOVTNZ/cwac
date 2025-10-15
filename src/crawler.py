@@ -333,14 +333,22 @@ class Crawler:
         viewport_size=self.browser.get_window_size(),
       )
 
-  def are_url_headers_acceptable(self, base_url: str, parent_url: str, url: str, status_code: int) -> bool:
+  def are_url_headers_acceptable(
+    self,
+    base_url: str,
+    parent_url: str,
+    url: str,
+    status_code: int,
+    headers: dict[str, str],
+  ) -> bool:
     """Check if the URL has acceptable headers.
 
     Args:
         base_url (str): base URL - homepage of website specified
         parent_url (str): parent URL of url
         url (str): URL to check
-        status_code (int): status code of the rul
+        status_code (int): status code of the url
+        headers (dict): the headers of the url
 
     Returns:
         bool: True if URL has acceptable headers, else False
@@ -369,7 +377,7 @@ class Crawler:
         csv_writer.write_csv_file(f'./results/{self.config.audit_name}/unexpected_response_codes.csv')
 
       return False
-    return status_code is not None
+    return src.filters.url_filter_by_header_content_type(url, headers)
 
   def fetch_robots_txt(self, robots_txt_url: str) -> str:
     """Fetches a robots.txt file from a domain.
@@ -532,7 +540,11 @@ class Crawler:
         url_status_code = url_data['status_code']
         url = url_data['final_url']
         if not self.are_url_headers_acceptable(
-          base_url=base_url, parent_url=parent_url, url=url, status_code=url_status_code
+          base_url=base_url,
+          parent_url=parent_url,
+          url=url,
+          status_code=url_status_code,
+          headers=url_data['headers'],
         ):
           continue
 
