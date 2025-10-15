@@ -2,7 +2,7 @@
 
 import logging
 import urllib.parse
-from typing import Any, Callable
+from typing import Any, Callable, TypedDict
 
 import requests
 
@@ -195,7 +195,15 @@ def url_filter_by_header_content_type(url: str, headers: dict[Any, Any]) -> bool
   return True
 
 
-def process_url_headers(config: Config, url: str, supports_head_requests: bool = True) -> dict[Any, Any]:
+class UrlData(TypedDict):
+  """Data about a request made for a particular url."""
+
+  status_code: int
+  final_url: str
+  headers: dict[str, str]
+
+
+def process_url_headers(config: Config, url: str, supports_head_requests: bool = True) -> UrlData:
   """Process a URL by handling the headers.
 
   It does the following:
@@ -208,10 +216,10 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
       supports_head_requests (bool): whether the URL supports HEAD requests
 
   Returns:
-      dict[Any, Any]]: A dict of status_code, final_url, and headers from the final request
+      UrlData: A dict of status_code, final_url, and headers from the final request
   """
   timeout = (10, 10)
-  final_url = None
+  final_url = url
   method = 'head'
 
   if not supports_head_requests:
