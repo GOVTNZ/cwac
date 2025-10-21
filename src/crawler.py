@@ -333,27 +333,23 @@ class Crawler:
         viewport_size=self.browser.get_window_size(),
       )
 
-  def are_url_headers_acceptable(self, base_url: str, parent_url: str, url: str, status_code: int) -> bool:
+  def are_url_headers_acceptable(self, base_url: str, parent_url: str, url_data: src.filters.UrlData) -> bool:
     """Check if the URL has acceptable headers.
 
     Args:
         base_url (str): base URL - homepage of website specified
         parent_url (str): parent URL of url
-        url (str): URL to check
-        status_code (int): status code of the rul
+        url_data (src.filters.UrlData): url data
 
     Returns:
         bool: True if URL has acceptable headers, else False
     """
-    if status_code is None:
-      status_code = -1
-
     ok_status_codes = [200, 301, 302, 307, 308]
-    if status_code not in ok_status_codes:
+    if url_data['status_code'] not in ok_status_codes:
       logger.info(
         'URL filtered out due to bad http status_code: %s %i',
-        url,
-        status_code,
+        url_data['final_url'],
+        url_data['status_code'],
       )
       # Write bad response codes with CSVWriter
       csv_writer = src.output.CSVWriter()
@@ -361,15 +357,15 @@ class Crawler:
         {
           'base_url': base_url,
           'parent_url': parent_url,
-          'url': url,
-          'status_code': status_code,
+          'url': url_data['final_url'],
+          'status_code': url_data['status_code'],
         }
       )
       if self.config.record_unexpected_response_codes:
         csv_writer.write_csv_file(f'./results/{self.config.audit_name}/unexpected_response_codes.csv')
 
       return False
-    return status_code is not None
+    return src.filters.url_filter_by_header_content_type(url_data['final_url'], url_data['headers'])
 
   def fetch_robots_txt(self, robots_txt_url: str) -> str:
     """Fetches a robots.txt file from a domain.
@@ -529,11 +525,8 @@ class Crawler:
           url,
           supports_head_requests=site_data['supports_head'],
         )
-        url_status_code = url_data['status_code']
         url = url_data['final_url']
-        if not self.are_url_headers_acceptable(
-          base_url=base_url, parent_url=parent_url, url=url, status_code=url_status_code
-        ):
+        if not self.are_url_headers_acceptable(base_url=base_url, parent_url=parent_url, url_data=url_data):
           continue
 
       if not self.url_filter.run_url_filters(url):
