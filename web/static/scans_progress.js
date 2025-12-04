@@ -1,6 +1,12 @@
 /**
+ * @typedef {Object} ProgressLogs
+ * @property {string} chromedriver
+ * @property {string} audit
+ */
+
+/**
  * @typedef {Object} ProgressUpdate
- * @property {string} logs
+ * @property {ProgressLogs} logs
  * @property {number} time
  * @property {number} iteration
  * @property {number} total
@@ -10,6 +16,20 @@
  * @property {string} remaining
  * @property {string} state
  */
+
+/**
+ * Updates the text area with the given content, and scrolls to the bottom
+ *
+ * @param {string} id
+ * @param {string} content
+ */
+function updateTextArea(id, content) {
+  /** @type {HTMLTextAreaElement} */
+  const logsTextArea = document.getElementById(id);
+
+  logsTextArea.value = content;
+  logsTextArea.scrollTop = logsTextArea.scrollHeight;
+}
 
 /**
  * Updates the progress of the current scan
@@ -28,11 +48,8 @@ async function updateProgress() {
   /** @type {ProgressUpdate} */
   const data = await resp.json();
 
-  /** @type {HTMLTextAreaElement} */
-  const logsTextArea = document.getElementById('logs');
-
-  logsTextArea.value = data.logs;
-  logsTextArea.scrollTop = logsTextArea.scrollHeight;
+  updateTextArea('logs-audit', data.logs.audit);
+  updateTextArea('logs-chromedriver', data.logs.chromedriver);
 
   const progressBar = document.getElementById('scan-progress');
 

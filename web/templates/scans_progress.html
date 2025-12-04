@@ -38,6 +38,38 @@
           </div>
         </div>
       </div>
+
+      <div
+        class="nav flex-column nav-pills m-3"
+        id="v-pills-tab"
+        role="tablist"
+        aria-orientation="vertical"
+      >
+        <button
+          class="nav-link active"
+          id="v-pills-audit-log-tab"
+          data-bs-toggle="pill"
+          data-bs-target="#v-pills-audit-log"
+          type="button"
+          role="tab"
+          aria-controls="v-pills-audit-log"
+          aria-selected="true"
+        >
+          Audit log
+        </button>
+        <button
+          class="nav-link"
+          id="v-pills-chromedriver-log-tab"
+          data-bs-toggle="pill"
+          data-bs-target="#v-pills-chromedriver-log"
+          type="button"
+          role="tab"
+          aria-controls="v-pills-chromedriver-log"
+          aria-selected="false"
+        >
+          chromedriver.log
+        </button>
+      </div>
     </div>
 
     <div class="col-lg-10">
@@ -71,16 +103,44 @@
         </div>
       </div>
 
-      <textarea
-        class="form-control"
-        rows="20"
-        id="logs"
-        readonly
-        disabled
-        aria-label="{{ manager.log_file_path() }}"
-      >
-{{ logs }}</textarea
-      >
+      <div class="tab-content">
+        <div
+          class="tab-pane show active"
+          id="v-pills-audit-log"
+          role="tabpanel"
+          aria-labelledby="v-pills-audit-log-tab"
+          tabindex="0"
+        >
+          <textarea
+            class="form-control"
+            rows="20"
+            id="logs-audit"
+            readonly
+            disabled
+            aria-label="{{ manager.audit_log_file_path() }}"
+          >
+{{ audit_logs }}</textarea
+          >
+        </div>
+        <div
+          class="tab-pane"
+          id="v-pills-chromedriver-log"
+          role="tabpanel"
+          aria-labelledby="v-pills-chromedriver-log-tab"
+          tabindex="0"
+        >
+          <textarea
+            class="form-control"
+            rows="20"
+            id="logs-chromedriver"
+            readonly
+            disabled
+            aria-label="{{ manager.chromedriver_log_file_path() }}"
+          >
+{{ chromedriver_logs }}</textarea
+          >
+        </div>
+      </div>
     </div>
   </div>
 

@@ -208,17 +208,39 @@ class TestScanProgressUpdate:
       'results/2025-01-01_12-00-00_audit_results/2025-01-01_12-00-00_audit_results.log',
       contents=build_audit_results_log_content('2025-01-03'),
     )
+    fs.create_file(
+      'results/2025-01-01_12-00-00_audit_results/chromedriver.log',
+      contents='\n'.join(
+        [
+          '[1759967794.041][INFO]: Starting ChromeDriver 122.0.6261.39 (...) on port 39241',
+          '[1759967794.041][INFO]: Please see ... for suggestions on keeping ChromeDriver safe.',
+        ]
+      ),
+    )
     mocker.patch.object(CWACManager, 'state', new_callable=mocker.PropertyMock, return_value='running')
     mocker.patch.object(
       cwac_manager,
-      'log_file_path',
+      'audit_log_file_path',
       return_value='results/2025-01-01_12-00-00_audit_results/2025-01-01_12-00-00_audit_results.log',
+    )
+    mocker.patch.object(
+      cwac_manager,
+      'chromedriver_log_file_path',
+      return_value='results/2025-01-01_12-00-00_audit_results/chromedriver.log',
     )
     mocker.patch.object(
       cwac_manager,
       'progress',
       return_value={
-        'logs': build_audit_results_log_content('2025-01-03'),
+        'logs': {
+          'audit': build_audit_results_log_content('2025-01-03'),
+          'chromedriver': '\n'.join(
+            [
+              '[1759967794.041][INFO]: Starting ChromeDriver 122.0.6261.39 (...) on port 39241',
+              '[1759967794.041][INFO]: Please see ... for suggestions on keeping ChromeDriver safe.',
+            ]
+          ),
+        },
         'elapsed': '0h 2m',
         'iteration': 7,
         'percent': '87.5',
@@ -233,7 +255,15 @@ class TestScanProgressUpdate:
 
     assert response.status_code == 200
     assert response.json == {
-      'logs': build_audit_results_log_content('2025-01-03'),
+      'logs': {
+        'audit': build_audit_results_log_content('2025-01-03'),
+        'chromedriver': '\n'.join(
+          [
+            '[1759967794.041][INFO]: Starting ChromeDriver 122.0.6261.39 (...) on port 39241',
+            '[1759967794.041][INFO]: Please see ... for suggestions on keeping ChromeDriver safe.',
+          ]
+        ),
+      },
       'elapsed': '0h 2m',
       'iteration': 7,
       'percent': '87.5',

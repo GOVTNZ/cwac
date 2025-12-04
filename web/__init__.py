@@ -96,8 +96,12 @@ class CWACManager:
     """Return the path to the results directory for the current CWAC run."""
     return 'results/' + self.__cwac.config.audit_name
 
-  def log_file_path(self) -> str:
-    """Return the path to the main log file for the current CWAC run."""
+  def chromedriver_log_file_path(self) -> str:
+    """Return the path to the chromedriver log file for the current CWAC run."""
+    return self.results_directory() + '/chromedriver.log'
+
+  def audit_log_file_path(self) -> str:
+    """Return the path to the audit log file for the current CWAC run."""
     return self.results_directory() + '/' + self.__cwac.config.audit_name + '.log'
 
   def progress(self) -> ProgressUpdate:
@@ -382,7 +386,7 @@ def show_urls(filename: str) -> str:
 @app.route('/urls/new')
 def new_urls() -> str:
   """Present a form for creating a url csv file."""
-  return render_template('urls_new.html')
+  return render_template('urls_new.html', contents='organisation,url,sector\n')
 
 
 @app.route('/urls/<filename>/edit')
@@ -540,10 +544,21 @@ def view_scan() -> ResponseReturnValue:
     flash('no scan in progress', 'warning')
     return redirect(url_for('new_scan'))
 
-  with open(cwac_manager.log_file_path(), encoding='utf-8') as f:
-    logs = f.read()
+  try:
+    with open(cwac_manager.chromedriver_log_file_path(), encoding='utf-8') as f:
+      chromedriver_logs = f.read()
+  except FileNotFoundError:
+    chromedriver_logs = ''
 
-  return render_template('scans_progress.html', manager=cwac_manager, logs=logs)
+  with open(cwac_manager.audit_log_file_path(), encoding='utf-8') as f:
+    audit_logs = f.read()
+
+  return render_template(
+    'scans_progress.html',
+    manager=cwac_manager,
+    chromedriver_logs=chromedriver_logs,
+    audit_logs=audit_logs,
+  )
 
 
 @app.route('/scans/progress/update')
@@ -552,7 +567,22 @@ def get_scan_progress() -> ResponseReturnValue:
   if cwac_manager.state == 'idle':
     return flask.jsonify({})
 
-  with open(cwac_manager.log_file_path(), encoding='utf-8') as f:
-    logs = f.read()
+  try:
+    with open(cwac_manager.chromedriver_log_file_path(), encoding='utf-8') as f:
+      chromedriver_logs = f.read()
+  except FileNotFoundError:
+    chromedriver_logs = ''
 
-  return flask.jsonify({'logs': logs, 'state': cwac_manager.state, **cwac_manager.progress()})
+  with open(cwac_manager.audit_log_file_path(), encoding='utf-8') as f:
+    audit_logs = f.read()
+
+  return flask.jsonify(
+    {
+      'logs': {
+        'audit': audit_logs,
+        'chromedriver': chromedriver_logs,
+      },
+      'state': cwac_manager.state,
+      **cwac_manager.progress(),
+    }
+  )
