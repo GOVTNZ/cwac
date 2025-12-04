@@ -4,14 +4,23 @@
 {% set intro_subtitle = 'Set up which endpoints CWAC will scan when it runs for different configurations.' %}
 
 {% block body %}
-  <nav aria-label="breadcrumb" class="mb-5">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
-      <li class="breadcrumb-item active" aria-current="page">
-        Set URL endpoints
-      </li>
-    </ol>
-  </nav>
+  <div class="d-flex justify-content-between mb-5">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="{{ url_for('root') }}">Home</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+          Set URL endpoints
+        </li>
+      </ol>
+    </nav>
+    <a
+      class="btn btn-outline-primary btn-sm rounded-pill align-self-start"
+      href="{{ url_for('new_urls') }}"
+      >Add new file</a
+    >
+  </div>
 
   <div>
     {% if files|length != 0 %}

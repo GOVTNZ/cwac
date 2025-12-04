@@ -1,0 +1,78 @@
+﻿{% extends 'layout.html' %}
+
+{% block body %}
+  <nav aria-label="breadcrumb" class="mb-5">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('root') }}">Home</a></li>
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('view_urls') }}">Set URL endpoints</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">
+        New endpoints file
+      </li>
+    </ol>
+  </nav>
+
+  <div class="row mb-3">
+    <div class="col-lg-9 offset-lg-3 text-primary">Currently creating</div>
+  </div>
+
+  <form class="row" action="{{ url_for('create_urls') }}" method="post">
+    <div class="col-lg-3">
+      <div class="card rounded-5">
+        <div class="card-body">
+          These are the URL endpoints that will be scanned by any configurations
+          that reference them.
+
+          <div class="d-flex justify-content-between my-3">
+            <a
+              href="{{ url_for('view_urls') }}"
+              class="btn btn-sm btn-outline-secondary rounded-pill"
+              >Cancel</a
+            >
+            <button type="submit" class="btn btn-sm btn-primary rounded-pill">
+              Create
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-9">
+      <div class="input-group mb-3">
+        <span class="input-group-text">base_urls/visit/</span>
+        <input
+          class="form-control {% if 'filename' in validation_errors %}is-invalid{% endif %}"
+          id="filename"
+          name="filename"
+          type="text"
+          value="{{ filename }}"
+          aria-label="Filename"
+        />
+        <span class="input-group-text">.csv</span>
+
+        {% if 'filename' in validation_errors %}
+          <div class="invalid-feedback">
+            {{ validation_errors['filename'][0] }}
+          </div>
+        {% endif %}
+      </div>
+
+      <textarea
+        class="form-control {% if 'contents' in validation_errors %}is-invalid{% endif %}"
+        rows="20"
+        id="contents"
+        name="contents"
+        aria-label="Contents"
+      >
+{{ contents }}</textarea
+      >
+
+      {% if 'contents' in validation_errors %}
+        <div class="invalid-feedback">
+          {{ validation_errors['contents'][0] }}
+        </div>
+      {% endif %}
+    </div>
+  </form>
+{% endblock %}

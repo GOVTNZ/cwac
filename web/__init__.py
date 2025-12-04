@@ -379,6 +379,12 @@ def show_urls(filename: str) -> str:
     abort(404)
 
 
+@app.route('/urls/new')
+def new_urls() -> str:
+  """Present a form for creating a url csv file."""
+  return render_template('urls_new.html')
+
+
 @app.route('/urls/<filename>/edit')
 def edit_urls(filename: str) -> str:
   """Present a form for modifying a url CSV."""
@@ -395,6 +401,63 @@ def edit_urls(filename: str) -> str:
       )
   except FileNotFoundError:
     abort(404)
+
+
+@app.route('/urls', methods=['POST'])
+def create_urls() -> ResponseReturnValue:
+  """Create a new endpoints file."""
+  filename = request.form.get('filename', '')
+  contents = request.form.get('contents', '')
+
+  validation_errors: dict[str, list[str]] = {}
+
+  if not isinstance(contents, str) or contents == '':
+    validation_errors.setdefault('contents', []).append('cannot be blank')
+
+  if not isinstance(filename, str) or filename == '':
+    validation_errors.setdefault('filename', []).append('cannot be blank')
+  else:
+    if os.path.splitext(filename)[1] != '':
+      validation_errors.setdefault('filename', []).append('cannot include an extension')
+    if re.search(r'[^a-zA-Z\d_-]', filename) is not None:
+      validation_errors.setdefault('filename', []).append('can only contain letters, numbers, dashes, and underscores')
+
+  if len(validation_errors) > 0:
+    return (
+      render_template(
+        'urls_new.html',
+        validation_errors=validation_errors,
+        filename=filename,
+        contents=contents,
+      ),
+      422,
+    )
+
+  # ensure that Unix line endings are in use, even on Windows
+  # todo: confirm that this is a good idea; the underlying issue we want to avoid is
+  #  having the default config in version control flipping between line endings, which
+  #  can come up in particular if you're on WSL as that will use Unix line-endings but
+  #  the browser (running in the Windows host) will use Windows line-endings...
+  contents = contents.replace('\r\n', '\n')
+
+  os.makedirs('base_urls/visit', exist_ok=True)
+  filepath = f'./base_urls/visit/{filename}.csv'
+  try:
+    with open(filepath, 'x', encoding='utf-8') as f:
+      f.write('organisation,url,sector\n' + contents.removeprefix('organisation,url,sector\n'))
+  except FileExistsError:
+    flash('an endpoints file with that name already exists', 'danger')
+    return (
+      render_template(
+        'urls_new.html',
+        filename=filename,
+        contents=contents,
+      ),
+      422,
+    )
+
+  flash(f'{filepath} has been created', 'success')
+  return redirect(url_for('view_urls'))
 
 
 @app.route('/urls/<filename>', methods=['POST'])

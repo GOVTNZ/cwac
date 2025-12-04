@@ -11,7 +11,9 @@ from flask.testing import FlaskClient
 from markupsafe import escape
 from pyfakefs.fake_filesystem import FakeFilesystem
 
-from tests.web.test_helpers import assert_has_invalid_field
+from tests.web.test_helpers import assert_has_invalid_field, assert_has_valid_field
+
+# pylint: disable=too-many-lines
 
 
 class TestViewUrls:
@@ -29,13 +31,13 @@ class TestViewUrls:
 
     assert b'No url files found' in response.data
 
-  def test_empty_directory_is_ok(self, client: FlaskClient) -> None:
+  def test_empty_directory_is_ok(self, client: FlaskClient, fs: FakeFilesystem) -> None:
     """Test handling when the base_urls/visit directory is empty.
 
     The page should say that no url files were found.
     """
 
-    os.mkdir('config')
+    fs.makedirs('base_urls/visit')
 
     response = client.get('/urls')
 
@@ -112,7 +114,7 @@ class TestShowUrls:
   """Tests for the GET /urls/<filename> endpoint."""
 
   def test_missing_directory_is_handled(self, client: FlaskClient) -> None:
-    """Test handling when the base_urls/visit/ directory is missing.
+    """Test handling when the base_urls/base_urls/visit/ directory is missing.
 
     The page should return a 404
     """
@@ -347,11 +349,24 @@ class TestShowUrls:
     assert response.status_code == 404
 
 
+class TestNewUrls:
+  """Tests for the GET /urls/new endpoint."""
+
+  def test_the_page_is_rendered(self, client: FlaskClient) -> None:
+    """Test handling when viewing the page."""
+    response = client.get('/urls/new')
+
+    assert response.status_code == 200
+    assert b'Currently creating' in response.data
+
+    assert b'<form' in response.data
+
+
 class TestEditUrls:
   """Tests for the GET /urls/<filename>/edit endpoint."""
 
   def test_missing_directory_is_handled(self, client: FlaskClient) -> None:
-    """Test handling when the base_urls/visit/ directory is missing.
+    """Test handling when the base_urls/base_urls/visit/ directory is missing.
 
     The page should return a 404
     """
@@ -540,11 +555,296 @@ class TestEditUrls:
     assert response.status_code == 404
 
 
+class TestCreateUrls:
+  """Tests for the POST /urls endpoint."""
+
+  def test_missing_directory_is_handled(self, client: FlaskClient) -> None:
+    """Test handling when the base_urls/visit/ directory does not exist.
+
+    The directory should be created along with the new file.
+    """
+    response = client.post('/urls', data={'filename': 'endpoints', 'contents': 'organisation,url,sector\na,b,c'})
+
+    assert response.status_code == 302
+    assert response.location == '/urls'
+
+    assert os.path.exists('base_urls/visit/endpoints.csv') is True
+    assert os.path.exists('base_urls/visit/endpoints') is False
+
+  def test_endpoints_file_can_be_created(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when provided with a valid filename and content.
+
+    The file should be created with the given name and content, and the user redirected to the view page.
+    """
+    fs.makedirs('base_urls/visit')
+
+    response = client.post('/urls', data={'filename': 'endpoints', 'contents': 'organisation,url,sector\na,b,c\n'})
+
+    assert response.status_code == 302
+    assert response.location == '/urls'
+
+    assert os.path.exists('base_urls/visit/endpoints.csv') is True
+    assert os.path.exists('base_urls/visit/endpoints') is False
+
+    with open('base_urls/visit/endpoints.csv', encoding='utf-8') as f:
+      assert f.read() == 'organisation,url,sector\na,b,c\n'
+
+  def test_endpoints_file_content_automatically_has_header_added(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when provided with content that does not have the CSV header.
+
+    The file should be created with the given name and content, with the header being
+    added, and the user redirected to the view page.
+    """
+    fs.makedirs('base_urls/visit')
+
+    response = client.post('/urls', data={'filename': 'endpoints', 'contents': 'a,b,c\n'})
+
+    assert response.status_code == 302
+    assert response.location == '/urls'
+
+    assert os.path.exists('base_urls/visit/endpoints.csv') is True
+    assert os.path.exists('base_urls/visit/endpoints') is False
+
+    with open('base_urls/visit/endpoints.csv', encoding='utf-8') as f:
+      assert f.read() == 'organisation,url,sector\na,b,c\n'
+
+  def test_endpoints_file_content_has_newlines_normalized(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when provided with content that uses Windows newlines.
+
+    The file should be created with the given name and content, using Unix line-endings
+    and the user redirected to the view page.
+    """
+    fs.makedirs('base_urls/visit')
+
+    response = client.post('/urls', data={'filename': 'endpoints', 'contents': 'organisation,url,sector\r\na,b,c\r\n'})
+
+    assert response.status_code == 302
+    assert response.location == '/urls'
+
+    assert os.path.exists('base_urls/visit/endpoints.csv') is True
+    assert os.path.exists('base_urls/visit/endpoints') is False
+
+    with open('base_urls/visit/endpoints.csv', encoding='utf-8') as f:
+      assert f.read() == 'organisation,url,sector\na,b,c\n'
+
+  def test_filename_is_required(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename is not present.
+
+    An error should be returned, without the file being created.
+    """
+    fs.makedirs('base_urls/visit')
+
+    response = client.post('/urls', data={'filename': '', 'contents': 'organisation,url,sector\na,b,c\n'})
+
+    assert response.status_code == 422
+
+    assert_has_invalid_field(response.data, 'filename', 'cannot be blank')
+    assert_has_valid_field(response.data, 'contents')
+
+    assert os.path.exists('base_urls/visit/.csv') is False
+
+    response = client.post('/urls', data={'contents': 'organisation,url,sector\na,b,c\n'})
+
+    assert response.status_code == 422
+
+    assert_has_invalid_field(response.data, 'filename', 'cannot be blank')
+    assert_has_valid_field(response.data, 'contents')
+
+    assert os.path.exists('base_urls/visit/.csv') is False
+
+  def test_contents_is_required(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the file contents is not present.
+
+    An error should be returned, without the file being created.
+    """
+    fs.makedirs('base_urls/visit')
+
+    response = client.post('/urls', data={'filename': 'endpoints', 'contents': ''})
+
+    assert response.status_code == 422
+
+    assert_has_valid_field(response.data, 'filename')
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
+
+    assert os.path.exists('base_urls/visit/endpoints.csv') is False
+    assert os.path.exists('base_urls/visit/endpoints') is False
+
+    response = client.post('/urls', data={'filename': 'endpoints'})
+
+    assert response.status_code == 422
+
+    assert_has_valid_field(response.data, 'filename')
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
+
+    assert os.path.exists('base_urls/visit/endpoints.csv') is False
+    assert os.path.exists('base_urls/visit/endpoints') is False
+
+  def test_all_fields_are_validated_together(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when all fields are invalid.
+
+    An error should be returned, without the file being created.
+    """
+    fs.makedirs('base_urls/visit')
+
+    response = client.post('/urls', data={'filename': 'endpoints.csv', 'contents': ''})
+
+    assert response.status_code == 422
+
+    assert_has_invalid_field(response.data, 'filename', 'cannot include an extension')
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
+
+    assert os.path.exists('base_urls/visit/endpoints.csv') is False
+    assert os.path.exists('base_urls/visit/endpoints') is False
+
+    response = client.post('/urls', data={'filename': 'endpoints.csv'})
+
+    assert response.status_code == 422
+
+    assert_has_invalid_field(response.data, 'filename', 'cannot include an extension')
+    assert_has_invalid_field(response.data, 'contents', 'cannot be blank')
+
+    assert os.path.exists('base_urls/visit/endpoints.csv') is False
+    assert os.path.exists('base_urls/visit/endpoints') is False
+
+  def test_filename_should_not_have_an_extension(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename has an extension.
+
+    An error should be returned, without the file being created
+    """
+    fs.makedirs('base_urls/visit')
+
+    for filename in ['endpoints_new.csv', 'endpoints_new.yml.yaml', 'endpoints_new.csv.yml', 'endpoints_new.txt.yml']:
+      response = client.post('/urls', data={'filename': filename, 'contents': 'organisation,url,sector\na,b,c\n'})
+
+      assert response.status_code == 422
+
+      assert_has_invalid_field(response.data, 'filename', 'cannot include an extension')
+      assert_has_valid_field(response.data, 'contents')
+
+      assert os.path.exists(f'base_urls/visit/{filename}.csv') is False
+      assert os.path.exists(f'base_urls/visit/{filename}') is False
+
+  def test_filename_can_have_expected_characters(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename has characters that are fine for filenames.
+
+    The file should be created with the given name, and the user redirected to the view page.
+    """
+    fs.makedirs('base_urls/visit')
+
+    for filename in ['endpoints_new', 'endpoints-new', '_', 'endpoints1', 'endpoints-2']:
+      response = client.post('/urls', data={'filename': filename, 'contents': 'organisation,url,sector\na,b,c'})
+
+      assert response.status_code == 302
+      assert response.location == '/urls'
+
+      assert os.path.exists(f'base_urls/visit/{filename}.csv') is True
+      assert os.path.exists(f'base_urls/visit/{filename}') is False
+
+      with open(f'base_urls/visit/{filename}.csv', encoding='utf-8') as f:
+        assert f.read() == 'organisation,url,sector\na,b,c'
+
+  def test_filename_should_not_have_weird_characters(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename has characters that are best not used in filenames.
+
+    An error should be returned without any file being created.
+    """
+    fs.makedirs('base_urls/visit')
+
+    for filename in ['endpoints new']:
+      response = client.post('/urls', data={'filename': filename, 'contents': 'organisation,url,sector\na,b,c'})
+
+      assert response.status_code == 422
+
+      assert_has_invalid_field(response.data, 'filename', 'can only contain letters, numbers, dashes, and underscores')
+      assert_has_valid_field(response.data, 'contents')
+
+      assert os.path.exists(f'base_urls/visit/{filename}.csv') is False
+      assert os.path.exists(f'base_urls/visit/{filename}') is False
+
+  def test_existing_files_cannot_be_overridden(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename matches a config that already exists.
+
+    An error should be returned, and the existing file unchanged.
+    """
+    fs.create_file('base_urls/visit/endpoints.csv', contents='organisation,url,sector\na,b,c')
+    fs.create_file('base_urls/visit/endpoints_special.csv', contents='organisation,url,sector\na,b,c')
+
+    response = client.post('/urls', data={'filename': 'endpoints', 'contents': 'organisation,url,sector\nx,y,z'})
+
+    assert response.status_code == 422
+    assert b'an endpoints file with that name already exists' in response.data
+
+    with open('base_urls/visit/endpoints.csv', encoding='utf-8') as f:
+      assert f.read() != 'organisation,url,sector\nx,y,z'
+
+    response = client.post(
+      '/urls', data={'filename': 'endpoints_special', 'contents': 'organisation,url,sector\nx,y,z'}
+    )
+
+    assert response.status_code == 422
+    assert b'an endpoints file with that name already exists' in response.data
+
+    with open('base_urls/visit/endpoints_special.csv', encoding='utf-8') as f:
+      assert f.read() != 'organisation,url,sector\nx,y,z'
+
+    # do a little bonus check since both files came from the same source
+    with (
+      open('base_urls/visit/endpoints.csv', encoding='utf-8') as f1,
+      open('base_urls/visit/endpoints_special.csv', encoding='utf-8') as f2,
+    ):
+      assert f1.read() == f2.read()
+
+  def test_parent_files_cannot_be_created(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename includes a path attempting to traverse upwards.
+
+    An error should be returned without any files being created.
+    """
+    fs.makedirs('base_urls/visit')
+
+    for filename in ['../endpoints_new', '..\\/endpoints_new', '..%2Fendpoints_new', '..%5Cendpoints_new']:
+      response = client.post('/urls', data={'filename': filename, 'contents': 'organisation,url,sector\na,b,c'})
+
+      assert response.status_code == 422
+      assert_has_invalid_field(response.data, 'filename', 'can only contain letters, numbers, dashes, and underscores')
+      assert_has_valid_field(response.data, 'contents')
+
+      assert os.path.exists(f'base_urls/visit/{filename}.csv') is False
+      assert os.path.exists(f'base_urls/visit/{filename}') is False
+      assert os.path.exists(f'base_urls/{filename}.csv') is False
+      assert os.path.exists(f'base_urls/{filename}') is False
+      assert os.path.exists(f'{filename}.csv') is False
+      assert os.path.exists(f'{filename}') is False
+      assert os.path.exists('endpoints_new.csv') is False
+      assert os.path.exists('endpoints_new') is False
+
+  def test_child_files_cannot_be_created(self, client: FlaskClient, fs: FakeFilesystem) -> None:
+    """Test handling when the filename includes a path attempting to traverse downwards.
+
+    An error should be returned without any files being created.
+    """
+    fs.makedirs('base_urls/visit')
+
+    for filename in ['inner/endpoints_new', 'inner%2Fendpoints_new', 'inner\\/endpoints_new', 'inner%5Cendpoints_new']:
+      response = client.post('/urls', data={'filename': filename, 'contents': 'organisation,url,sector\na,b,c'})
+
+      assert response.status_code == 422
+      assert_has_invalid_field(response.data, 'filename', 'can only contain letters, numbers, dashes, and underscores')
+      assert_has_valid_field(response.data, 'contents')
+
+      assert os.path.exists(f'base_urls/visit/{filename}.csv') is False
+      assert os.path.exists(f'base_urls/visit/{filename}') is False
+      assert os.path.exists('base_urls/visit/inner') is False
+      assert os.path.exists(f'base_urls/visit/inner/{filename}.csv') is False
+      assert os.path.exists(f'base_urls/visit/inner/{filename}') is False
+      assert os.path.exists('base_urls/visit/inner/endpoints_new.csv') is False
+      assert os.path.exists('base_urls/visit/inner/endpoints_new') is False
+
+
 class TestUpdateUrls:
   """Tests for the POST /urls/<filename> endpoint."""
 
   def test_missing_directory_is_handled(self, client: FlaskClient) -> None:
-    """Test handling when the config/ directory is missing.
+    """Test handling when the base_urls/visit/ directory is missing.
 
     The page should return a 404
     """
