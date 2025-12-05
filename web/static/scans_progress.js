@@ -65,12 +65,15 @@ async function updateProgress() {
   document.getElementById('scan-progress-remaining').innerText =
     `t-:${data.remaining}`;
 
-  if (data.state !== 'running') {
-    clearInterval(updateProgressInterval);
-    progressBar.classList.remove('bg-primary');
-    progressBar.classList.add('bg-success');
-    document.getElementById('scan-state').innerText = 'finished';
+  if (data.state === 'running') {
+    setTimeout(updateProgress, 1000);
+
+    return;
   }
+
+  progressBar.classList.remove('bg-primary');
+  progressBar.classList.add('bg-success');
+  document.getElementById('scan-state').innerText = 'finished';
 }
 
-const updateProgressInterval = setInterval(() => updateProgress(), 1000);
+updateProgress().catch(console.error);
