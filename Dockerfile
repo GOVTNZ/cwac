@@ -28,7 +28,7 @@ RUN apt-get update && \
 WORKDIR /cwac
 
 # copy in requirements.txt
-COPY requirements-prod.txt .
+COPY requirements.txt .
 
 # create .venv
 RUN python3 -m venv .venv
@@ -37,7 +37,7 @@ ENV VIRTUAL_ENV .venv
 ENV PATH .venv/bin:$PATH
 
 # pip install
-RUN python3 -m pip install --no-cache-dir -r requirements-prod.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 # copy node_modules from node_modules_builder
 COPY --from=node_modules_builder /usr/app/node_modules ./node_modules
@@ -68,4 +68,4 @@ RUN chmod -R 700 ./nltk_data
 USER cwac
 
 # run cwac.py config_linux.json
-CMD [".venv/bin/python", "-u", "cwac.py", "config_linux.json"]
+CMD [".venv/bin/python", "-u", "cwac.py", "config_default.json"]
