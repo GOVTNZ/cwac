@@ -73,7 +73,12 @@ async function updateProgress() {
 
   progressBar.classList.remove('bg-primary');
   progressBar.classList.add('bg-success');
-  document.getElementById('scan-state').innerText = 'finished';
+  document.getElementById('scan-state').innerText = 'Finished scanning';
+
+  const scanControl = document.getElementById('scan-control');
+
+  scanControl.innerText = 'View results';
+  scanControl.classList.remove('disabled');
 }
 
 updateProgress().catch(console.error);

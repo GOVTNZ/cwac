@@ -15,7 +15,7 @@
 
   <div class="row mb-4">
     <div class="col-lg-10 offset-lg-2">
-      Currently scanning
+      <span id="scan-state">Currently scanning</span>
       <h2>{{ manager.results_directory() }}</h2>
     </div>
   </div>
@@ -25,15 +25,12 @@
       <div class="card rounded-5">
         <div class="card-body">
           <div>Selected configuration:</div>
-          <div>
-            <button
-              type="submit"
+          <div class="scan-controls">
+            <a
+              href="{{ url_for('view_results') }}"
+              id="scan-control"
               class="btn btn-sm btn-success rounded-pill disabled"
-            >
-              Scanning...
-            </button>
-            <a href="#" class="btn btn-sm btn-danger rounded-pill disabled"
-              >Stop</a
+              >Scanning...</a
             >
           </div>
         </div>
