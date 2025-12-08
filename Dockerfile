@@ -54,18 +54,17 @@ RUN chmod +x ./drivers/chromedriver_linux_x64
 # create volume for ./results folder
 VOLUME /cwac/results
 
-# Create non-root user
-RUN useradd -m cwac
-
 # Ensure non-root user has write access to /cwac/results
+# todo: try to create user & group if they do not exist?
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
 RUN mkdir ./nltk_data/
-RUN chown -R cwac:cwac ./results/
-RUN chown -R cwac:cwac ./nltk_data/
-RUN chmod -R 700 ./results
+RUN chown -R $USER_ID:$GROUP_ID ./nltk_data/
 RUN chmod -R 700 ./nltk_data
 
 # Change to non-root user
-USER cwac
+USER $USER_ID:$GROUP_ID
 
 # run cwac.py config_linux.json
 CMD [".venv/bin/python", "-u", "cwac.py", "config_default.json"]
