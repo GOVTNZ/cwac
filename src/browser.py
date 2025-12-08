@@ -263,6 +263,15 @@ class Browser:
         },
       )
 
+      # todo: only enable these when running in a container
+      # todo: I couldn't get the sandbox working within docker...
+      chrome_options.add_argument('--no-sandbox')
+      # todo: seems like this is the main crash we get, which is related to
+      #  the size of /dev/shm - for now we can just disable that usage at the
+      #  cost of having disk be used instead of memory, which can be slower
+      # https://stackoverflow.com/questions/53902507
+      chrome_options.add_argument('--disable-dev-shm-usage')
+
       # Set fake user agent
       chrome_options.add_argument(f'user-agent={self.config.user_agent}')
 
