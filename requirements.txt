@@ -7,7 +7,7 @@ lxml==6.0.2
 responses==0.25.8
 pre-commit==4.3.0
 bandit==1.8.6
-mypy==1.18.2
+mypy==1.19.0
 pylint==4.0.1
 flake8==7.3.0
 flake8-simplify==0.22.0

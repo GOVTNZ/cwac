@@ -12,11 +12,14 @@ from typing import Any, cast
 import selenium
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebDriver
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebDriver
 
 from config import Config
 
-WebDriverType = selenium.webdriver.firefox.webdriver.WebDriver | selenium.webdriver.chrome.webdriver.WebDriver
+WebDriverType = FirefoxWebDriver | ChromeWebDriver
 
 logger = logging.getLogger('cwac')
 
@@ -292,7 +295,7 @@ class Browser:
 
     # Sets up a Firefox instance
     if self.config.browser == 'firefox':
-      firefox_options = selenium.webdriver.firefox.options.Options()
+      firefox_options = FirefoxOptions()
       firefox_options.headless = self.config.headless  # type: ignore
       if headless_override:
         firefox_options.headless = True  # type: ignore
