@@ -9,7 +9,7 @@ from typing import Any, Type
 import selenium
 from selenium.webdriver.common.by import By
 
-import src.output
+import src.filters
 from config import Config
 from src.analytics import Analytics
 from src.browser import Browser
