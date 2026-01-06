@@ -9,9 +9,6 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm install
 
-RUN chrome_version=$(node -p 'require("./package.json").config.chromeVersion') && \
-    cp chrome/linux-${chrome_version}/chrome-linux64/chrome_sandbox /usr/local/sbin/chrome-devel-sandbox
-
 FROM --platform=linux/amd64 ubuntu:noble@sha256:723ad8033f109978f8c7e6421ee684efb624eb5b9251b70c6788fdb2405d050b
 
 # ubuntu equivalent (include upgrade)
@@ -47,13 +44,6 @@ COPY --from=node_modules_builder /usr/app/node_modules ./node_modules
 
 # copy chrome binary from node_modules_builder
 COPY --from=node_modules_builder /usr/app/chrome ./chrome
-
-# Ensure the Chrome sandbox is setup
-COPY --from=node_modules_builder /usr/local/sbin/chrome-devel-sandbox /usr/local/sbin/chrome-devel-sandbox
-RUN chown root:root /usr/local/sbin/chrome-devel-sandbox
-RUN chmod 4755 /usr/local/sbin/chrome-devel-sandbox
-
-ENV CHROME_DEVEL_SANDBOX /usr/local/sbin/chrome-devel-sandbox
 
 # copy all top-level files to /cwac/
 COPY . .
