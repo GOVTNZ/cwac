@@ -14,7 +14,7 @@ flake8-simplify==0.30.0
 pydocstyle==6.3.0
 opencv-python==4.13.0.92
 numpy==2.4.2
-pandas==2.3.3
+pandas==3.0.1
 pandas-stubs==2.3.2.250926
 pyarrow==21.0.0
 nltk==3.9.2
