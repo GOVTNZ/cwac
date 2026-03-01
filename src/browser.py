@@ -4,6 +4,7 @@ Contains useful functions for managing browsers.
 """
 
 import logging
+import os
 import platform
 import time
 import traceback
@@ -262,6 +263,9 @@ class Browser:
           'profile.default_content_setting_values.javascript': 2,
         },
       )
+
+      for arg in os.environ.get('CHROME_EXTRA_ARGS', '').split(','):
+        chrome_options.add_argument(arg.strip())
 
       # Set fake user agent
       chrome_options.add_argument(f'user-agent={self.config.user_agent}')
