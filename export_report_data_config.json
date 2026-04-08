@@ -43,12 +43,6 @@
         {
             "enabled": true,
             "export_type": "raw_data",
-            "input_filename": "axe_core_audit_template_aware.csv",
-            "output_filename": "axe_core_audit_template_aware.csv"
-        },
-        {
-            "enabled": true,
-            "export_type": "raw_data",
             "input_filename": "focus_indicator_audit.csv",
             "output_filename": "focus_indicator_audit.csv"
         },
