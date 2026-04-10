@@ -21,4 +21,4 @@ nltk==3.9.4
 pyfakefs==6.1.6
 pytest==9.0.3
 pytest-mock==3.15.1
-ruff==0.15.9
+ruff==0.15.10
