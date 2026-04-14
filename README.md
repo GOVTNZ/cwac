@@ -138,7 +138,7 @@ Field descriptions:
 - `user_agent`
   - the user agent string CWAC will use for all network requests
 - `user_agent_product_token`
-  - the product token (should match the one in `user_agnet` used for robots.txt matching)
+  - the product token (should match the one in `user_agent` used for robots.txt matching)
 - `follow_robots_txt`
   - a bool, determines if robots.txt directives should be followed by CWAC
 - `script_timeout`
