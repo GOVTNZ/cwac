@@ -181,6 +181,11 @@ class Crawler:
     current_base_url = remove_file_from_path(current_base_url)
     current_url = remove_file_from_path(current_url)
 
+    # Normalize trailing slashes to handle redirect edge cases
+    # (e.g., base_url "example.com/path/" redirecting to "example.com/path")
+    current_base_url = current_base_url.rstrip('/')
+    current_url = current_url.rstrip('/')
+
     # If the current_url does not start with the current_base_url,
     # then the url should not be scanned as it is not within the
     # scope of the current_base_url
@@ -200,6 +205,7 @@ class Crawler:
     for base_url in self.analytics.base_urls:
       base_url = lowercase_protocol_and_domain(base_url)
       base_url = remove_file_from_path(base_url)
+      base_url = base_url.rstrip('/')
       if current_url.startswith(base_url) and len(base_url) > len(current_base_url):
         # If the current_url starts with a base_url that is longer
         # this means that the current_url is within the scope of
