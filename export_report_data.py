@@ -302,13 +302,17 @@ class DataExporter:
         agg_dict[col] = 'first'
 
     # Aggregate the data
-    agg_df = grouped_df.agg(agg_dict).rename(columns={'num_issues': 'num_pages'})
+    agg_df = grouped_df.agg(agg_dict)
 
     # Reset the index
     agg_df = agg_df.reset_index()
 
     # Concatenate the zero count rows with the agg data
     agg_df = pd.concat([agg_df, zero_count_rows])
+
+    # Generate column for the number of pages impacted by an issue
+    agg_df['num_pages'] = agg_df.apply(lambda row: agg_df[agg_df['issue_id'] == row.issue_id]['url'].nunique(), axis=1)
+    agg_df.reset_index()
 
     return agg_df
 
@@ -330,12 +334,9 @@ class DataExporter:
     # Read the CSV file into a DataFrame
     data_frame = pd.read_csv(file_path)
 
-    # Get original column order for later use
-    original_column_order = list(data_frame.columns)
-
-    for i, _ in enumerate(original_column_order):
-      if original_column_order[i] == 'num_issues':
-        original_column_order[i] = 'num_pages'
+    # Get and update the column order for the page count column
+    processed_column_order = list(data_frame.columns)
+    processed_column_order.insert(processed_column_order.index('num_issues'), 'num_pages')
 
     # Group and aggregate the data
     data_frame = self.template_aware_algorithm(
@@ -343,13 +344,13 @@ class DataExporter:
       groupby_cols=['base_url', 'id', 'html', 'viewport_size'],
     )
 
-    data_frame = self.sort_with_default(data_frame, ['num_pages'])
+    data_frame = self.sort_with_default(data_frame, ['num_issues'])
 
     # Write the data to CSV file with original column order
     data_frame.to_csv(
       self.input_path + '/axe_core_audit_template_aware.csv',
       index=False,
-      columns=list(original_column_order),
+      columns=list(processed_column_order),
     )
 
     return data_frame
@@ -361,18 +362,18 @@ class DataExporter:
     query = """
              SELECT organisation, base_url, COUNT(*) as num_count
                     FROM cwac_table
-                    WHERE num_pages > 0
+                    WHERE num_issues > 0
                     AND "best-practice" = 'No'
                     GROUP BY base_url
                     UNION
-                    SELECT organisation, base_url, num_pages
+                    SELECT organisation, base_url, num_issues
                     FROM cwac_table
-                    WHERE num_pages = 0
+                    WHERE num_issues = 0
                     AND "best-practice" = 'No'
                     AND base_url NOT IN (
                         SELECT base_url
                         FROM cwac_table
-                        WHERE num_pages > 0
+                        WHERE num_issues > 0
                         AND "best-practice" = 'No'
                         GROUP BY base_url
                     )
