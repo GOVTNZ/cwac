@@ -347,7 +347,7 @@ class DataExporter:
 
     # Write the data to CSV file with original column order
     data_frame.to_csv(
-      self.input_path + '/axe_core_audit_template_aware.csv',
+      self.output_path + '/axe_core_audit_template_aware.csv',
       index=False,
       columns=list(original_column_order),
     )
