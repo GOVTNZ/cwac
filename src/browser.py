@@ -265,7 +265,8 @@ class Browser:
       )
 
       for arg in os.environ.get('CHROME_EXTRA_ARGS', '').split(','):
-        chrome_options.add_argument(arg.strip())
+        if arg.strip():
+          chrome_options.add_argument(arg.strip())
 
       # Set fake user agent
       chrome_options.add_argument(f'user-agent={self.config.user_agent}')
