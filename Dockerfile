@@ -1,5 +1,5 @@
 # Get node_modules
-FROM --platform=linux/amd64 node:slim AS node_modules_builder
+FROM --platform=linux/amd64 node:24-slim AS node_modules_builder
 
 WORKDIR /usr/app/
 
