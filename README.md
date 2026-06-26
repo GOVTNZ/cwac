@@ -247,7 +247,7 @@ Use `pre-commit run --all-files` to run all pre-commit hooks.
 ## Audit plugin architecture
 CWAC is designed to be extensible with plugins. This enables CWAC to run multiple different types of audits against web pages.
 
-By default, CWAC has 6 plugins:
+By default, CWAC has 8 plugins:
 - `DefaultAudit` - a plugin that simply gets basic page information e.g. viewport size, page title. This audit plugin is never used directly, it is always imported by other plugins so they don't have to fetch basic page information.
 - `AxeCoreAudit` - a plugin that runs `axe-core` on the page
 - `LanguageAudit` - a plugin that estimates text readability using a Flesch-Kincaid and SMOG score. It can also perform sentiment analysis.
