@@ -44,6 +44,10 @@
             "viewport_to_test": "small",
             "screenshot_failures": false
         },
+        "title_audit": {
+            "class_name": "TitleAudit",
+            "enabled": true
+        },
         "focus_indicator_audit": {
             "class_name": "FocusIndicatorAudit",
             "enabled": false,

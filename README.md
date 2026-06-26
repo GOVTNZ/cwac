@@ -78,7 +78,7 @@ If the paths cannot be determined automatically, you can pass them manually by:
    - for Linux x64, the `chrome_binary_location` could be: `./chrome/linux-114.0.5735.90/chrome-linux64/chrome`
 
 > [!NOTE]
-> 
+>
 > Pull requests improving the automatic detection to cover additional OSs and architectures are welcome
 
 #### Updating Chrome for Testing (optional)
@@ -163,7 +163,7 @@ Field descriptions:
   - a path to a folder that contains CSV files (as many as you like). The CSV files **must** have the headers: organisation,url,sector.
   - The entries in `base_urls_visit_path` are extremely important, as these files are used to associate URLs with other information like their organisation, and sector
 - `base_urls_nohead_path`
-  - Defines which URLs don't support HEAD requests 
+  - Defines which URLs don't support HEAD requests
   - a path to a folder that contains CSV files (as many as you like). The CSV files **must** have only one header: url.
   - In cases where a HEAD request would be made CWAC will instead make a GET request
 - `force_open_details_elements`
@@ -255,6 +255,7 @@ By default, CWAC has 6 plugins:
 - `FocusIndicatorAudit` - a plugin that presses the tab key and detects if pixels changed after pressing tab, which can be an indicative test for WCAG 2.4.7 Focus Visible.
 - `ScreenshotAudit` - a plugin that simply takes screenshots of each web page tested and saves it to a folder in the results directory.
 - `ElementAudit` - a plugin that reports all instances of elements that match a CSS selector.
+- `TitleAudit` - a plugin that captures page titles to allow checking for uniqueness.
 
 The code for each plugin is located in `/src/audit_plugins/`
 
@@ -278,6 +279,10 @@ The format of `audit_plugin` entries requires a snake case name as the key, and 
         "enabled": true,
         "viewport_to_test": "small",
         "screenshot_failures": false
+    },
+    "title_audit": {
+        "class_name": "TitleAudit",
+        "enabled": true
     },
     "screenshot_audit": {
         "class_name": "ScreenshotAudit",
