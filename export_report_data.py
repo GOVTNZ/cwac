@@ -29,11 +29,7 @@ class DataExporter:
     # assert the input_path exists
     if not os.path.exists(self.input_path):
       raise FileNotFoundError(f'Input path {self.input_path} does not exist.')
-
-    # ensure that the output prefix itself is acceptable
-    self.output_prefix = self.output_path
-    self.output_prefix = self.__build_output_filename(self.config['output_filename_prefix'])
-
+    self.output_prefix = self.config['output_filename_prefix']
     self.iterate_export_formats()
 
   def __determine_results_folder_name(self) -> str:
@@ -56,11 +52,10 @@ class DataExporter:
 
     return latest_result
 
-  def __build_output_filename(self, path: str) -> str:
-    if path in ('', '.', '..') or '..' in path or '/' in path or '\\' in path:
+  def __build_path(self, base: str, sub: str) -> str:
+    if sub in ('', '.', '..') or '..' in sub or '/' in sub or '\\' in sub:
       raise ValueError(f'filename must be a simple path without path separators or consecutive dots')
-
-    return self.output_prefix + path
+    return os.path.join(base, sub)
 
   # noinspection PyDefaultArgument
   def sort_with_default(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
@@ -205,13 +200,15 @@ class DataExporter:
       df = self.import_audit_csv_to_df(input_filename)
       df = self.sort_with_default(df, [])
 
-      df.to_csv(self.__build_output_filename(output_filename), index=False)
+      df.to_csv(self.__build_path(self.output_path, self.output_prefix + output_filename), index=False)
 
       return
 
     with (
       open(self.input_path + input_filename, 'r', encoding='utf-8-sig') as input_file,
-      open(self.__build_output_filename(output_filename), 'w', encoding='utf-8-sig') as output_file,
+      open(
+        self.__build_path(self.output_path, self.output_prefix + output_filename), 'w', encoding='utf-8-sig'
+      ) as output_file,
     ):
       output_file.write(input_file.read())
 
@@ -243,7 +240,7 @@ class DataExporter:
 
         # Write leaderboard to CSV
         output_df.to_csv(
-          self.__build_output_filename(export_format['output_filename']),
+          self.__build_path(self.output_path, self.output_prefix + export_format['output_filename']),
           index=False,
         )
 
@@ -272,7 +269,7 @@ class DataExporter:
 
         # Write the leaderboard to a CSV file
         leaderboard_df.to_csv(
-          self.__build_output_filename(export_format['output_filename']),
+          self.__build_path(self.output_path, self.output_prefix + export_format['output_filename']),
           index=False,
         )
 
@@ -364,7 +361,7 @@ class DataExporter:
 
     # Write the data to CSV file with original column order
     data_frame.to_csv(
-      self.__build_output_filename(output_filename),
+      self.__build_path(self.output_path, self.output_prefix + output_filename),
       index=False,
       columns=list(processed_column_order),
     )
