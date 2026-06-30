@@ -57,8 +57,8 @@ class DataExporter:
     return latest_result
 
   def __build_output_filename(self, path: str) -> str:
-    if '/' in path or '\\' in path:
-      raise ValueError('filename must not contain path separators')
+    if path in ('', '.', '..') or '..' in path or '/' in path or '\\' in path:
+      raise ValueError(f'filename must be a simple path without path separators or consecutive dots')
 
     return self.output_prefix + path
 
