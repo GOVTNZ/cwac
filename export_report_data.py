@@ -18,39 +18,19 @@ import pandas as pd
 class DataExporter:
   """Outputs CSV data from ./results/ to ./reports/."""
 
-  def __init__(self) -> None:
+  def __init__(self, results_folder_name: str) -> None:
     """Init vars."""
     self.config = self.import_config_file()
 
-    input_results_folder_name = self.__determine_results_folder_name()
+    print(f'Processing ./results/{results_folder_name}')
 
-    self.results_path = './results/' + input_results_folder_name
+    self.results_path = './results/' + results_folder_name
 
     # ensure the results path actually exists
     if not os.path.exists(self.results_path):
       raise FileNotFoundError(f'Input path {self.results_path} does not exist.')
     self.output_prefix = self.config['output_filename_prefix']
     self.iterate_export_formats()
-
-  def __determine_results_folder_name(self) -> str:
-    if len(sys.argv) > 1:
-      return sys.argv[1]
-
-    # get all the directories in the results folder, sorted naturally in
-    # ascending order so that the latest results will be the last item
-    convert: Callable[[str], int | str] = lambda text: int(text) if text.isdigit() else text
-    existing_results = sorted(
-      [d for d in os.listdir('./results') if os.path.isdir(f'./results/{d}')],
-      key=lambda key: [convert(c) for c in re.split('([0-9]+)', key)],
-    )
-
-    if len(existing_results) == 0:
-      raise ValueError('could not determine latest results folder - have you run an audit?')
-    latest_result = existing_results[-1]
-
-    print(f'Processing ./results/{latest_result}')
-
-    return latest_result
 
   def __build_results_path(self, sub: str) -> str:
     if sub in ('', '.', '..') or '..' in sub or '/' in sub or '\\' in sub:
@@ -396,4 +376,22 @@ class DataExporter:
 
 
 if __name__ == '__main__':
-  exporter = DataExporter()
+
+  def resolve_results_folder_name() -> str:
+    """Resolve the results folder name when being invoked directly."""
+    if len(sys.argv) > 1:
+      return sys.argv[1]
+
+    # get all the directories in the results folder, sorted naturally in
+    # ascending order so that the latest results will be the last item
+    convert: Callable[[str], int | str] = lambda text: int(text) if text.isdigit() else text
+    existing_results = sorted(
+      [d for d in os.listdir('./results') if os.path.isdir(f'./results/{d}')],
+      key=lambda key: [convert(c) for c in re.split('([0-9]+)', key)],
+    )
+
+    if len(existing_results) == 0:
+      raise ValueError('could not determine latest results folder - have you run an audit?')
+    return existing_results[-1]
+
+  exporter = DataExporter(resolve_results_folder_name())
