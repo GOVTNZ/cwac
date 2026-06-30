@@ -193,6 +193,15 @@ class DataExporter:
         input_filename (str): The input filename.
         output_filename (str): The output filename.
     """
+    # handle CSV files with data frames so that they can be sorted
+    if input_filename.endswith('.csv'):
+      df = self.import_audit_csv_to_df(input_filename)
+      df = self.sort_with_default(df, [])
+
+      df.to_csv(self.output_prefix + output_filename, index=False)
+
+      return
+
     with (
       open(self.input_path + input_filename, 'r', encoding='utf-8-sig') as input_file,
       open(self.output_prefix + output_filename, 'w', encoding='utf-8-sig') as output_file,
