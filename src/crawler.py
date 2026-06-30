@@ -145,41 +145,42 @@ class Crawler:
         bool: True if URL is valid, else False
     """
 
-    def remove_file_from_path(url: str) -> str:
-      """Remove the file from the URL path.
+    def normalize_url(url: str) -> str:
+      """Normalize the URL for comparing.
 
-      E.g. https://example.com/abc/def.html -> https://example.com/abc/
+      This includes:
+        - making the url protocol and domain lowercase
+        - removing files from the path
+        - removing trailing slashes
 
-      Args:
-          url (str): URL to remove file from
-
-      Returns:
-          str: URL with file removed
-      """
-      if not url.endswith('/'):
-        url = url[: url.rfind('/') + 1]
-      return url
-
-    def lowercase_protocol_and_domain(url: str) -> str:
-      """Make URL protocol and domain lowercase.
+      E.g. HTTPS://MyCoolSite.com/abc/def.html -> https://mycoolsite.com/abc
 
       Args:
-          url (str): URL to make lowercase
+          url (str): URL to normalize
 
       Returns:
-          str: lowercase URL
+          str: normalized URL
       """
       parsed_url = urllib.parse.urlparse(url)
+
+      # lowercase the protocol and domain
       scheme = parsed_url.scheme.lower()
       netloc = parsed_url.netloc.lower()
+
       path = parsed_url.path
+
+      # if the path ends with a file, remove it
+      if '.' in path:
+        path = path[: path.rfind('/') + 1]
+
+      # remove trailing slash
+      path = path.rstrip('/')
+
       return f'{scheme}://{netloc}{path}'
 
     # Prepares the base_url and url for the matching algorithm
-    current_base_url = lowercase_protocol_and_domain(current_base_url)
-    current_url = lowercase_protocol_and_domain(current_url)
-    current_base_url = remove_file_from_path(current_base_url)
-    current_url = remove_file_from_path(current_url)
+    current_base_url = normalize_url(current_base_url)
+    current_url = normalize_url(current_url)
 
     # If the current_url does not start with the current_base_url,
     # then the url should not be scanned as it is not within the
@@ -198,8 +199,7 @@ class Crawler:
     # base_url
 
     for base_url in self.analytics.base_urls:
-      base_url = lowercase_protocol_and_domain(base_url)
-      base_url = remove_file_from_path(base_url)
+      base_url = normalize_url(base_url)
       if current_url.startswith(base_url) and len(base_url) > len(current_base_url):
         # If the current_url starts with a base_url that is longer
         # this means that the current_url is within the scope of
