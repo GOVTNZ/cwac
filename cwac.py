@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 
 import src.verify
 from config import Config
+from export_report_data import DataExporter
 from src.analytics import Analytics
 from src.browser import Browser
 from src.crawler import Crawler, SiteData
@@ -159,6 +160,10 @@ class CWAC:
     print('\r\nCWAC complete! Data can be found', 'in the ./results folder.')
 
     logger.info('CWAC complete!')
+
+    if self.config.config.get('reporting') is not None:
+      logger.info('Doing report generation')
+      DataExporter(self.config.audit_name, True)
 
 
 if __name__ == '__main__':
