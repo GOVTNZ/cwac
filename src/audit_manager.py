@@ -182,15 +182,15 @@ class AuditManager:
     """Iterate through registered audits and runs them.
 
     Returns:
-        bool: True if all audits successful, else False
+        bool: True if at least one audit successfully produced results, else False
     """
     logger.info('run_audits called')
 
     # Unique UUID string
     page_id = self.config.get_unique_id()
 
-    # Tracks if all tests successfully ran
-    all_tests_successful = True
+    # Tracks if at least one audit successfully produced results
+    any_audit_succeeded = False
 
     # Re-run tests for each viewport size in config.json
     for index, viewport in enumerate(self.config.viewport_sizes):
@@ -293,7 +293,6 @@ class AuditManager:
             audit['kwargs']['url'],
             exc_info=True,
           )
-          all_tests_successful = False
           continue
 
         logger.info('Test finished %s, %s', audit_name, audit['kwargs']['url'])
@@ -312,7 +311,6 @@ class AuditManager:
 
         # If a test fails, .run() returns False
         if audit_result is False:
-          all_tests_successful = False
           logger.error(
             'Test failed %s, %s',
             audit_name,
@@ -344,6 +342,9 @@ class AuditManager:
         csv_writer.add_rows(audit_result)
         csv_writer.write_csv_file(f'./results/{self.config.audit_name}/{audit_name}.csv')
 
+        # At least one audit successfully produced results
+        any_audit_succeeded = True
+
       # If we're not on the last viewport size
       if index < len(self.config.viewport_sizes) - 1:
         # Refresh the page
@@ -356,4 +357,4 @@ class AuditManager:
           self.browser.safe_restart()
           break
 
-    return all_tests_successful
+    return any_audit_succeeded
