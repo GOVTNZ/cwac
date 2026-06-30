@@ -1,68 +1,74 @@
 {
-    "audit_name": "audit_name_here",
-    "headless": true,
-    "max_links_per_domain": 50,
-    "thread_count": 8,
-    "browser": "chrome",
-    "chrome_binary_location": "auto",
-    "chrome_driver_location": "auto",
-    "user_agent": "Mozilla/5.0 (compatible; CWACbot/1.0; +https://www.digital.govt.nz/centralised-web-accessibility-checker/)",
-    "user_agent_product_token": "CWACbot",
-    "follow_robots_txt": true,
-    "script_timeout": 15,
-    "page_load_timeout": 10,
-    "delay_between_page_loads": 0.2,
-    "delay_between_viewports": 0.1,
-    "delay_after_page_load": 0.1,
-    "only_allow_https": true,
-    "perform_header_check": true,
-    "shuffle_base_urls": true,
-    "base_urls_visit_path" : "./base_urls/visit/",
-    "base_urls_nohead_path": "./base_urls/nohead/",
-    "record_unexpected_response_codes": true,
-    "force_open_details_elements": true,
-    "filter_to_organisations": [],
-    "filter_to_urls": [],
-    "viewport_sizes": {
-        "small": {"width": 320, "height": 450},
-        "medium": {"width": 1280, "height": 800}
+  "audit_name": "audit_name_here",
+  "headless": true,
+  "max_links_per_domain": 50,
+  "thread_count": 8,
+  "browser": "chrome",
+  "chrome_binary_location": "auto",
+  "chrome_driver_location": "auto",
+  "user_agent": "Mozilla/5.0 (compatible; CWACbot/1.0; +https://www.digital.govt.nz/centralised-web-accessibility-checker/)",
+  "user_agent_product_token": "CWACbot",
+  "follow_robots_txt": true,
+  "script_timeout": 15,
+  "page_load_timeout": 10,
+  "delay_between_page_loads": 0.2,
+  "delay_between_viewports": 0.1,
+  "delay_after_page_load": 0.1,
+  "only_allow_https": true,
+  "perform_header_check": true,
+  "shuffle_base_urls": true,
+  "base_urls_visit_path": "./base_urls/visit/",
+  "base_urls_nohead_path": "./base_urls/nohead/",
+  "record_unexpected_response_codes": true,
+  "force_open_details_elements": true,
+  "filter_to_organisations": [],
+  "filter_to_urls": [],
+  "viewport_sizes": {
+    "small": {
+      "width": 320,
+      "height": 450
     },
-    "audit_plugins": {
-        "axe_core_audit": {
-            "class_name": "AxeCoreAudit",
-            "best-practice": false,
-            "enabled": true
-        },
-        "language_audit": {
-            "class_name": "LanguageAudit",
-            "enabled": true,
-            "run_sentiment_analysis": false
-        },
-        "reflow_audit": {
-            "class_name": "ReflowAudit",
-            "enabled": true,
-            "viewport_to_test": "small",
-            "screenshot_failures": false
-        },
-        "title_audit": {
-            "class_name": "TitleAudit",
-            "enabled": true
-        },
-        "focus_indicator_audit": {
-            "class_name": "FocusIndicatorAudit",
-            "enabled": false,
-            "root_element_css_selector": "main",
-            "pre_tab_key_presses": 0,
-            "max_tab_key_presses": 5
-        },
-        "screenshot_audit": {
-            "class_name": "ScreenshotAudit",
-            "enabled": false
-        },
-        "element_audit": {
-            "class_name": "ElementAudit",
-            "target_element_css_selector": "input:not([type='search'])",
-            "enabled": false
-        }
+    "medium": {
+      "width": 1280,
+      "height": 800
     }
+  },
+  "audit_plugins": {
+    "axe_core_audit": {
+      "class_name": "AxeCoreAudit",
+      "best-practice": false,
+      "enabled": true
+    },
+    "language_audit": {
+      "class_name": "LanguageAudit",
+      "enabled": true,
+      "run_sentiment_analysis": false
+    },
+    "reflow_audit": {
+      "class_name": "ReflowAudit",
+      "enabled": true,
+      "viewport_to_test": "small",
+      "screenshot_failures": false
+    },
+    "title_audit": {
+      "class_name": "TitleAudit",
+      "enabled": true
+    },
+    "focus_indicator_audit": {
+      "class_name": "FocusIndicatorAudit",
+      "enabled": false,
+      "root_element_css_selector": "main",
+      "pre_tab_key_presses": 0,
+      "max_tab_key_presses": 5
+    },
+    "screenshot_audit": {
+      "class_name": "ScreenshotAudit",
+      "enabled": false
+    },
+    "element_audit": {
+      "class_name": "ElementAudit",
+      "target_element_css_selector": "input:not([type='search'])",
+      "enabled": false
+    }
+  }
 }
