@@ -25,13 +25,10 @@ class DataExporter:
     input_results_folder_name = self.__determine_results_folder_name()
 
     self.input_path = './results/' + input_results_folder_name + '/'
-    self.output_path = './reports/' + input_results_folder_name + '/'
+    self.output_path = self.input_path
     # assert the input_path exists
     if not os.path.exists(self.input_path):
       raise FileNotFoundError(f'Input path {self.input_path} does not exist.')
-    # create ouptut folder if it doesn't exist
-    if not os.path.exists(self.output_path):
-      os.makedirs(self.output_path)
     self.output_prefix = self.output_path + self.config['output_filename_prefix']
     self.iterate_export_formats()
 
