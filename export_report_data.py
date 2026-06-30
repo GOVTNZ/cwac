@@ -246,7 +246,7 @@ class DataExporter:
       if export_format['export_type'] == 'generate_axe_core_template_aware_file':
         # Run the axe-core template-aware algorithm
         # to generate the template-aware CSV
-        axe_core_template_aware_df = self.run_axe_core_audit_template_aware()
+        axe_core_template_aware_df = self.run_axe_core_audit_template_aware(export_format['output_filename'])
         continue
 
       if export_format['export_type'] == 'axe_core_template_aware_leaderboard':
@@ -322,13 +322,13 @@ class DataExporter:
 
     return agg_df
 
-  def run_axe_core_audit_template_aware(self) -> pd.DataFrame:
+  def run_axe_core_audit_template_aware(self, output_filename: str) -> pd.DataFrame:
     """Combine repeated axe-core issues.
 
     Used for detecting template-level errors.
 
     Args:
-        export_path (str): The path to the audit folder.
+        output_filename (str): The output filename.
     """
     # Read the CSV file into a list of dicts
     file_path = self.input_path + '/axe_core_audit.csv'
@@ -354,7 +354,7 @@ class DataExporter:
 
     # Write the data to CSV file with original column order
     data_frame.to_csv(
-      self.output_path + '/axe_core_audit_template_aware.csv',
+      self.output_prefix + output_filename,
       index=False,
       columns=list(processed_column_order),
     )
