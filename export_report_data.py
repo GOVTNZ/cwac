@@ -54,7 +54,7 @@ class DataExporter:
 
   def __build_results_path(self, sub: str) -> str:
     if sub in ('', '.', '..') or '..' in sub or '/' in sub or '\\' in sub:
-      raise ValueError(f'filename must be a simple path without path separators or consecutive dots')
+      raise ValueError('filename must be a simple path without path separators or consecutive dots')
     return os.path.join(self.results_path, sub)
 
   # noinspection PyDefaultArgument
