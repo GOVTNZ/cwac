@@ -65,7 +65,7 @@ class Config:
   def __init__(self, config_filename: str) -> None:
     """Read config.json into self.config."""
     with open('./config/' + config_filename, 'r', encoding='utf-8-sig') as file:
-      self.config = json.load(file)
+      self.config: dict[str, Any] = json.load(file)
 
     self.unique_id = 0
 
@@ -336,8 +336,6 @@ class Config:
     Args:
         name (str): the name of the attribute (in config.json)
     """
-    if name == 'lock':
-      return self.config.lock
     return self.config[name]
 
   def read_config(self) -> Any:
