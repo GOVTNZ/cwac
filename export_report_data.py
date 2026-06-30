@@ -24,7 +24,7 @@ class DataExporter:
 
     input_results_folder_name = self.__determine_results_folder_name()
 
-    self.input_path = './results/' + input_results_folder_name + '/'
+    self.input_path = './results/' + input_results_folder_name
     self.output_path = self.input_path
     # assert the input_path exists
     if not os.path.exists(self.input_path):
@@ -205,7 +205,7 @@ class DataExporter:
       return
 
     with (
-      open(self.input_path + input_filename, 'r', encoding='utf-8-sig') as input_file,
+      open(self.__build_path(self.input_path, input_filename), 'r', encoding='utf-8-sig') as input_file,
       open(
         self.__build_path(self.output_path, self.output_prefix + output_filename), 'w', encoding='utf-8-sig'
       ) as output_file,
@@ -226,8 +226,10 @@ class DataExporter:
       print(f'Exporting {export_format["export_type"]} to {self.output_path}')
 
       # Check if export_format["input_filename"] exists
-      if 'input_filename' in export_format and not os.path.exists(self.input_path + export_format['input_filename']):
-        print(f'WARNING: File {self.input_path + export_format["input_filename"]} does not exist.')
+      if 'input_filename' in export_format and not os.path.exists(
+        self.__build_path(self.input_path, export_format['input_filename'])
+      ):
+        print(f'WARNING: File {self.__build_path(self.input_path, export_format["input_filename"])} does not exist.')
         continue
 
       if export_format['export_type'] == 'leaderboard':
@@ -275,7 +277,7 @@ class DataExporter:
 
   def import_audit_csv_to_df(self, input_filename: str) -> pd.DataFrame:
     """Import the audit CSV file to a DataFrame."""
-    audit_df = pd.read_csv(self.input_path + input_filename)
+    audit_df = pd.read_csv(self.__build_path(self.input_path, input_filename))
     return audit_df
 
   def import_config_file(self) -> dict[str, Any]:
@@ -338,7 +340,7 @@ class DataExporter:
         output_filename (str): The output filename.
     """
     # Read the CSV file into a list of dicts
-    file_path = self.input_path + '/axe_core_audit.csv'
+    file_path = self.__build_path(self.input_path, 'axe_core_audit.csv')
 
     # If file doesn't exist, return
     if not os.path.exists(file_path):
