@@ -229,7 +229,7 @@ class AuditManager:
             audit_name,
             audit['kwargs']['url'],
           )
-          return False
+          return any_audit_succeeded
 
         # If the browser fails to load the page, skip test
         if browser_status is False:
