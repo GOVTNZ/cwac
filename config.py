@@ -59,6 +59,8 @@ class Config:
   record_unexpected_response_codes: bool
   force_open_details_elements: bool
 
+  reporting: dict[str, Any] | None
+
   # Threading lock (shared amongst all threads)
   lock = threading.RLock()
 

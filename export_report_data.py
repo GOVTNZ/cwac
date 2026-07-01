@@ -18,39 +18,19 @@ import pandas as pd
 class DataExporter:
   """Outputs CSV data from ./results/ to ./reports/."""
 
-  def __init__(self) -> None:
+  def __init__(self, results_folder_name: str, use_inline_config: bool) -> None:
     """Init vars."""
-    self.config = self.import_config_file()
+    print(f'Processing ./results/{results_folder_name}')
 
-    input_results_folder_name = self.__determine_results_folder_name()
-
-    self.results_path = './results/' + input_results_folder_name
+    self.results_path = './results/' + results_folder_name
 
     # ensure the results path actually exists
     if not os.path.exists(self.results_path):
       raise FileNotFoundError(f'Input path {self.results_path} does not exist.')
+
+    self.config = self.import_config_file(use_inline_config)
     self.output_prefix = self.config['output_filename_prefix']
     self.iterate_export_formats()
-
-  def __determine_results_folder_name(self) -> str:
-    if len(sys.argv) > 1:
-      return sys.argv[1]
-
-    # get all the directories in the results folder, sorted naturally in
-    # ascending order so that the latest results will be the last item
-    convert: Callable[[str], int | str] = lambda text: int(text) if text.isdigit() else text
-    existing_results = sorted(
-      [d for d in os.listdir('./results') if os.path.isdir(f'./results/{d}')],
-      key=lambda key: [convert(c) for c in re.split('([0-9]+)', key)],
-    )
-
-    if len(existing_results) == 0:
-      raise ValueError('could not determine latest results folder - have you run an audit?')
-    latest_result = existing_results[-1]
-
-    print(f'Processing ./results/{latest_result}')
-
-    return latest_result
 
   def __build_results_path(self, sub: str) -> str:
     if sub in ('', '.', '..') or '..' in sub or '/' in sub or '\\' in sub:
@@ -278,11 +258,26 @@ class DataExporter:
     audit_df = pd.read_csv(self.__build_results_path(input_filename))
     return audit_df
 
-  def import_config_file(self) -> dict[str, Any]:
-    """Import export_report_data_config.json."""
-    with open('export_report_data_config.json', 'r', encoding='utf-8-sig') as file:
+  def import_config_file(self, use_inline_config: bool) -> dict[str, Any]:
+    """Import the configuration file.
+
+    If `use_inline_config` is true then the configuration will be imported from the
+    "reporting" configuration within the input results config.json.
+
+    Otherwise, the `export_report_data_config.json` file will be used.
+    """
+    filename = self.__build_results_path('config.json') if use_inline_config else 'export_report_data_config.json'
+
+    with open(filename, 'r', encoding='utf-8-sig') as file:
       config = cast(dict[str, Any], json.load(file))
-    return config
+
+    if not use_inline_config:
+      return config
+
+    reporting = config.get('reporting')
+    if not isinstance(reporting, dict):
+      raise KeyError('config.json has non-object "reporting" key')
+    return reporting
 
   def template_aware_algorithm(self, input_df: pd.DataFrame, groupby_cols: list[str]) -> pd.DataFrame:
     """Template aware algorithm - finds template-level issues.
@@ -396,4 +391,22 @@ class DataExporter:
 
 
 if __name__ == '__main__':
-  exporter = DataExporter()
+
+  def resolve_results_folder_name() -> str:
+    """Resolve the results folder name when being invoked directly."""
+    if len(sys.argv) > 1:
+      return sys.argv[1]
+
+    # get all the directories in the results folder, sorted naturally in
+    # ascending order so that the latest results will be the last item
+    convert: Callable[[str], int | str] = lambda text: int(text) if text.isdigit() else text
+    existing_results = sorted(
+      [d for d in os.listdir('./results') if os.path.isdir(f'./results/{d}')],
+      key=lambda key: [convert(c) for c in re.split('([0-9]+)', key)],
+    )
+
+    if len(existing_results) == 0:
+      raise ValueError('could not determine latest results folder - have you run an audit?')
+    return existing_results[-1]
+
+  exporter = DataExporter(resolve_results_folder_name(), False)
