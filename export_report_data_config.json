@@ -1,4 +1,5 @@
 {
+  "$schema": "./export_report_data_config.schema.json",
   "output_filename_prefix": "",
   "export_formats": [
     {
