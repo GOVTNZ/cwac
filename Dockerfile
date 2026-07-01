@@ -14,9 +14,9 @@ FROM --platform=linux/amd64 ubuntu:noble@sha256:723ad8033f109978f8c7e6421ee684ef
 # ubuntu equivalent (include upgrade)
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y wget python3-pip python3.12-venv libnss3-dev && \
+    apt-get install -y --no-install-recommends wget python3-pip python3.12-venv libnss3-dev && \
     wget -nv https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    apt-get install -y ./google-chrome-stable_current_amd64.deb && \
+    apt-get install -y --no-install-recommends ./google-chrome-stable_current_amd64.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives && \
     rm google-chrome-stable_current_amd64.deb
