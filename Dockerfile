@@ -24,14 +24,14 @@ RUN apt-get update && \
 # create cwac directory
 WORKDIR /cwac
 
-# copy in requirements.txt
-COPY requirements.txt .
-
 # create .venv
 RUN python3 -m venv .venv
 
 ENV VIRTUAL_ENV .venv
 ENV PATH .venv/bin:$PATH
+
+# copy in requirements.txt
+COPY requirements.txt .
 
 # pip install
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
