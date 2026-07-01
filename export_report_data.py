@@ -271,9 +271,13 @@ class DataExporter:
     with open(filename, 'r', encoding='utf-8-sig') as file:
       config = cast(dict[str, Any], json.load(file))
 
-    if use_inline_config:
-      return cast(dict[str, Any], config.get('reporting'))
-    return config
+    if not use_inline_config:
+      return config
+
+    reporting = config.get('reporting')
+    if not isinstance(reporting, dict):
+      raise KeyError('config.json has non-object "reporting" key')
+    return reporting
 
   def template_aware_algorithm(self, input_df: pd.DataFrame, groupby_cols: list[str]) -> pd.DataFrame:
     """Template aware algorithm - finds template-level issues.
