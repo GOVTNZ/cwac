@@ -22,7 +22,8 @@ RUN apt-get update && \
     python3-pip \
     python3.12-venv \
     libnss3-dev  && \
-    apt-get clean
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # create cwac directory
 WORKDIR /cwac
