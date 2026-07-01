@@ -59,9 +59,9 @@ VOLUME /cwac/results
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 
-RUN mkdir ./nltk_data/
-RUN chown -R $USER_ID:$GROUP_ID ./nltk_data/
-RUN chmod -R 700 ./nltk_data
+RUN mkdir ./nltk_data/ && \
+    chown -R $USER_ID:$GROUP_ID ./nltk_data/ && \
+    chmod -R 700 ./nltk_data
 
 # Change to non-root user
 USER $USER_ID:$GROUP_ID
