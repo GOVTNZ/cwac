@@ -24,12 +24,12 @@ class DataExporter:
 
     input_results_folder_name = self.__determine_results_folder_name()
 
-    self.input_path = './results/' + input_results_folder_name + '/'
-    self.output_path = self.input_path
-    # assert the input_path exists
-    if not os.path.exists(self.input_path):
-      raise FileNotFoundError(f'Input path {self.input_path} does not exist.')
-    self.output_prefix = self.output_path + self.config['output_filename_prefix']
+    self.results_path = './results/' + input_results_folder_name
+
+    # ensure the results path actually exists
+    if not os.path.exists(self.results_path):
+      raise FileNotFoundError(f'Input path {self.results_path} does not exist.')
+    self.output_prefix = self.config['output_filename_prefix']
     self.iterate_export_formats()
 
   def __determine_results_folder_name(self) -> str:
@@ -51,6 +51,11 @@ class DataExporter:
     print(f'Processing ./results/{latest_result}')
 
     return latest_result
+
+  def __build_results_path(self, sub: str) -> str:
+    if sub in ('', '.', '..') or '..' in sub or '/' in sub or '\\' in sub:
+      raise ValueError('filename must be a simple path without path separators or consecutive dots')
+    return os.path.join(self.results_path, sub)
 
   # noinspection PyDefaultArgument
   def sort_with_default(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
@@ -195,13 +200,13 @@ class DataExporter:
       df = self.import_audit_csv_to_df(input_filename)
       df = self.sort_with_default(df, [])
 
-      df.to_csv(self.output_prefix + output_filename, index=False)
+      df.to_csv(self.__build_results_path(self.output_prefix + output_filename), index=False)
 
       return
 
     with (
-      open(self.input_path + input_filename, 'r', encoding='utf-8-sig') as input_file,
-      open(self.output_prefix + output_filename, 'w', encoding='utf-8-sig') as output_file,
+      open(self.__build_results_path(input_filename), 'r', encoding='utf-8-sig') as input_file,
+      open(self.__build_results_path(self.output_prefix + output_filename), 'w', encoding='utf-8-sig') as output_file,
     ):
       output_file.write(input_file.read())
 
@@ -216,11 +221,13 @@ class DataExporter:
         continue
 
       # print(f"Exporting {export_format['export_type']} to {export_format['output_filename']}")
-      print(f'Exporting {export_format["export_type"]} to {self.output_path}')
+      print(f'Exporting {export_format["export_type"]} to {self.results_path}')
 
       # Check if export_format["input_filename"] exists
-      if 'input_filename' in export_format and not os.path.exists(self.input_path + export_format['input_filename']):
-        print(f'WARNING: File {self.input_path + export_format["input_filename"]} does not exist.')
+      if 'input_filename' in export_format and not os.path.exists(
+        self.__build_results_path(export_format['input_filename'])
+      ):
+        print(f'WARNING: File {self.__build_results_path(export_format["input_filename"])} does not exist.')
         continue
 
       if export_format['export_type'] == 'leaderboard':
@@ -233,7 +240,7 @@ class DataExporter:
 
         # Write leaderboard to CSV
         output_df.to_csv(
-          self.output_prefix + export_format['output_filename'],
+          self.__build_results_path(self.output_prefix + export_format['output_filename']),
           index=False,
         )
 
@@ -262,13 +269,13 @@ class DataExporter:
 
         # Write the leaderboard to a CSV file
         leaderboard_df.to_csv(
-          self.output_prefix + export_format['output_filename'],
+          self.__build_results_path(self.output_prefix + export_format['output_filename']),
           index=False,
         )
 
   def import_audit_csv_to_df(self, input_filename: str) -> pd.DataFrame:
     """Import the audit CSV file to a DataFrame."""
-    audit_df = pd.read_csv(self.input_path + input_filename)
+    audit_df = pd.read_csv(self.__build_results_path(input_filename))
     return audit_df
 
   def import_config_file(self) -> dict[str, Any]:
@@ -331,7 +338,7 @@ class DataExporter:
         output_filename (str): The output filename.
     """
     # Read the CSV file into a list of dicts
-    file_path = self.input_path + '/axe_core_audit.csv'
+    file_path = self.__build_results_path('axe_core_audit.csv')
 
     # If file doesn't exist, return
     if not os.path.exists(file_path):
@@ -354,7 +361,7 @@ class DataExporter:
 
     # Write the data to CSV file with original column order
     data_frame.to_csv(
-      self.output_prefix + output_filename,
+      self.__build_results_path(self.output_prefix + output_filename),
       index=False,
       columns=list(processed_column_order),
     )
