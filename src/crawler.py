@@ -22,12 +22,15 @@ import src.audit_manager
 import src.audit_plugins
 import src.filters
 import src.output
+import json
 from config import Config
 from config import SiteData as ConfigSiteData
 from src.analytics import Analytics
 from src.audit_manager import AuditManager
 from src.browser import Browser
 from src.output import CSVWriter
+
+from collections.abc import Mapping
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-locals
 
@@ -345,12 +348,19 @@ class Crawler:
         bool: True if URL has acceptable headers, else False
     """
     ok_status_codes = [200, 202, 301, 302, 307, 308]
+
+    # New: normalize + serialize headers once for consistent logging/CSV output
+    normalized_headers = self.normalize_headers(url_data.get('headers'))
+    headers_csv_value = self.headers_to_csv_value(normalized_headers)
+
+      
     if url_data['status_code'] not in ok_status_codes:
       logger.info(
         'URL filtered out due to bad http status_code: %s %i',
         url_data['final_url'],
         url_data['status_code'],
       )
+      
       # Write bad response codes with CSVWriter
       csv_writer = src.output.CSVWriter()
       csv_writer.add_row(
@@ -359,13 +369,35 @@ class Crawler:
           'parent_url': parent_url,
           'url': url_data['final_url'],
           'status_code': url_data['status_code'],
+          'response_headers': headers_csv_value
         }
       )
       if self.config.record_unexpected_response_codes:
         csv_writer.write_csv_file(f'./results/{self.config.audit_name}/unexpected_response_codes.csv')
 
       return False
-    return src.filters.url_filter_by_header_content_type(url_data['final_url'], url_data['headers'])
+
+    return src.filters.url_filter_by_header_content_type(url_data['final_url'], normalized_headers)
+
+
+  def normalize_headers(self, headers: Any) -> dict[str, str]:
+    """Convert response headers into a plain dict[str, str]."""
+    if headers is None:
+      return {}
+
+    if isinstance(headers, Mapping):
+      return {str(k): str(v) for k, v in headers.items()}
+
+    try:
+      return {str(k): str(v) for k, v in headers.items()}
+    except Exception:  # pylint: disable=broad-exception-caught
+      return {}
+
+  def headers_to_csv_value(self, headers: Any) -> str:
+    """Serialize headers as stable JSON for CSV storage."""
+    normalized = self.normalize_headers(headers)
+    return json.dumps(normalized, ensure_ascii=False, sort_keys=True)
+  
 
   def fetch_robots_txt(self, robots_txt_url: str) -> str:
     """Fetches a robots.txt file from a domain.
