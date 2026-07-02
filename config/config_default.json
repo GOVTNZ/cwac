@@ -1,4 +1,5 @@
 {
+  "$schema": "../config.schema.json",
   "audit_name": "audit_name_here",
   "headless": true,
   "max_links_per_domain": 50,

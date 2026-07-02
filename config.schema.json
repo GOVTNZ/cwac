@@ -1,0 +1,463 @@
+{
+  "$schema": "https://json-schema.org/draft-04/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "audit_name": {
+      "description": "A short identifier for this audit run. Only alphanumeric characters, underscores, hyphens, and dots are allowed. The provided value is sanitised and truncated to 50 characters before CWAC adds a timestamp prefix at runtime",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50,
+      "pattern": "^[a-zA-Z0-9_.\\-]+$"
+    },
+    "headless": {
+      "description": "Whether to run the browser in headless mode (no visible window)",
+      "type": "boolean"
+    },
+    "max_links_per_domain": {
+      "description": "Maximum number of pages to crawl per domain. Set to 1 to audit only the base URL",
+      "type": "integer",
+      "minimum": 1
+    },
+    "thread_count": {
+      "description": "Number of parallel browser threads to use. Set to 1 to disable multithreading (useful for profiling)",
+      "type": "integer",
+      "minimum": 1
+    },
+    "browser": {
+      "description": "The browser to use for auditing",
+      "type": "string",
+      "enum": [
+        "chrome",
+        "firefox"
+      ]
+    },
+    "chrome_binary_location": {
+      "description": "Path to the Chrome binary. Set to 'auto' to resolve automatically based on the OS and the chromeVersion in package.json",
+      "type": "string",
+      "minLength": 1
+    },
+    "chrome_driver_location": {
+      "description": "Path to the ChromeDriver binary. Set to 'auto' to resolve automatically based on the OS",
+      "type": "string",
+      "minLength": 1
+    },
+    "user_agent": {
+      "description": "The full User-Agent string sent with every request",
+      "type": "string",
+      "minLength": 1
+    },
+    "user_agent_product_token": {
+      "description": "The product token portion of the User-Agent, used for robots.txt identification. Must not contain whitespace",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S+$"
+    },
+    "follow_robots_txt": {
+      "description": "Whether to respect robots.txt directives when crawling",
+      "type": "boolean"
+    },
+    "script_timeout": {
+      "description": "Timeout in seconds for JavaScript execution in the browser",
+      "type": "number",
+      "minimum": 0
+    },
+    "page_load_timeout": {
+      "description": "Timeout in seconds for page load operations",
+      "type": "number",
+      "minimum": 0
+    },
+    "delay_between_page_loads": {
+      "description": "Seconds to wait between loading consecutive pages. Use to reduce server load",
+      "type": "number",
+      "minimum": 0
+    },
+    "delay_between_viewports": {
+      "description": "Seconds to wait after resizing the browser to a new viewport before running audits",
+      "type": "number",
+      "minimum": 0
+    },
+    "delay_after_page_load": {
+      "description": "Seconds to wait after a page load completes before running audits",
+      "type": "number",
+      "minimum": 0
+    },
+    "only_allow_https": {
+      "description": "When true, non-HTTPS URLs are skipped and not audited",
+      "type": "boolean"
+    },
+    "perform_header_check": {
+      "description": "Whether to perform HTTP HEAD requests to pre-check URLs before auditing them",
+      "type": "boolean"
+    },
+    "shuffle_base_urls": {
+      "description": "Whether to randomise the order in which base URLs are processed",
+      "type": "boolean"
+    },
+    "base_urls_visit_path": {
+      "description": "Path to the directory containing CSV files of URLs to crawl and audit. Must be within the base_urls/ folder",
+      "type": "string",
+      "minLength": 1
+    },
+    "base_urls_nohead_path": {
+      "description": "Path to the directory containing CSV files of URLs that do not support HTTP HEAD requests. Must be within the base_urls/ folder",
+      "type": "string",
+      "minLength": 1
+    },
+    "record_unexpected_response_codes": {
+      "description": "Whether to log and record unexpected HTTP response codes encountered during crawling",
+      "type": "boolean"
+    },
+    "force_open_details_elements": {
+      "description": "Whether to forcibly expand all <details> elements on a page before auditing, so their contents are included in the audit",
+      "type": "boolean"
+    },
+    "filter_to_organisations": {
+      "description": "Restrict auditing to organisations whose name contains one of these strings. Leave empty to audit all organisations",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "filter_to_urls": {
+      "description": "Restrict auditing to URLs that contain one of these strings. Leave empty to audit all URLs",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "viewport_sizes": {
+      "description": "Named viewport sizes to test. Each audit is repeated at every listed viewport. At least one viewport is required",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "width": {
+            "description": "Viewport width in pixels",
+            "type": "integer",
+            "minimum": 1
+          },
+          "height": {
+            "description": "Viewport height in pixels",
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "width",
+          "height"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "audit_plugins": {
+      "description": "Configuration for each audit plugin. Only the plugins defined here are permitted",
+      "type": "object",
+      "properties": {
+        "axe_core_audit": {
+          "description": "Runs axe-core accessibility checks on each page",
+          "type": "object",
+          "properties": {
+            "class_name": {
+              "enum": [
+                "AxeCoreAudit"
+              ]
+            },
+            "enabled": {
+              "description": "Whether this plugin is active",
+              "type": "boolean"
+            },
+            "best-practice": {
+              "description": "Whether to include axe-core best-practice rules in addition to WCAG rules",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "class_name",
+            "enabled",
+            "best-practice"
+          ],
+          "additionalProperties": false
+        },
+        "language_audit": {
+          "description": "Checks that pages declare a valid language and optionally runs sentiment analysis",
+          "type": "object",
+          "properties": {
+            "class_name": {
+              "enum": [
+                "LanguageAudit"
+              ]
+            },
+            "enabled": {
+              "description": "Whether this plugin is active",
+              "type": "boolean"
+            },
+            "run_sentiment_analysis": {
+              "description": "Whether to run NLTK sentiment analysis on page text",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "class_name",
+            "enabled",
+            "run_sentiment_analysis"
+          ],
+          "additionalProperties": false
+        },
+        "reflow_audit": {
+          "description": "Checks whether page content reflows correctly at a narrow viewport (WCAG 1.4.10)",
+          "type": "object",
+          "properties": {
+            "class_name": {
+              "enum": [
+                "ReflowAudit"
+              ]
+            },
+            "enabled": {
+              "description": "Whether this plugin is active",
+              "type": "boolean"
+            },
+            "viewport_to_test": {
+              "description": "The viewport name (from viewport_sizes) at which reflow is tested",
+              "type": "string",
+              "minLength": 1
+            },
+            "screenshot_failures": {
+              "description": "Whether to save a screenshot when a reflow failure is detected",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "class_name",
+            "enabled",
+            "viewport_to_test",
+            "screenshot_failures"
+          ],
+          "additionalProperties": false
+        },
+        "title_audit": {
+          "description": "Checks that each page has a non-empty <title> element",
+          "type": "object",
+          "properties": {
+            "class_name": {
+              "enum": [
+                "TitleAudit"
+              ]
+            },
+            "enabled": {
+              "description": "Whether this plugin is active",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "class_name",
+            "enabled"
+          ],
+          "additionalProperties": false
+        },
+        "focus_indicator_audit": {
+          "description": "Checks that interactive elements display a visible focus indicator when navigated to via the keyboard",
+          "type": "object",
+          "properties": {
+            "class_name": {
+              "enum": [
+                "FocusIndicatorAudit"
+              ]
+            },
+            "enabled": {
+              "description": "Whether this plugin is active",
+              "type": "boolean"
+            },
+            "root_element_css_selector": {
+              "description": "CSS selector for the root element within which tab-key navigation is tested",
+              "type": "string",
+              "minLength": 1
+            },
+            "pre_tab_key_presses": {
+              "description": "Number of Tab key presses to perform before beginning the focus indicator check",
+              "type": "integer",
+              "minimum": 0
+            },
+            "max_tab_key_presses": {
+              "description": "Maximum number of Tab key presses to perform during the focus indicator check",
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "class_name",
+            "enabled",
+            "root_element_css_selector",
+            "pre_tab_key_presses",
+            "max_tab_key_presses"
+          ],
+          "additionalProperties": false
+        },
+        "screenshot_audit": {
+          "description": "Captures a full-page screenshot of each audited page",
+          "type": "object",
+          "properties": {
+            "class_name": {
+              "enum": [
+                "ScreenshotAudit"
+              ]
+            },
+            "enabled": {
+              "description": "Whether this plugin is active",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "class_name",
+            "enabled"
+          ],
+          "additionalProperties": false
+        },
+        "element_audit": {
+          "description": "Audits specific elements on a page matching a CSS selector",
+          "type": "object",
+          "properties": {
+            "class_name": {
+              "enum": [
+                "ElementAudit"
+              ]
+            },
+            "enabled": {
+              "description": "Whether this plugin is active",
+              "type": "boolean"
+            },
+            "target_element_css_selector": {
+              "description": "CSS selector identifying the elements to audit",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "class_name",
+            "enabled",
+            "target_element_css_selector"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "reporting": {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "output_filename_prefix": {
+          "type": "string"
+        },
+        "export_formats": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "export_type": {
+                    "type": "string",
+                    "enum": [
+                      "generate_axe_core_template_aware_file",
+                      "axe_core_template_aware_leaderboard",
+                      "raw_data"
+                    ]
+                  },
+                  "input_filename": {
+                    "type": "string"
+                  },
+                  "output_filename": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "export_type",
+                  "input_filename",
+                  "output_filename"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "export_type": {
+                    "type": "string",
+                    "enum": [
+                      "leaderboard"
+                    ]
+                  },
+                  "input_filename": {
+                    "type": "string"
+                  },
+                  "output_filename": {
+                    "type": "string"
+                  },
+                  "query": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "export_type",
+                  "input_filename",
+                  "output_filename",
+                  "query"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "output_filename_prefix",
+        "export_formats"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "audit_name",
+    "headless",
+    "max_links_per_domain",
+    "thread_count",
+    "browser",
+    "chrome_binary_location",
+    "chrome_driver_location",
+    "user_agent",
+    "user_agent_product_token",
+    "follow_robots_txt",
+    "script_timeout",
+    "page_load_timeout",
+    "delay_between_page_loads",
+    "delay_between_viewports",
+    "delay_after_page_load",
+    "only_allow_https",
+    "perform_header_check",
+    "shuffle_base_urls",
+    "base_urls_visit_path",
+    "base_urls_nohead_path",
+    "record_unexpected_response_codes",
+    "force_open_details_elements",
+    "filter_to_organisations",
+    "filter_to_urls",
+    "viewport_sizes",
+    "audit_plugins"
+  ],
+  "additionalProperties": false
+}
