@@ -14,27 +14,24 @@ FROM --platform=linux/amd64 ubuntu:noble@sha256:723ad8033f109978f8c7e6421ee684ef
 # ubuntu equivalent (include upgrade)
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y wget && \
-    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    apt-get install -y ./google-chrome-stable_current_amd64.deb && \
-    rm google-chrome-stable_current_amd64.deb && \
-    apt-get install -y \
-    python3-pip \
-    python3.12-venv \
-    libnss3-dev  && \
-    apt-get clean
+    apt-get install -y --no-install-recommends wget python3-pip python3.12-venv libnss3-dev && \
+    wget -nv https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+    apt-get install -y --no-install-recommends ./google-chrome-stable_current_amd64.deb && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives && \
+    rm google-chrome-stable_current_amd64.deb
 
 # create cwac directory
 WORKDIR /cwac
-
-# copy in requirements.txt
-COPY requirements.txt .
 
 # create .venv
 RUN python3 -m venv .venv
 
 ENV VIRTUAL_ENV .venv
 ENV PATH .venv/bin:$PATH
+
+# copy in requirements.txt
+COPY requirements.txt .
 
 # pip install
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
@@ -59,9 +56,9 @@ VOLUME /cwac/results
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 
-RUN mkdir ./nltk_data/
-RUN chown -R $USER_ID:$GROUP_ID ./nltk_data/
-RUN chmod -R 700 ./nltk_data
+RUN mkdir ./nltk_data/ && \
+    chown -R $USER_ID:$GROUP_ID ./nltk_data/ && \
+    chmod -R 700 ./nltk_data
 
 # Change to non-root user
 USER $USER_ID:$GROUP_ID
