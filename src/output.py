@@ -241,18 +241,6 @@ def generate_axe_core_template_aware_results(audit_name: str) -> None:
       audit_name (str): The name of the audit that was just run
   """
 
-  def sort_with_default(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
-    """Sort the data frame by the given columns in descending order followed by default columns for consistency."""
-    ascending = [False] * len(columns) + [True, True, True]
-    columns = list(
-      filter(
-        lambda key: key in df.columns,
-        columns + ['organisation', 'base_url', 'url'],
-      )
-    )
-
-    return df.sort_values(by=columns, ascending=ascending[0 : len(columns)])
-
   def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) -> pd.DataFrame:
     """Template aware algorithm - finds template-level issues.
 
@@ -313,7 +301,10 @@ def generate_axe_core_template_aware_results(audit_name: str) -> None:
     groupby_cols=['base_url', 'id', 'html', 'viewport_size'],
   )
 
-  data_frame = sort_with_default(data_frame, ['num_issues'])
+  data_frame = data_frame.sort_values(
+    by=['num_issues', 'organisation', 'base_url', 'url'],
+    ascending=[False, True, True, True],
+  )
 
   # Write the data to CSV file with original column order
   data_frame.to_csv(
