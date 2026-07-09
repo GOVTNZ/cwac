@@ -50,124 +50,6 @@ class DataExporter:
 
     return df.sort_values(by=columns, ascending=ascending[0 : len(columns)])
 
-  def get_num_unique_pages_scanned(self, df: pd.DataFrame) -> pd.DataFrame:
-    """Returns a DF with num of unique pages scanned for each base_url.
-
-    Args:
-        df (pd.DataFrame): The input DataFrame
-
-    Returns:
-        pd.DataFrame: The resulting DataFrame
-    """
-    # Create a new sqlite3 connection to count how many pages scanned
-    page_count_conn = sqlite3.connect(':memory:')
-
-    # Get a sqlite3 db of the data frame as it should have all the unique urls scanned
-    df.to_sql('cwac_table', page_count_conn, index=False)
-
-    # Query how many unique 'url' values each 'base_url' has
-    url_count_query = """
-        SELECT base_url, COUNT(DISTINCT url) as num_pages_scanned
-        FROM cwac_table
-        GROUP BY base_url
-        """
-    # Run the query
-    url_count_result = page_count_conn.execute(url_count_query).fetchall()
-
-    # Convert the result to a DataFrame
-    url_count_df = pd.DataFrame(url_count_result, columns=['base_url', 'num_pages_scanned'])
-
-    return url_count_df
-
-  def generate_axe_core_leaderboard(self, df: pd.DataFrame) -> pd.DataFrame:
-    """Generates the axe-core leaderboard dataframe."""
-    # Generate the SQL query for the axe-core template aware report
-    query = self.generate_axe_core_template_aware_query()
-
-    # Convert df to sqlite3 in-mem db
-    leaderboard_conn = sqlite3.connect(':memory:')
-
-    # Write the data to the in-memory database
-    df.to_sql('cwac_table', leaderboard_conn, index=False)
-
-    # Run query with conn.execute
-    leaderboard = leaderboard_conn.execute(query).fetchall()
-
-    # Convert the result to a DataFrame
-    url_count_df = self.get_num_unique_pages_scanned(df)
-
-    # Convert results to DataFrame
-    leaderboard_df = pd.DataFrame(leaderboard, columns=['organisation', 'base_url', 'num_issues'])
-
-    # Add the 'num_pages_scanned' column to the leaderboard_df
-    leaderboard_df = pd.merge(leaderboard_df, url_count_df, on='base_url')
-
-    # Add a column of 'count' / 'num_pages_scanned' to the DataFrame
-    leaderboard_df['average_count'] = (leaderboard_df['num_issues'] / leaderboard_df['num_pages_scanned']).round(2)
-
-    # Add rank column
-    # leaderboard_df["rank"] = leaderboard_df["average_count"].rank(method="dense", ascending=True)
-
-    # Ensure "rank" is an integer
-    # leaderboard_df["rank"] = leaderboard_df["rank"].astype(int)
-
-    # Add percentile column
-    leaderboard_df['percentile'] = (leaderboard_df['average_count'].rank(pct=True) * 100).round(2)
-
-    # Rename columns to be more descriptive
-    leaderboard_df = leaderboard_df.rename(columns={'average_count': 'average_num_issues_per_page'})
-
-    # Reorder so num_issues and average_num_issues_per_page are next to each other
-    leaderboard_df = leaderboard_df[
-      [
-        'organisation',
-        'base_url',
-        'num_pages_scanned',
-        'num_issues',
-        'average_num_issues_per_page',
-        'percentile',
-      ]
-    ]
-
-    return leaderboard_df
-
-  def generate_leaderboard(self, query: str, input_df: pd.DataFrame) -> pd.DataFrame:
-    """Generates a leaderboard by performing the query on the input_df.
-
-    Args:
-        query (str): SQL query to perform on input_df
-        input_df (pd.DataFrame): Input DataFrame
-
-    Returns:
-        pd.DataFrame: The resulting leaderboard DataFrame
-    """
-    # Make a sqlite3 connection
-    conn = sqlite3.connect(':memory:')
-
-    # Write input_df to the in-memory database
-    input_df.to_sql('cwac_table', conn, index=False)
-
-    # Run query
-    leaderboard = conn.execute(query).fetchall()
-
-    # Get columns from leadeboard
-    columns = conn.execute(query).description
-
-    # Convert to df and preserve columns
-    leaderboard_df = pd.DataFrame(leaderboard, columns=[col[0] for col in columns])
-
-    # Convert the result to a DataFrame
-    url_count_df = self.get_num_unique_pages_scanned(input_df)
-
-    # Merge the url_count_df with the leaderboard_df
-    leaderboard_df = pd.merge(leaderboard_df, url_count_df, on='base_url')
-
-    # Add average issue count per page (if it has a 'num_issues' column)
-    if 'num_issues' in leaderboard_df.columns:
-      leaderboard_df['average_count'] = (leaderboard_df['num_issues'] / leaderboard_df['num_pages_scanned']).round(2)
-
-    return leaderboard_df
-
   def export_raw_data(self, input_filename: str, output_filename: str) -> None:
     """Export the raw data from the input_filename to the output_filename.
 
@@ -192,8 +74,6 @@ class DataExporter:
 
   def iterate_export_formats(self) -> None:
     """Iterate through the export formats."""
-    axe_core_template_aware_df: pd.DataFrame | None = None
-
     for export_format in self.config['export_formats']:
       # if 'enabled' is False, skip the export format
       if not export_format['enabled']:
@@ -210,20 +90,6 @@ class DataExporter:
         print(f'WARNING: File {self.__build_results_path(export_format["input_filename"])} does not exist.')
         continue
 
-      if export_format['export_type'] == 'leaderboard':
-        output_df = self.generate_leaderboard(
-          query=export_format['query'],
-          input_df=self.import_audit_csv_to_df(export_format['input_filename']),
-        )
-
-        output_df = self.sort_with_default(output_df, ['average_count'])
-
-        # Write leaderboard to CSV
-        output_df.to_csv(
-          self.__build_results_path(self.output_prefix + export_format['output_filename']),
-          index=False,
-        )
-
       if export_format['export_type'] == 'raw_data':
         self.export_raw_data(
           input_filename=export_format['input_filename'],
@@ -233,25 +99,7 @@ class DataExporter:
       if export_format['export_type'] == 'generate_axe_core_template_aware_file':
         # Run the axe-core template-aware algorithm
         # to generate the template-aware CSV
-        axe_core_template_aware_df = self.run_axe_core_audit_template_aware(export_format['output_filename'])
-        continue
-
-      if export_format['export_type'] == 'axe_core_template_aware_leaderboard':
-        if axe_core_template_aware_df is None:
-          raise ValueError(
-            'The generate_axe_core_template_aware_file export must happen before'
-            ' the axe_core_template_aware_leaderboard export can run'
-          )
-
-        # Generate the axe-core leaderboard
-        leaderboard_df = self.generate_axe_core_leaderboard(axe_core_template_aware_df)
-        leaderboard_df = self.sort_with_default(leaderboard_df, ['average_num_issues_per_page'])
-
-        # Write the leaderboard to a CSV file
-        leaderboard_df.to_csv(
-          self.__build_results_path(self.output_prefix + export_format['output_filename']),
-          index=False,
-        )
+        self.run_axe_core_audit_template_aware(export_format['output_filename'])
 
   def import_audit_csv_to_df(self, input_filename: str) -> pd.DataFrame:
     """Import the audit CSV file to a DataFrame."""
@@ -324,7 +172,7 @@ class DataExporter:
 
     return agg_df
 
-  def run_axe_core_audit_template_aware(self, output_filename: str) -> pd.DataFrame:
+  def run_axe_core_audit_template_aware(self, output_filename: str):
     """Combine repeated axe-core issues.
 
     Used for detecting template-level errors.
@@ -360,34 +208,6 @@ class DataExporter:
       index=False,
       columns=list(processed_column_order),
     )
-
-    return data_frame
-
-  def generate_axe_core_template_aware_query(
-    self,
-  ) -> str:
-    """Generate the SQL query for the axe-core template aware report."""
-    query = """
-             SELECT organisation, base_url, COUNT(*) as num_count
-                    FROM cwac_table
-                    WHERE num_issues > 0
-                    AND "best-practice" = 'No'
-                    GROUP BY base_url
-                    UNION
-                    SELECT organisation, base_url, num_issues
-                    FROM cwac_table
-                    WHERE num_issues = 0
-                    AND "best-practice" = 'No'
-                    AND base_url NOT IN (
-                        SELECT base_url
-                        FROM cwac_table
-                        WHERE num_issues > 0
-                        AND "best-practice" = 'No'
-                        GROUP BY base_url
-                    )
-                    ORDER BY num_count DESC
-                """
-    return query
 
 
 if __name__ == '__main__':
