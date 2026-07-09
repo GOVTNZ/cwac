@@ -155,6 +155,11 @@ class CWAC:
       pages_scanned=self.analytics.pages_scanned,
     )
 
+    try:
+      src.output.generate_axe_core_template_aware_results(self.config.audit_name)
+    except FileNotFoundError:
+      logger.warning('Skipped generating axe-core template aware csv as axe-core results were not present')
+
     print('\r\n')
     print('-' * 80)
     print('\r\nCWAC complete! Data can be found', 'in the ./results folder.')

@@ -8,7 +8,6 @@ To configure the export, edit export_report_data_config.json.
 import json
 import os
 import re
-import sqlite3
 import sys
 from typing import Any, Callable, cast
 
@@ -37,7 +36,6 @@ class DataExporter:
       raise ValueError('filename must be a simple path without path separators or consecutive dots')
     return os.path.join(self.results_path, sub)
 
-  # noinspection PyDefaultArgument
   def sort_with_default(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     """Sort the data frame by the given columns in descending order followed by default columns for consistency."""
     ascending = [False] * len(columns) + [True, True, True]
