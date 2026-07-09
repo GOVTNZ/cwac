@@ -7,6 +7,8 @@ import threading
 import time
 from typing import Any
 
+import pandas as pd
+
 from config import Config
 
 # pylint: disable=too-many-locals
@@ -228,3 +230,85 @@ def print_progress_bar(
   # Print New Line on Complete
   if iteration == total:
     print()
+
+
+def generate_axe_core_template_aware_results(audit_name: str) -> None:
+  """Combine repeated axe-core issues.
+
+  Used for detecting template-level errors.
+
+  Args:
+      audit_name (str): The name of the audit that was just run
+  """
+
+  def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) -> pd.DataFrame:
+    """Template aware algorithm - finds template-level issues.
+
+    Uses pandas to group/aggregate axe-core data to show template
+    level issues within websites.
+
+    Args:
+        input_df (pd.DataFrame): The input dataframe.
+        groupby_cols (list[str]): The columns to group by.
+
+    Returns:
+        pd.DataFrame: The grouped and aggregated dataframe.
+    """
+    # Collect all rows where count is 0
+    zero_count_rows = input_df[input_df['num_issues'] == 0]
+
+    # Remove the zero count rows from the input_df
+    no_zero_count_df = input_df[input_df['num_issues'] != 0]
+
+    # Group the data
+    grouped_df = no_zero_count_df.groupby(groupby_cols)
+
+    # Generate the aggregation dictionary
+    agg_dict = {'num_issues': 'sum'}
+
+    # Add in 'first' for all other columns
+    for col in input_df.columns:
+      if col not in agg_dict and col not in groupby_cols:
+        agg_dict[col] = 'first'
+
+    # Aggregate the data
+    agg_df = grouped_df.agg(agg_dict)
+
+    # Reset the index
+    agg_df = agg_df.reset_index()
+
+    # Concatenate the zero count rows with the agg data
+    agg_df = pd.concat([agg_df, zero_count_rows])
+
+    # Generate column for the number of pages impacted by an issue
+    agg_df['num_pages'] = agg_df.apply(lambda row: agg_df[agg_df['issue_id'] == row.issue_id]['url'].nunique(), axis=1)
+    agg_df.reset_index()
+
+    return agg_df
+
+  results_path = f'./results/{audit_name}'
+
+  # Read the CSV file into a DataFrame
+  data_frame = pd.read_csv(f'{results_path}/axe_core_audit.csv')
+
+  # Get and update the column order for the page count column
+  processed_column_order = list(data_frame.columns)
+  processed_column_order.insert(processed_column_order.index('num_issues'), 'num_pages')
+
+  # Group and aggregate the data
+  data_frame = template_aware_algorithm(
+    input_df=data_frame,
+    groupby_cols=['base_url', 'id', 'html', 'viewport_size'],
+  )
+
+  data_frame = data_frame.sort_values(
+    by=['num_issues', 'organisation', 'base_url', 'url'],
+    ascending=[False, True, True, True],
+  )
+
+  # Write the data to CSV file with original column order
+  data_frame.to_csv(
+    f'{results_path}/axe_core_audit_template_aware.csv',
+    index=False,
+    columns=list(processed_column_order),
+  )

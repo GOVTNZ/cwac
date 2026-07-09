@@ -14,7 +14,6 @@ from urllib.parse import urlparse
 
 import src.verify
 from config import Config
-from export_report_data import DataExporter
 from src.analytics import Analytics
 from src.browser import Browser
 from src.crawler import Crawler, SiteData
@@ -155,15 +154,16 @@ class CWAC:
       pages_scanned=self.analytics.pages_scanned,
     )
 
+    try:
+      src.output.generate_axe_core_template_aware_results(self.config.audit_name)
+    except FileNotFoundError:
+      logger.warning('Skipped generating axe-core template aware csv as axe-core results were not present')
+
     print('\r\n')
     print('-' * 80)
     print('\r\nCWAC complete! Data can be found', 'in the ./results folder.')
 
     logger.info('CWAC complete!')
-
-    if self.config.config.get('reporting') is not None:
-      logger.info('Doing report generation')
-      DataExporter(self.config.audit_name, True)
 
 
 if __name__ == '__main__':

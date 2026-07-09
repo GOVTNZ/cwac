@@ -220,15 +220,6 @@ python cwac.py config_a.json && python cwac.py config_b.json
 ### Results storage
 The raw test results are stored within the `./results/` folder.
 
-### Exporting reports from the raw data
-You can either use the raw data stored in teh `./results/` folder directly, or you can use a data exporting feature which auto-generates leaderboards, and runs an algorithm which attempts to de-duplicate axe-core issues.
-
-The CWAC data exporter is in the file `export_report_data.py`, and its configuration is in `export_report_data_config.json`.
-
-To use the CWAC data exporter, run `python export_report_data.py` and it will generate various leaderboard CSVs etc for the latest audit results, placing the output next to the raw results.
-
-You can also provide the name of a directory in the `./results` folder to generate the reports for older results.
-
 ## Checking CWAC's source code
 
 CWAC uses several tools to maintain the quality and integrity of its source code, including:
