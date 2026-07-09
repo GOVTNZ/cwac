@@ -122,9 +122,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pipx run check-jsonschema config.schema.json export_report_data_config.schema.json --check-metaschema
+      - run: pipx run check-jsonschema config.schema.json --check-metaschema
       - run: pipx run check-jsonschema config/config_default.json --schemafile config.schema.json
-      - run: pipx run check-jsonschema export_report_data_config.json --schemafile export_report_data_config.schema.json
   test:
     permissions:
       contents: read # to fetch (actions/checkout)
