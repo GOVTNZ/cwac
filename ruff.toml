@@ -9,6 +9,7 @@ ignore = [
   'D417' # don't require documentation for every function parameter
 ]
 select = [
+  'F', # Pyflakes
   'D', # pydocstyle
   'I'  # isort
 ]
