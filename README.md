@@ -223,7 +223,7 @@ The raw test results are stored within the `./results/` folder.
 ## Checking CWAC's source code
 
 CWAC uses several tools to maintain the quality and integrity of its source code, including:
-- [ruff](https://github.com/astral-sh/ruff), an uncompromising code formatter
+- [ruff](https://github.com/astral-sh/ruff), an uncompromising code formatter and linter
 - [bandit](https://github.com/PyCQA/bandit), for detecting potential security vulnerabilities
 - [flake8](https://github.com/pycqa/flake8), for linting
 - [pylint](https://github.com/PyCQA/pylint), for linting
