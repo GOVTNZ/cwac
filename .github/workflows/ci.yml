@@ -81,11 +81,11 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/ruff-action@v3 # v3.5.1
         with:
-          version-file: 'pyproject.toml'
+          version-file: requirements.txt
           args: 'check'
       - uses: astral-sh/ruff-action@v3 # v3.5.1
         with:
-          version-file: 'pyproject.toml'
+          version-file: requirements.txt
           args: 'format --check --diff'
   schemas:
     permissions:
