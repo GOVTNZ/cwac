@@ -5,6 +5,13 @@ line-length = 120
 quote-style = 'single'
 
 [lint]
-select = [
-  'I' # isort
+ignore = [
+  'D417' # don't require documentation for every function parameter
 ]
+select = [
+  'D', # pydocstyle
+  'I'  # isort
+]
+
+[lint.pydocstyle]
+convention = 'google'

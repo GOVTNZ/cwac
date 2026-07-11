@@ -17,7 +17,6 @@ updates:
           - mypy
           - pre-commit
           - pylint
-          - pydocstyle
           - ruff
         update-types:
           - minor
@@ -30,7 +29,6 @@ updates:
           - mypy
           - pre-commit
           - pylint
-          - pydocstyle
           - ruff
         update-types:
           - minor
