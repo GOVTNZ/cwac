@@ -15,8 +15,14 @@ select = [
   'F',    # Pyflakes
   'D',    # pydocstyle
   'SIM',  # flake8-simplify
-  'I'     # isort
+  'I',    # isort
+  'S'     # flake8-bandit
 ]
 
 [lint.pydocstyle]
 convention = 'google'
+
+[lint.per-file-ignores]
+"tests/**/*.py" = [
+  "S101" # allow using assert in tests
+]

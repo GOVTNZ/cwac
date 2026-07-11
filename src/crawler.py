@@ -650,8 +650,8 @@ class RandomQueue:
     # these random numbers are not used for security
     # or cryptographic purposes so it is safe to use
     # and 'nosec' is added to suppress bandit warning.
-    random_number = random.random()  # nosec
-    random_number *= random.random()  # nosec
+    random_number = random.random()  # nosec # noqa: S311
+    random_number *= random.random()  # nosec # noqa: S311
     return int(maximum * random_number)
 
   def clear(self) -> None:
