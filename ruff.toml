@@ -6,9 +6,12 @@ quote-style = 'single'
 
 [lint]
 ignore = [
-  'D417' # don't require documentation for every function parameter
+  'E501', # don't check line length (mainly for comments)
+  'D417'  # don't require documentation for every function parameter
 ]
 select = [
+  'E', # pycodestyle
+  'W', # pycodestyle
   'F', # Pyflakes
   'D', # pydocstyle
   'I'  # isort
