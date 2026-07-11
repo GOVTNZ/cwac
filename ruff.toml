@@ -17,7 +17,8 @@ select = [
   'SIM',  # flake8-simplify
   'I',    # isort
   'S',    # flake8-bandit
-  'PLC'   # pylint conventions
+  'PLC',  # pylint conventions
+  'PLE'   # pylint errors
 ]
 
 [lint.pydocstyle]
