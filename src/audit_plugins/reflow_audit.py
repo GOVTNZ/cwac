@@ -87,7 +87,7 @@ class ReflowAudit(DefaultAudit):
     # Run a ScreenshotAudit if the page overflows
     if self.config.audit_plugins['reflow_audit']['screenshot_failures'] and overflow_amount > 0:
       # pylint: disable=import-outside-toplevel
-      from src.audit_plugins.screenshot_audit import ScreenshotAudit
+      from src.audit_plugins.screenshot_audit import ScreenshotAudit  # noqa: PLC0415
 
       screenshot_audit = ScreenshotAudit(
         config=self.config,
