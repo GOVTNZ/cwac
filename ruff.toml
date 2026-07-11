@@ -3,3 +3,8 @@ line-length = 120
 
 [format]
 quote-style = 'single'
+
+[lint]
+select = [
+  'I' # isort
+]

@@ -14,7 +14,6 @@ updates:
           - bandit
           - flake8
           - flake8-simplify
-          - isort
           - mypy
           - pre-commit
           - pylint
@@ -28,7 +27,6 @@ updates:
           - bandit
           - flake8
           - flake8-simplify
-          - isort
           - mypy
           - pre-commit
           - pylint
