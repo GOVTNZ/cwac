@@ -455,7 +455,7 @@ class Crawler:
 
     return result
 
-  def crawl(self, site_data: SiteData, base_url: str) -> None:
+  def crawl(self, site_data: SiteData, base_url: str) -> None:  # noqa: PLR0912, PLR0915
     """Crawls a domain and executes the AuditManager.
 
     Loads a webpage, and runs a set of tests on that page. If

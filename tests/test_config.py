@@ -58,7 +58,7 @@ class TestChromeLocationsAutoResolution:
       ('Darwin', 'arm64', './chrome/mac_arm-123-abc/chrome-mac-arm64/', './drivers/chromedriver_mac_arm64'),
     ],
   )
-  def test_auto_resolves_for_supported_platforms(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+  def test_auto_resolves_for_supported_platforms(  # pylint: disable=too-many-arguments,too-many-positional-arguments  # noqa: PLR0913
     self,
     fs: FakeFilesystem,
     mocker: MockerFixture,

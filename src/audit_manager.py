@@ -178,7 +178,7 @@ class AuditManager:
           logger.warning("Could not open <details> element titled '%s'", detail.text)
           continue
 
-  def run_audits(self) -> bool:
+  def run_audits(self) -> bool:  # noqa: PLR0912, PLR0915
     """Iterate through registered audits and runs them.
 
     Returns:
