@@ -10,11 +10,12 @@ ignore = [
   'D417'  # don't require documentation for every function parameter
 ]
 select = [
-  'E', # pycodestyle
-  'W', # pycodestyle
-  'F', # Pyflakes
-  'D', # pydocstyle
-  'I'  # isort
+  'E',    # pycodestyle
+  'W',    # pycodestyle
+  'F',    # Pyflakes
+  'D',    # pydocstyle
+  'SIM',  # flake8-simplify
+  'I'     # isort
 ]
 
 [lint.pydocstyle]
