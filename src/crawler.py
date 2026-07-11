@@ -199,7 +199,7 @@ class Crawler:
     # base_url
 
     for base_url in self.analytics.base_urls:
-      base_url = normalize_url(base_url)
+      base_url = normalize_url(base_url)  # noqa: PLW2901
       if current_url.startswith(base_url) and len(base_url) > len(current_base_url):
         # If the current_url starts with a base_url that is longer
         # this means that the current_url is within the scope of

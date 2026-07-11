@@ -18,7 +18,8 @@ select = [
   'I',    # isort
   'S',    # flake8-bandit
   'PLC',  # pylint conventions
-  'PLE'   # pylint errors
+  'PLE',  # pylint errors
+  'PLW'   # pylint warnings
 ]
 
 [lint.pydocstyle]
