@@ -2,22 +2,11 @@ default_stages: [pre-commit, pre-push]
 default_language_version:
   python: python3.13
 repos:
-  - repo: https://github.com/astral-sh/ruff
-    rev: 0.14.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.21
     hooks:
-    - id: ruff
-      args: [
-        check
-      ]
-      types: ['python']
-  - repo: https://github.com/astral-sh/ruff
-    rev: 0.14.0
-    hooks:
-    - id: ruff
-      args: [
-        format
-      ]
-      types: ['python']
+      - id: ruff-check
+      - id: ruff-format
   - repo: https://github.com/PyCQA/flake8
     rev: 7.1.1
     hooks:
