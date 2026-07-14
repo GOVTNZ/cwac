@@ -1,9 +1,9 @@
 beautifulsoup4==4.15.0
 types-beautifulsoup4==4.12.0.20250516
 requests==2.34.2
-selenium==4.45.0
+selenium==4.46.0
 lxml==6.1.1
-responses==0.26.1
+responses==0.26.2
 pre-commit==4.6.0
 bandit==1.9.4
 mypy==2.3.0
@@ -11,11 +11,11 @@ pylint==4.0.6
 flake8==7.3.0
 flake8-simplify==0.30.0
 opencv-python==4.13.0.92
-numpy==2.5.0
+numpy==2.5.1
 pandas==3.0.3
 pandas-stubs==3.0.3.260530
 pyarrow==24.0.0
-nltk==3.9.4
+nltk==3.10.0
 pyfakefs==6.2.0
 pytest==9.1.1
 pytest-mock==3.15.1
