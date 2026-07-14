@@ -10,7 +10,6 @@ mypy==2.1.0
 pylint==4.0.6
 flake8==7.3.0
 flake8-simplify==0.30.0
-pydocstyle==6.3.0
 opencv-python==4.13.0.92
 numpy==2.5.0
 pandas==3.0.3

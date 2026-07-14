@@ -14,11 +14,9 @@ updates:
           - bandit
           - flake8
           - flake8-simplify
-          - isort
           - mypy
           - pre-commit
           - pylint
-          - pydocstyle
           - ruff
         update-types:
           - minor
@@ -28,11 +26,9 @@ updates:
           - bandit
           - flake8
           - flake8-simplify
-          - isort
           - mypy
           - pre-commit
           - pylint
-          - pydocstyle
           - ruff
         update-types:
           - minor

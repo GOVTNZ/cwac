@@ -248,7 +248,7 @@ class LanguageAudit(DefaultAudit):
       return True
 
     # If there are less than 200 words, the test is not applicable
-    if len(words) < 200:
+    if len(words) < 200:  # noqa: SIM103
       return True
 
     return False
