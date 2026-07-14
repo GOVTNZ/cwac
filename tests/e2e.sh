@@ -18,7 +18,11 @@ cat config/config_default.json | jq '
 # make sure the "results" directory exists
 mkdir -p results
 
-docker build --iidfile /tmp/cwac_image_id .
+docker build \
+  --iidfile /tmp/cwac_image_id \
+  --build-arg USER_ID=$(id -u) \
+  --build-arg GROUP_ID=$(id -g) \
+  .
 
 docker run --rm \
   --mount "type=bind,src=./config,dst=/cwac/config" \
