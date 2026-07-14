@@ -15,6 +15,9 @@ cat config/config_default.json | jq '
   .filter_to_urls = ["example.com"]
 ' > config/config_e2e.json
 
+# make sure the "results" directory exists
+mkdir -p results
+
 docker build --iidfile /tmp/cwac_image_id .
 
 docker run --rm \
