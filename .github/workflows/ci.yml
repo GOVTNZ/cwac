@@ -117,3 +117,13 @@ jobs:
       - uses: actions/setup-node@v4
       - run: npm i
       - run: pytest .
+  e2e:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: tests/e2e.sh
