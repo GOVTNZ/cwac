@@ -5,7 +5,7 @@ set -e
 # create a url file
 cat <<URLS > base_urls/visit/e2e.csv
 organisation,url,sector
-e2e,example.com,e2e
+e2e,https://example.com,e2e
 URLS
 
 # create a config file
