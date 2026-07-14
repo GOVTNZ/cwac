@@ -126,4 +126,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/setup-node@v4
+      - run: npm i
       - run: tests/e2e.sh
