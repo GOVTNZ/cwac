@@ -21,6 +21,7 @@ from src.audit_plugins.default_audit import DefaultAudit
 
 # Download Natural Language Toolkit data
 nltk_dir = os.getcwd() + '/nltk_data/'
+nltk.data.path.append(nltk_dir)
 nltk.download('punkt_tab', download_dir=nltk_dir, quiet=True)
 nltk.download('cmudict', download_dir=nltk_dir, quiet=True)
 nltk.download('vader_lexicon', download_dir=nltk_dir, quiet=True)
