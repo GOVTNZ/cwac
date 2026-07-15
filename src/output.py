@@ -120,7 +120,7 @@ def output_init_message(config: Config) -> None:
   print_log(
     '*' * 80,
     'Centralised Web Accessibility Checker (CWAC)',
-    'Te Tari Taiwhenua | Department of Internal Affairs',
+    'Te Pūnaha Matihiko | Government Digital Delivery Agency',
   )
   print_log(f'Run time: {time.strftime("%Y-%m-%d %H:%M:%S")}')
   print_log('*' * 80)

@@ -5,7 +5,7 @@ Please don't file security-related issues in the Issues section of this reposito
 Checklist for reporting security issues:
 - Don’t disclose the issue publicly
 - Document the issue to help us understand how to fix it
-- Report the security issue to us directly via web.standards@dia.govt.nz
+- Report the security issue to us directly via web.standards@gdda.govt.nz
 - Be professional and clear in your communications
 - Wait to hear back from us
 - Provide any follow up information if requested to help resolve the issue

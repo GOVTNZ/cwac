@@ -2,7 +2,7 @@
 
 ![CWAC](/icons/logo.svg)
 
-CWAC is a project originally designed and developed by the Web Standards team within the Digital Public Service branch of <span lang="mi">Te Tari Taiwhenua</span> | Department of Internal Affairs, New Zealand Government.
+CWAC is designed and developed by the Web Standards team at <span lang="mi">Te Pūnaha Matihiko</span> | Government Digital Delivery Agency, New Zealand Government.
 
 **Note:** "CWAC" is pronounced "quack", like a duck.
 
