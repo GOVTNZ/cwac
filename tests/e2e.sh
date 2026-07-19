@@ -13,7 +13,8 @@ cat config/config_default.json | jq '
   .audit_name = "e2e" |
   .max_links_per_domain = 3 |
   .filter_to_organisations = ["e2e"] |
-  .filter_to_urls = ["example.com"]
+  .filter_to_urls = ["example.com"] |
+  .audit_plugins.screenshot_audit.enabled = true
 ' > config/config_e2e.json
 
 # make sure the "results" directory exists
