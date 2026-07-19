@@ -14,13 +14,7 @@ cat config/config_default.json | jq '
   .max_links_per_domain = 3 |
   .filter_to_organisations = ["e2e"] |
   .filter_to_urls = ["example.com"] |
-  .audit_plugins.axe_core_audit.enabled = true |
-  .audit_plugins.language_audit.enabled = true |
-  .audit_plugins.reflow_audit.enabled = true |
-  .audit_plugins.title_audit.enabled = true |
-  .audit_plugins.focus_indicator_audit.enabled = true |
-  .audit_plugins.screenshot_audit.enabled = true |
-  .audit_plugins.element_audit.enabled = true
+  .audit_plugins |= map_values(.enabled = true)
 ' > config/config_e2e.json
 
 # make sure the "results" directory exists
