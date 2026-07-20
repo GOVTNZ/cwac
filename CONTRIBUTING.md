@@ -33,4 +33,4 @@ Please make sure to use `pre-commit` — it will automatically check your code m
 
 ## Questions?
 
-Feel free to contact the Web Standards team at the Department of Internal Affairs: web.standards@dia.govt.nz
+Feel free to contact the Web Standards team at the Government Digital Delivery Agency: web.standards@gdda.govt.nz

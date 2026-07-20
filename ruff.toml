@@ -3,3 +3,31 @@ line-length = 120
 
 [format]
 quote-style = 'single'
+
+[lint]
+ignore = [
+  'E501',    # don't check line length (mainly for comments)
+  'D417',    # don't require documentation for every function parameter
+  'PLR2004'  # most numbers are not magic
+]
+select = [
+  'E',    # pycodestyle
+  'W',    # pycodestyle
+  'F',    # Pyflakes
+  'D',    # pydocstyle
+  'SIM',  # flake8-simplify
+  'I',    # isort
+  'S',    # flake8-bandit
+  'PLC',  # pylint conventions
+  'PLE',  # pylint errors
+  'PLR',  # pylint refactors
+  'PLW'   # pylint warnings
+]
+
+[lint.pydocstyle]
+convention = 'google'
+
+[lint.per-file-ignores]
+"tests/**/*.py" = [
+  "S101" # allow using assert in tests
+]
