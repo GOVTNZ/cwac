@@ -1,22 +1,15 @@
 # Results
 
-The tool places results in a new subdirectory of [./results](./results).
+Scan outputs are saved to a new subdirectory of [./results](./results) using the naming scheme `./results/<scan-timestamp>/<scan-output-files>`. As well as the accessibility findings for the scanned URLs, the results directory contains supporting files from the scan itself e.g. `config.json`, `chromedriver.log`, the main run log, and the `screenshots/` directory.
 
-Any screenshots captured during the scan will be in the `screenshots/` subdirectory of the results.
+The files in the results directory are in one of 2 categories:
 
-When a scan is run with all audits enabled, the results directory also contains supporting files such as `config.json`, `chromedriver.log`, the main run log, and the `screenshots/` directory shown in the examples under [./results](./results).
+1. Audit results - the accessibililty findings discovered by the scan.
+2. Scan control results - details of the scanning process itself.
 
-## CSV columns
+## Audit results
 
-### Scan control files
-
-| CSV file | Columns | Notes |
-| --- | --- | --- |
-| `audit_log.csv` | `organisation`, `base_url`, `url`, `sector` | Each row records a URL queued for scanning. |
-| `pages_scanned.csv` | `organisation`, `base_url`, `number_of_pages`, `sector` | Each row records how many pages were scanned for a base URL. |
-| `progress.csv` | `time`, `iteration`, `total`, `speed`, `percent`, `elapsed`, `remaining` | Each row records the current scan progress. |
-
-### Audit result files
+Audit results are stored as the following CSV files. These files contain the accessibility findings discovered by the scan.
 
 | CSV file | Columns | Notes |
 | --- | --- | --- |
@@ -29,3 +22,29 @@ When a scan is run with all audits enabled, the results directory also contains 
 | `screenshot_audit.csv` | `organisation`, `sector`, `page_title`, `base_url`, `url`, `viewport_size`, `audit_id`, `page_id`, `audit_type`, `screenshot` | Each row records the filename of the captured screenshot. |
 | `title_audit.csv` | `organisation`, `sector`, `page_title`, `base_url`, `url`, `viewport_size`, `audit_id`, `page_id` | Each row records the page title for the scanned page. |
 
+## Scan control results
+
+The results of how the scan itself ran are captured across some CSV and regular log files.
+
+### Scan control results: CSV files
+
+These files describe _how_ the scan ran. The audit result files (see above) capture _what_ the scan found. You can probably ignore these unless you are debugging issues with the scan itself.
+
+| CSV file | Columns | Notes |
+| --- | --- | --- |
+| `audit_log.csv` | `organisation`, `base_url`, `url`, `sector` | Each row records a URL queued for scanning. |
+| `pages_scanned.csv` | `organisation`, `base_url`, `number_of_pages`, `sector` | Each row records how many pages were scanned for a base URL. |
+| `progress.csv` | `time`, `iteration`, `total`, `speed`, `percent`, `elapsed`, `remaining` | Each row records the current scan progress. |
+
+### Scan control results: Log files
+
+The following log files are saved:
+
+| Log file | Format | Notes |
+| --- | --- | --- |
+| `<audit_name>.log` | Plain text log file | The main CWAC run log. It records the scan start time, configuration, enabled audit plugins, and runtime messages emitted while the scan is running. |
+| `chromedriver.log` | Plain text log file | The ChromeDriver log. It records browser-driver startup, session creation, browser capabilities, and lower-level Selenium or ChromeDriver activity that is useful when debugging browser automation issues. |
+
+### Scan control results: Scan config
+
+The full configuration used for the scan is captures in `config.json`.
