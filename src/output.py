@@ -311,4 +311,5 @@ def generate_axe_core_template_aware_results(audit_name: str) -> None:
     f'{results_path}/axe_core_audit_template_aware.csv',
     index=False,
     columns=list(processed_column_order),
+    encoding='utf-8-sig',
   )
