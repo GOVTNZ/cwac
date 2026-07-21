@@ -2,10 +2,6 @@
 
 This "audit" saves a screenshot of each page visited as part of the scan. You can check the screenshots for any obvious rendering issues or use them to get more context on a page that failed one of the other audits.
 
-## Severity rationale
-
-This is an informational audit only and does not have a pass/fail state so no severity is assigned.
-
 ## Required configuration
 
 None.

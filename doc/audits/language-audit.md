@@ -15,10 +15,6 @@ If the language audit was enabled for a scan, its results will be in the `langua
 More technical details about how the scores are calculated is available from
 the [Python Natural Language Toolkit](https://www.nltk.org/) which is the underlying technology used by the audit.
 
-## Severity rationale
-
-Content that is unnecessarily difficult to read creates barriers for users with cognitive disabilities, low literacy, or those reading in a second language. Plain language is a requirement of the NZ Government's content design guidance.
-
 ## Required configuration
 
 The language audit has no special requirements beyond the standard audit configuration. Sentiment analysis is optional and controlled by the `run_sentiment_analysis` setting under `audit_plugins.language_audit` in the config.

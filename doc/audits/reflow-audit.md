@@ -10,14 +10,6 @@ This audit tests [WCAG 1.4.10 Reflow](https://www.w3.org/WAI/WCAG22/Understandin
 
 If the reflow audit was enabled for a scan, it's results will be in `reflow_audit.csv` file in the results.
 
-## Severity rationale
-
-A page which fails this audit is potentially confusing and annoying for users on small screens.
-
-Reflow issues are classified as `TODO`.
-TODO: rationale here
-TODO: is 320 too small in 2026?
-
 ## Required configuration
 
 The reflow audit requires the following scan configuration:

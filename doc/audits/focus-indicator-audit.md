@@ -10,9 +10,6 @@ This audit tests [WCAG 2.4.11 Focus Appearance](https://www.w3.org/WAI/WCAG22/Un
 
 If the focus indicator audit was enabled for a scan, its results will be in the `focus_indicator_audit.csv` file in the results.
 
-## Severity rationale
-
-An invisible focus indicator makes it impossible for keyboard-only users to know where they are on the page. This is a critical barrier for users who cannot use a mouse, including many users with motor disabilities.
 
 ## Required configuration
 
