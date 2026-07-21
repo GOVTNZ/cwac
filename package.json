@@ -8,7 +8,7 @@
     "chromeVersion": "122.0.6261.39"
   },
   "dependencies": {
-    "axe-core": "^4.10.2",
+    "axe-core": "4.12.1",
     "@mozilla/readability": "^0.6.0"
   }
 }
