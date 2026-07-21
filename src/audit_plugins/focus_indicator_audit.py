@@ -111,7 +111,7 @@ class FocusIndicatorAudit(DefaultAudit):
       logger.exception('Failed to check if page has focus')
       return False
 
-  def screenshot(self) -> Any:
+  def screenshot(self) -> cv2.typing.MatLike:
     """Take a screenshot of the page that's loaded in the browser.
 
     Returns:
