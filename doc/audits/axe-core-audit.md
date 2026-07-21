@@ -1,4 +1,4 @@
-# Understanding the axe-core audit
+# axe-core audit
 
 ## Overview
 
@@ -7,14 +7,28 @@ This audit uses the [axe-core](https://github.com/dequelabs/axe-core) automated 
 > [!WARNING]
 >
 > Automated testing cannot detect all accessibility issues. Many WCAG requirements require manual inspection. axe-core typically catches 30-40% of accessibility issues; the remainder must be found through manual testing, user testing, and code review.
+>
+> Issues reported by axe-core are automatically detectable failures of specific WCAG success criteria or best practices. However, automation has limits; absence of a finding does not mean the page passes WCAG.
 
-If the axe-core audit was enabled for a scan, its results will be in the `axe_core_audit.csv` and `axe_core_audit_template_aware.csv` files in the results.
+## Configuration
 
-## Severity rationale
+As with all audits, audit is configured by the `audit_plugins` section in the JSON config.
 
-Issues reported by axe-core are automatically detectable failures of specific WCAG success criteria or best practices. However, automation has limits; absence of a finding does not mean the page passes WCAG.
-
-## Required configuration
+```jsonc
+// Truncated snippet from config/config_default.json
+{
+    "audit_plugins": {
+        // ...
+        "axe_core_audit": {
+            "enabled": true, // enable/disable the audit
+            "class_name": "AxeCoreAudit", // Dev use only - do not change this.
+            "best-practice": false
+        },
+        // ...
+    }
+    // ...
+}
+```
 
 The axe-core audit has minimal configuration requirements:
 
@@ -36,44 +50,82 @@ The axe-core audit has minimal configuration requirements:
 5. If no violations are found, return a single "No issues found" row.
 6. Return one row per affected element per violation.
 
-## Interpreting the report spreadsheet
+## Interpreting results
 
-The important columns in the CSV are:
+If the axe-core audit was enabled for a scan, its results will be in 2 files in the results:
 
-- `num_issues`
-  - `0` — no issues found on this page.
-  - `1` — this row represents a single violation instance.
-- `id`
-  - The axe-core rule ID (e.g. `color-contrast`, `missing-alt-text`, `empty-heading`). Consult axe-core's documentation for details.
-- `description`
-  - A human-readable summary of the rule being tested.
-- `impact`
-  - The severity of the issue if found: `critical`, `serious`, `moderate`, or `minor`. Typically correlates with WCAG level (A/AA/AAA) but not always.
-- `target`
-  - The XPath expression identifying the element(s) with the issue on the page.
-- `html`
-  - The opening tag of the affected element (truncated to 100 characters).
-- `help` & `helpUrl`
-  - Guidance on how to fix the issue, including links to WCAG understanding documents.
-- `best-practice`
-  - `Yes` if this rule is a best-practice rule (not a strict WCAG requirement), `No` if it is a WCAG requirement.
+1. `axe_core_audit.csv` — contains all violations found during the scan.
+2. `axe_core_audit_template_aware.csv` — a filtered version where violations appearing on multiple pages due to shared template/component code are de-duplicated. This file helps identify systemic issues that need to be fixed in templates rather than on individual pages.
+
+### Report columns
+
+The columsn in `axe_core_audit.csv` are:
+
+- `organisation`
+  - The organisation label from the input base URL list.
+- `sector`
+  - The sector label from the input base URL list.
+- `page_title`
+  - The page `<title>` text captured by the browser for this URL.
+- `base_url`
+  - The base site URL the page belongs to.
+- `url`
+  - The specific page URL that was audited.
+- `viewport_size`
+  - Browser viewport dimensions used for this audit row (stored as a width/height object string).
+- `audit_id`
+  - The audit run + viewport identifier (for example `1_small`).
+- `page_id`
+  - Sequential page identifier within the run.
+- `audit_type`
+  - The plugin that produced the row (`AxeCoreAudit`).
 - `issue_id`
   - A hash uniquely identifying this issue instance (based on base URL, rule ID, element HTML, and viewport). Useful for tracking the same issue across multiple scans.
+- `description`
+  - A human-readable summary of the rule being tested.
+- `target`
+  - The XPath expression identifying the element with the issue on the page.
+- `num_issues`
+  - `0` means no issues found for this page/viewport row.
+  - `1` means this row represents one violation instance.
+- `help`
+  - Short guidance text describing how to fix the issue.
+- `helpUrl`
+  - Link to detailed guidance for the rule.
+- `id`
+  - The axe-core rule ID (for example `color-contrast`, `link-name`, `aria-hidden-focus`).
+- `impact`
+  - The axe-core severity level: `critical`, `serious`, `moderate`, or `minor`.
+- `html`
+  - The opening HTML of the affected element, truncated to 100 characters for report readability.
+- `tags`
+  - Axe-core tags for the rule (for example WCAG mappings and `best-practice`).
+- `best-practice`
+  - `Yes` if this rule is a best-practice rule (not a strict WCAG requirement), `No` if it is a WCAG requirement.
 
-## Two CSV files
+## Replicating findings
 
-- `axe_core_audit.csv` — contains all violations found during the scan.
-- `axe_core_audit_template_aware.csv` — a filtered version where violations appearing on multiple pages due to shared template/component code are de-duplicated. This file helps identify systemic issues that need to be fixed in templates rather than on individual pages.
+To manually replicate a finding for a specific page:
 
-## Fixing axe-core issues
+1. Open the page in a browser at the same viewport size used by the scan (see `viewport_size` column)
+2. Inspect the element using the `target` XPath from the report row. In Chrome you can use [JS console $x() function](https://developer.chrome.com/docs/devtools/console/utilities#xpath-function) to find the element on the page. For example:
+    ```js
+    // Chrome provides the $x() shortcut function in console to find an element
+    // on the page using the XPath - see
+    // https://developer.chrome.com/docs/devtools/console/utilities#xpath-function
+    // Example: Open dev tools JS console and call $x() passing it the XPath
+    // value from the spreadsheet.
+    $x("//section[@id='e1891']/section/ul/li[2]/details/div/p[3]/a[2]")
+    ```
+3. Compare the element with the `html` snippet and rule `id`/`description` in the CSV.
+4. Use the `help` and `helpUrl` guidance to confirm why the issue was flagged.
+5. Re-run the axe-core audit and confirm whether the same `issue_id` appears. There are axe-code addons available for all the major browsers to help with this e.g. [axe DevTools for Chrome](https://chromewebstore.google.com/detail/axe-devtools-web-accessib/lhdoppojpmngadmnindnejefpokejbdd?pli=1)
 
-The fix depends on the specific rule. Common issues include:
+## Fixing issues
 
-- **Colour contrast** (`color-contrast`): Increase the contrast ratio between text and background. Aim for at least 4.5:1 for normal text (WCAG AA).
-- **Missing alt text** (`missing-alt-text`, `image-alt`): Add descriptive alt text to all images. Decorative images should have empty alt text (`alt=""`).
-- **Empty headings** (`empty-heading`): Remove headings with no text content, or add text to clarify the heading purpose.
-- **Missing form labels** (`label`, `form-field-multiple-labels`): Ensure every form input has an associated label, either via `<label>` element or ARIA attributes.
-- **Landmarks** (best-practice): Add semantic landmarks (`<main>`, `<nav>`, `<header>`, `<footer>`) to structure your page.
-- **Page title** (best-practice): Ensure every page has a unique, descriptive `<title>` element.
+The fix depends on the specific rule. The [axe-core rule descriptions](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md) links from the `id` value in the result (e.g. `aria-hidden-focus` to an informative page giving context on the issue e.g. [aria-hidden-focus](https://dequeuniversity.com/rules/axe/4.12/aria-hidden-focus?application=RuleDescription). This should provide enough context for a developer (or other technical person) to understand the issue and devise a fix suitable for the site in question.
 
-Consult the [axe-core rules documentation](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md) for a complete list of rules and detailed fix guidance.
+## More information
+
+- [axe-core repository](https://github.com/dequelabs/axe-core)
+- [axe-core rule descriptions](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md) - start here to better understand a particular rule
