@@ -1,7 +1,7 @@
 # Audit Results
 
 - [Audit Results](#audit-results)
-  - [Accessibilty findings from the audit](#accessibilty-findings-from-the-audit)
+  - [Accessibility findings from the audit](#accessibility-findings-from-the-audit)
   - [Screenshots](#screenshots)
   - [Scan logs](#scan-logs)
   - [Scan config](#scan-config)
@@ -35,21 +35,21 @@ results/2026-07-14_13-53-12_5
 
 ```
 
-## Accessibilty findings from the audit
+## Accessibility findings from the audit
 
 All audit results are stored as CSV files. These files contain the accessibility findings discovered by the scan.
 
 > [!WARNING] All CSV files start with Byte-order Mark (BOM)
 > All generated CSV files start with 3 hidden bytes called a [BOM marker](https://en.wikipedia.org/wiki/Byte_order_mark). The BOM allows MS Excel to choose the correct character set for the data and thereby avoid broken looking characters.
 >
-> Most software will automatically handle reading CSV files with a BOM but there are occastions where you may need to explicitly tell the software that the file starts with the BOM bytes.
+> Most software will automatically handle reading CSV files with a BOM but there are occasions where you may need to explicitly tell the software that the file starts with the BOM bytes.
 
 | CSV file | Audit guide |
 | --- | --- |
 | `axe_core_audit.csv` | [Axe-core audit](audits/axe-core-audit.md) |
 | `axe_core_audit_template_aware.csv` | [Axe-core audit](audits/axe-core-audit.md) |
 | `element_audit.csv` | [Element audit](audits/element-audit.md) |
-| `element_audit.csv` | [Focus indicator audit](audits/focus-indicator-audit.md) |
+| `focus_indicator_audit.csv` | [Focus indicator audit](audits/focus-indicator-audit.md) |
 | `language_audit.csv` | [Language audit](audits/language-audit.md) |
 | `reflow_audit.csv` | [Reflow audit](audits/reflow-audit.md) |
 | `screenshot_audit.csv` | [Screenshot audit](audits/screenshot-audit.md) |

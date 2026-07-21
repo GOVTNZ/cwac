@@ -83,7 +83,7 @@ CWAC is designed to be extensible with plugins. This enables CWAC to run multipl
 
 The available audit plugins are described in [Understanding audits](./doc/audits.md). The code for each plugin is located in `/src/audit_plugins/`
 
-To specify what audits run during testing, modify the `audit_plugin` dictionary in `config_default.json`. The format of `audit_plugin` entries requires a snake case name as the key, and a camel case name as the value for the 'class_name' property, e.g.:
+To specify which audits run during testing, modify the `audit_plugins` object in `./config/config_default.json`. The format of `audit_plugins` entries requires a snake case name as the key, and a camel case name as the value for the `class_name` property, e.g.:
 
 ```json
 "audit_plugins": {

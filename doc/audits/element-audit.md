@@ -80,7 +80,7 @@ The columns in `element_audit.csv` are:
 
 An empty result set indicates no elements matched the selector.
 
-The metadata columns above are standard fields from [DefaultAudit](../README.md#default-audit-columns).
+The metadata columns above are standard fields included in CWAC audit CSV outputs.
 
 ## Replicating findings
 

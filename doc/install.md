@@ -1,6 +1,6 @@
 # Installing CWAC
 
-## Step 1: Ensure appropriate Python and NodeJS installed
+## Step 1: Ensure appropriate Python and NodeJS are installed
 
 CWAC is a Python app and requires Python 3.12 or later. Ensure you have an appropriate version of Python installed and available. You can verify this by running:
 
@@ -9,7 +9,7 @@ $ python --version
 # should return a version number 3.12 or greater
 ```
 
-CWAC also required NodeJS for these dependencies:
+CWAC also requires NodeJS for these dependencies:
 
 - axe-core
 - Readability
@@ -47,9 +47,9 @@ cd cwac # change to project root dir
 npm install
 ```
 
-The NodeJs package installation should also install a localy copy of [Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing) (a stand-alone version of the Chrome browser optimised for testing pages) as well as a compatible version of chromedriver (which forms the bridge between CWAC and the _Chrome for Testing_ instance).
+The NodeJS package installation should also install a locally downloaded copy of [Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing) (a stand-alone version of the Chrome browser optimised for testing pages) as well as a compatible version of chromedriver (which forms the bridge between CWAC and the _Chrome for Testing_ instance).
 
-Verify that these have downloaded correctly by manually inspecting the `cwac/chrome` and `cwac/driver` directories. They should contain files and folders.
+Verify that these have downloaded correctly by manually inspecting the `cwac/chrome` and `cwac/drivers` directories. They should contain files and folders.
 
 > [!NOTE]
 >
