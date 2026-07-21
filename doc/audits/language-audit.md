@@ -1,4 +1,4 @@
-# Understanding the language audit
+# language audit
 
 ## Overview
 
@@ -10,14 +10,32 @@ See <https://www.digital.govt.nz/standards-and-guidance/design-and-ux/content-de
 >
 > This audit only runs on English-language pages (pages where the `<html lang>` attribute starts with `en`). Pages in other languages are skipped. Pages with fewer than 10 sentences or 200 words are also skipped as the scores would not be reliable.
 
-If the language audit was enabled for a scan, its results will be in the `language_audit.csv` file in the results.
-
 More technical details about how the scores are calculated is available from
 the [Python Natural Language Toolkit](https://www.nltk.org/) which is the underlying technology used by the audit.
 
-## Required configuration
+## Configuration
 
-The language audit has no special requirements beyond the standard audit configuration. Sentiment analysis is optional and controlled by the `run_sentiment_analysis` setting under `audit_plugins.language_audit` in the config.
+As with all audits, this audit is configured by the `audit_plugins` section in the JSON config.
+
+```jsonc
+// Truncated snippet from config/config_default.json
+{
+  "audit_plugins": {
+    // ...
+    "language_audit": {
+      "class_name": "LanguageAudit", // Dev use only - do not change this.
+      "enabled": true,
+      "run_sentiment_analysis": false
+    }
+    // ...
+  }
+  // ...
+}
+```
+
+The language audit has no special requirements beyond the standard audit configuration.
+
+- `run_sentiment_analysis` (boolean) - Whether to include VADER sentiment scoring in addition to readability scoring.
 
 ## How the audit works
 
@@ -28,10 +46,30 @@ The language audit has no special requirements beyond the standard audit configu
 5. Calculate the **SMOG Grade Level**: an alternative readability score based on the proportion of polysyllabic words across sentences.
 6. Optionally calculate **sentiment scores** (negative, neutral, positive, compound) using NLTK's VADER sentiment analyser.
 
-## Interpreting the report spreadsheet
+## Interpreting results
 
-The important columns in the CSV are:
+If the language audit was enabled for a scan, its results will be in `language_audit.csv` in the results.
 
+### Report columns
+
+The columns in `language_audit.csv` include standard metadata fields plus language-specific result fields:
+
+- `organisation`
+  - The organisation label from the input base URL list.
+- `sector`
+  - The sector label from the input base URL list.
+- `page_title`
+  - The page `<title>` text captured by the browser for this URL.
+- `base_url`
+  - The base site URL the page belongs to.
+- `url`
+  - The specific page URL that was audited.
+- `viewport_size`
+  - Browser viewport dimensions used for this audit row (stored as a width/height object string).
+- `audit_id`
+  - The audit run + viewport identifier (for example `1_small`).
+- `page_id`
+  - Sequential page identifier within the run.
 - `flesch_kincaid_gl`
   - The Flesch-Kincaid Grade Level. Lower values indicate easier reading. A score of 8 or below is a common plain-language target.
 - `smog_gl`
@@ -45,7 +83,9 @@ The important columns in the CSV are:
 - `sentiment_neg`, `sentiment_neu`, `sentiment_pos`, `sentiment_compound` _(if sentiment analysis is enabled)_
   - VADER sentiment scores. `compound` ranges from -1 (most negative) to +1 (most positive).
 
-    TODO add guidance for what numbers represent a problem. maybe add pass/fail for those numbers if possible?
+## Replicating findings
+
+The easiest way to manually replicate these checks is to use a browser addon that calculates the readability scores for a given web page.
 
 ## Fixing language issues
 
@@ -55,3 +95,8 @@ Readability issues are addressed by editing the content of the site.
 - Replace complex or technical words with simpler everyday alternatives.
 - Use active voice rather than passive voice.
 - Refer to the [NZ Government plain language guidance](https://www.digital.govt.nz/standards-and-guidance/design-and-ux/content-design-guidance/writing-style/plain-language/) for further advice.
+
+## More information
+
+- [NZ Government plain language guidance](https://www.digital.govt.nz/standards-and-guidance/design-and-ux/content-design-guidance/writing-style/plain-language/)
+- [Python Natural Language Toolkit](https://www.nltk.org/)
