@@ -1,12 +1,18 @@
 {
   "devDependencies": {
+    "prettier": "^3.7.4",
+    "prettier-config-ackama": "^1.2.0",
+    "prettier-plugin-packagejson": "^2.5.20"
   },
   "scripts": {
+    "format-check": "prettier --check \"doc/**/*.md\" \"*.md\"",
+    "format-fix": "prettier --write \"doc/**/*.md\" \"*.md\"",
     "postinstall": "npx @puppeteer/browsers@2 install chrome@$npm_package_config_chromeVersion"
   },
   "config": {
     "chromeVersion": "122.0.6261.39"
   },
+    "prettier": "prettier-config-ackama",
   "dependencies": {
     "axe-core": "4.12.1",
     "@mozilla/readability": "^0.6.0"
