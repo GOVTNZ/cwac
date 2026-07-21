@@ -2,7 +2,7 @@
 
 ![CWAC](/icons/logo.svg)
 
-CWAC is a project originally designed and developed by the Web Standards team within the Digital Public Service branch of <span lang="mi">Te Tari Taiwhenua</span> | Department of Internal Affairs, New Zealand Government.
+CWAC is designed and developed by the Web Standards team at <span lang="mi">Te Pūnaha Matihiko</span> | Government Digital Delivery Agency, New Zealand Government.
 
 **Note:** "CWAC" is pronounced "quack", like a duck.
 
@@ -223,9 +223,7 @@ The raw test results are stored within the `./results/` folder.
 ## Checking CWAC's source code
 
 CWAC uses several tools to maintain the quality and integrity of its source code, including:
-- [ruff](https://github.com/astral-sh/ruff), an uncompromising code formatter
-- [pydocstyle](https://github.com/PyCQA/pydocstyle), for linting docstrings
-- [isort](https://github.com/pycqa/isort), for sorting import statements
+- [ruff](https://github.com/astral-sh/ruff), an uncompromising code formatter and linter
 - [bandit](https://github.com/PyCQA/bandit), for detecting potential security vulnerabilities
 - [flake8](https://github.com/pycqa/flake8), for linting
 - [pylint](https://github.com/PyCQA/pylint), for linting

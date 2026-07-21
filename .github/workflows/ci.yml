@@ -42,19 +42,6 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: flake8 --max-line-length 120 .
-  isort:
-    permissions:
-      contents: read # to fetch (actions/checkout)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: isort/isort-action@v1
-        with:
-          requirements-files: "requirements.txt"
-          configuration: "--check-only --diff --profile black"
   mypy:
     permissions:
       contents: read # to fetch (actions/checkout)
@@ -69,20 +56,6 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: mypy .
-  pydocstyle:
-    permissions:
-      contents: read # to fetch (actions/checkout)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install -r requirements.txt
-      - run: pydocstyle --convention=google
   pylint:
     permissions:
       contents: read # to fetch (actions/checkout)
@@ -108,7 +81,11 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/ruff-action@v3 # v3.5.1
         with:
-          version-file: 'pyproject.toml'
+          version-file: requirements.txt
+          args: 'check'
+      - uses: astral-sh/ruff-action@v3 # v3.5.1
+        with:
+          version-file: requirements.txt
           args: 'format --check --diff'
   schemas:
     permissions:
@@ -140,3 +117,14 @@ jobs:
       - uses: actions/setup-node@v4
       - run: npm i
       - run: pytest .
+  e2e:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+      - run: tests/e2e.sh

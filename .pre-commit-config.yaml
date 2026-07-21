@@ -2,19 +2,11 @@ default_stages: [pre-commit, pre-push]
 default_language_version:
   python: python3.13
 repos:
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.21
     hooks:
-      - id: isort
-        args: ["--profile black", "."]
-  - repo: https://github.com/astral-sh/ruff
-    rev: 0.14.0
-    hooks:
-    - id: ruff
-      args: [
-        format
-      ]
-      types: ['python']
+      - id: ruff-check
+      - id: ruff-format
   - repo: https://github.com/PyCQA/flake8
     rev: 7.1.1
     hooks:
@@ -32,14 +24,6 @@ repos:
           language: system
           types: [python]
           args: ["-rn", "-sn"]
-  - repo: https://github.com/pycqa/pydocstyle
-    rev: 6.3.0
-    hooks:
-      - id: pydocstyle
-        name: pydocstyle --convention=google
-        args: [
-          --convention=google
-        ]
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.10
     hooks:
