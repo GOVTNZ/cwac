@@ -12,7 +12,7 @@ This audit uses the [axe-core](https://github.com/dequelabs/axe-core) automated 
 
 ## Configuration
 
-As with all audits, audit is configured by the `audit_plugins` section in the JSON config.
+As with all audits, this audit is configured by the `audit_plugins` section in the JSON config.
 
 ```jsonc
 // Truncated snippet from config/config_default.json

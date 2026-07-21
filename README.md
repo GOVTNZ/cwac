@@ -146,7 +146,7 @@ To do this:
 6. Update the `chromeVersion` config property in `package.json`, ensuring it matches the `chromedriver` version
 7. Run `npm install` to install the newly specified version of Chrome for Testing
 8. Note: the `chromedriver` executable may need to have `chmod +x` run on it in order to give it execution permissions
-9. macOS might come up with an error stating "chromedriver_mac_arm64" can't be opened because Apple cannot check it for malicious software.". This is fixed by running `xattr -d com.apple.quarantine <name-of-executable>`
+9. macOS might come up with an error stating "chromedriver_mac_arm64" can't be opened because Apple cannot check it for malicious software." This is fixed by running `xattr -d com.apple.quarantine <name-of-executable>`
 
 ## Copyright notices
 
