@@ -60,13 +60,13 @@ If the element audit was enabled for a scan, its results will be in `element_aud
 The columns in `element_audit.csv` are:
 
 - `organisation`
-  - The organisation label from the input base URL list.
+  - Copied directly from the `organisation` column in the visits CSV documented in [Configuring CWAC](../audit-config.md).
 - `sector`
-  - The sector label from the input base URL list.
+  - Copied directly from the `sector` column in the visits CSV documented in [Configuring CWAC](../audit-config.md).
 - `page_title`
   - The page `<title>` text captured by the browser for this URL.
 - `base_url`
-  - The base site URL the page belongs to.
+  - Copied directly from the `url` column in the visits CSV documented in [Configuring CWAC](../audit-config.md).
 - `url`
   - The specific page URL that was audited.
 - `viewport_size`

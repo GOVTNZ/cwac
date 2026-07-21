@@ -114,6 +114,12 @@ Columns:
 3. `sector`
     - Useful for categorising results when you are scanning across multiple sectors. This value must be present but it can be any value.
 
+The values from these visits CSV columns are also included in audit report output metadata:
+
+- `organisation` is copied directly from the CSV `organisation` column.
+- `sector` is copied directly from the CSV `sector` column.
+- `base_url` in report output is copied directly from the CSV `url` column.
+
 ### A working example
 
 Below is an example of a compatible CSV file. You can name the file anything you want but it must be stored within `base_urls/visit`. For example, `base_urls/visit/my_sites_to_scan.csv` works.
