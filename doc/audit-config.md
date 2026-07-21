@@ -1,4 +1,13 @@
-# Audit config
+# Configuring CWAC
+
+The required inputs for a CWAC scan run are:
+
+1. A JSON configuration file
+2. A CSV file with a set of base URLs to visit, crawl and scan
+
+Both are described below.
+
+## JSON configuration file
 
 CWAC is configured using a single JSON file. A [default configuration JSON file](../config/config_default.json) is provided which sets sensible defaults. CWAC will execute using the default config file as its configuration source unless you provide a custom config file on the command line. Custom configuration files must be located in the `./config/` directory.
 
@@ -85,3 +94,34 @@ the [default configuration JSON file](../config/config_default.json) for an exam
   - each plugin entry has an `enabled` boolean, which can be used to switch the plugin on and off
   - each plugin entry may have an optional `viewport_to_test` value, which can be used to restrict the plugin to run only at one viewport size that has been specified in `viewport_sizes` e.g. `viewport_to_test: "small"`
   - each plugin may have one or more custom properties that are passed to the plugin
+
+## CSV files of base URLs to visit
+
+> [!TIP] Ignore advanced configurations for now
+> There are advanced configurations of CWAC that use other CSV files - see the settings for base_urls_nohead_path` above. You can ignore these when getting started - the only CSV file actually required is the "visits" CSV (described below)
+
+As well as the JSON configuration, CWAC needs a CSV file with a set of base URLs that will be visited, crawled and scanned.
+
+These lists of URLS to visit are loaded from every `.csv` file stored under `base_urls/visit`. This provides a lot of flexibility when scanning multiple domains but for the simple case it is enough to have a single CSV file. You can name the file anything.
+
+The format of each base URL CSV file is fixed. The following columns must be present (in order shown).
+
+Columns:
+
+1. `organisation`
+    - Useful when you are scanning across multiple orgs. This value must be present but it can be any value.
+2. `url`
+    - CWAC will start crawling the site at this URL.
+3. `sector`
+    - Useful for categorising results when you are scanning across multiple sectors. This value must be present but it can be any value.
+
+### A working example
+
+Below is an example of a compatible CSV file. You can name the file anything you want but it must be stored within `base_urls/visit`. For example, `base_urls/visit/my_sites_to_scan.csv` works.
+
+```csv
+organisation,url,sector
+Organisation Name 1,https://www.put-target-domain-name-here.govt.nz/,Private Sector Organisation
+Organisation Name 1,https://www.put-another-target-domain-name-here.govt.nz/,Private Sector Organisation
+Organisation Name 1,https://www.put-yet-another-target-domain-name-here.govt.nz/,Private Sector Organisation
+```
