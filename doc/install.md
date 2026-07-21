@@ -74,7 +74,7 @@ On macOS, `urllib` may fail when attempting to fetch data for `nltk`, with certi
 
 ### macOS security error
 
-If you run CWAC and get the error `"chromedriver_mac_arm64" can't be opened because Apple cannot check it for malicious software.` then running this may resolve it.:
+If you run CWAC and get the error `"chromedriver_mac_arm64" can't be opened because Apple cannot check it for malicious software.` then running this may resolve it:
 
 ```bash
 xattr -d com.apple.quarantine <name-of-executable>
