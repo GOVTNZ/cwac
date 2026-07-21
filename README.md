@@ -17,20 +17,38 @@
 
 ## About CWAC
 
-CWAC is designed and developed by the Web Standards team at <span lang="mi">Te Pūnaha Matihiko</span> | Government Digital Delivery Agency, New Zealand Government.
+CWAC is designed and developed by the Web Standards team at <span lang="mi">Te
+Pūnaha Matihiko</span> | Government Digital Delivery Agency, New Zealand
+Government.
 
 **Note:** "CWAC" is pronounced "quack", like a duck.
 
-CWAC is a tool that can scan hundreds of websites for accessibility issues, automatically.
+CWAC is a tool that can scan hundreds of websites for accessibility issues,
+automatically.
 
-CWAC can be used as a mechanism to monitor the New Zealand Government's implementation of minimum accessibility standards and guidelines on its websites. The primary standard, is the [NZ Government Web Accessibility Standard](https://www.digital.govt.nz/standards-and-guidance/nz-government-web-standards/web-accessibility-standard-1-2/), which includes [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/) Level AA conformance. CWAC enables the partial fulfillment of [Article 9 of the United Nations Convention on the Rights of Persons with Disabilities (CRPD)](https://www.un.org/development/desa/disabilities/convention-on-the-rights-of-persons-with-disabilities/article-9-accessibility.html).
+CWAC can be used as a mechanism to monitor the New Zealand Government's
+implementation of minimum accessibility standards and guidelines on its
+websites. The primary standard, is the
+[NZ Government Web Accessibility Standard](https://www.digital.govt.nz/standards-and-guidance/nz-government-web-standards/web-accessibility-standard-1-2/),
+which includes
+[Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/)
+Level AA conformance. CWAC enables the partial fulfillment of
+[Article 9 of the United Nations Convention on the Rights of Persons with Disabilities (CRPD)](https://www.un.org/development/desa/disabilities/convention-on-the-rights-of-persons-with-disabilities/article-9-accessibility.html).
 
-Provided a list of URLS to visit, CWAC will check each page for automatically-identifiable accessibility issues and store the results in an easy-to-read CSV file.
+Provided a list of URLS to visit, CWAC will check each page for
+automatically-identifiable accessibility issues and store the results in an
+easy-to-read CSV file.
 
-CWAC can also crawl each page as it goes to determine additional pages to check (up to a set max number per URL), respecting `robots.txt` and server signals when doing so. This makes it easy to check entire sites without knowing the all paths beforehand.
+CWAC can also crawl each page as it goes to determine additional pages to check
+(up to a set max number per URL), respecting `robots.txt` and server signals
+when doing so. This makes it easy to check entire sites without knowing the all
+paths beforehand.
 
-CWAC is designed to be extensible, so new forms of web testing can be added over time. For instance, CWAC could also run [The Nu Html Checker](https://github.com/validator) on web pages. Or, it could theoretically check other website requirements, such as website data usage and performance, or the existence of a privacy or copyright statement.
-
+CWAC is designed to be extensible, so new forms of web testing can be added over
+time. For instance, CWAC could also run
+[The Nu Html Checker](https://github.com/validator) on web pages. Or, it could
+theoretically check other website requirements, such as website data usage and
+performance, or the existence of a privacy or copyright statement.
 
 ## Using CWAC
 
@@ -46,17 +64,24 @@ CWAC is designed to be extensible, so new forms of web testing can be added over
 
 CWAC combines the following technologies:
 
-- [Python 3](https://www.python.org/) (the primary scripting language CWAC is written in)
-- [Selenium](https://github.com/seleniumhq/selenium) (used to control web browsers)
-- [axe-core](https://github.com/dequelabs/axe-core) (the accessibility rules engine)
-- [Chrome for Testing](https://github.com/GoogleChromeLabs/chrome-for-testing) (main browser CWAC uses)
+- [Python 3](https://www.python.org/) (the primary scripting language CWAC is
+  written in)
+- [Selenium](https://github.com/seleniumhq/selenium) (used to control web
+  browsers)
+- [axe-core](https://github.com/dequelabs/axe-core) (the accessibility rules
+  engine)
+- [Chrome for Testing](https://github.com/GoogleChromeLabs/chrome-for-testing)
+  (main browser CWAC uses)
 
 ### Linting source code
 
-CWAC uses several tools to maintain the quality and integrity of its source code, including:
+CWAC uses several tools to maintain the quality and integrity of its source
+code, including:
 
-- [ruff](https://github.com/astral-sh/ruff), an uncompromising code formatter and linter
-- [bandit](https://github.com/PyCQA/bandit), for detecting potential security vulnerabilities
+- [ruff](https://github.com/astral-sh/ruff), an uncompromising code formatter
+  and linter
+- [bandit](https://github.com/PyCQA/bandit), for detecting potential security
+  vulnerabilities
 - [flake8](https://github.com/pycqa/flake8), for linting
 - [pylint](https://github.com/PyCQA/pylint), for linting
 - [mypy](https://github.com/python/mypy), for static type checking
@@ -65,25 +90,32 @@ Use `pre-commit run --all-files` to run all pre-commit hooks.
 
 ### Setting up pre-commit hooks
 
-To set up CWAC for development, you must first install all required pre-commit hooks. This isn't necessary if you just want to run CWAC.
+To set up CWAC for development, you must first install all required pre-commit
+hooks. This isn't necessary if you just want to run CWAC.
 
 1. Open a shell
 2. Run `pre-commit autoupdate`
 3. Run `pre-commit install`
 
-A series of linters, security checking, and formatting will occur at every git commit.
+A series of linters, security checking, and formatting will occur at every git
+commit.
 
-To run the pre-commit hooks at any time, run:
-`pre-commit run --all-files`
-This is useful for debugging why a pre-commit hook failed.
+To run the pre-commit hooks at any time, run: `pre-commit run --all-files` This
+is useful for debugging why a pre-commit hook failed.
 
 ### Audit plugin architecture
 
-CWAC is designed to be extensible with plugins. This enables CWAC to run multiple different types of audits against web pages.
+CWAC is designed to be extensible with plugins. This enables CWAC to run
+multiple different types of audits against web pages.
 
-The available audit plugins are described in [Understanding audits](./doc/audits.md). The code for each plugin is located in `/src/audit_plugins/`
+The available audit plugins are described in
+[Understanding audits](./doc/audits.md). The code for each plugin is located in
+`/src/audit_plugins/`
 
-To specify which audits run during testing, modify the `audit_plugins` object in `./config/config_default.json`. The format of `audit_plugins` entries requires a snake case name as the key, and a camel case name as the value for the `class_name` property, e.g.:
+To specify which audits run during testing, modify the `audit_plugins` object in
+`./config/config_default.json`. The format of `audit_plugins` entries requires a
+snake case name as the key, and a camel case name as the value for the
+`class_name` property, e.g.:
 
 ```json
 "audit_plugins": {
@@ -128,37 +160,56 @@ To specify which audits run during testing, modify the `audit_plugins` object in
 }
 ```
 
-To add new audit plugins, first develop an appropriate test module/class within `./src/audit_plugins/`, and then enable that audit plugin by adding an entry within `config_default.json`.
+To add new audit plugins, first develop an appropriate test module/class within
+`./src/audit_plugins/`, and then enable that audit plugin by adding an entry
+within `config_default.json`.
 
-Each plugin can have an optional `viewport_to_test` item, which allows you to run a plugin only at particular viewport sizes, if multiple are being tested. The value of this key must match a value within the `viewport_sizes` option.
+Each plugin can have an optional `viewport_to_test` item, which allows you to
+run a plugin only at particular viewport sizes, if multiple are being tested.
+The value of this key must match a value within the `viewport_sizes` option.
 
 ## Updating Chrome and Chromedriver versions
 
-From time to time, it might make sense to update the version of Chrome for Testing that CWAC uses.
+From time to time, it might make sense to update the version of Chrome for
+Testing that CWAC uses.
 
 To do this:
 
-1. Visit [Chrome for Testing - GitHub](https://github.com/GoogleChromeLabs/chrome-for-testing)
-2. Open the API endpoint `last-known-good-versions-with-downloads.json` in a JSON viewer (Firefox has one built-in)
+1. Visit
+   [Chrome for Testing - GitHub](https://github.com/GoogleChromeLabs/chrome-for-testing)
+2. Open the API endpoint `last-known-good-versions-with-downloads.json` in a
+   JSON viewer (Firefox has one built-in)
 3. Find the entry for the latest stable version of Chrome for Testing
-4. Download the `chromedriver` that matches the version of Chrome for Testing you want to use
-5. Place the `chromedriver` executable into the `/drivers/` folder in `cwac`, with a unique filename
-6. Update the `chromeVersion` config property in `package.json`, ensuring it matches the `chromedriver` version
-7. Run `npm install` to install the newly specified version of Chrome for Testing
-8. Note: the `chromedriver` executable may need to have `chmod +x` run on it in order to give it execution permissions
-9. macOS might come up with an error stating "chromedriver_mac_arm64" can't be opened because Apple cannot check it for malicious software." This is fixed by running `xattr -d com.apple.quarantine <name-of-executable>`
+4. Download the `chromedriver` that matches the version of Chrome for Testing
+   you want to use
+5. Place the `chromedriver` executable into the `/drivers/` folder in `cwac`,
+   with a unique filename
+6. Update the `chromeVersion` config property in `package.json`, ensuring it
+   matches the `chromedriver` version
+7. Run `npm install` to install the newly specified version of Chrome for
+   Testing
+8. Note: the `chromedriver` executable may need to have `chmod +x` run on it in
+   order to give it execution permissions
+9. macOS might come up with an error stating "chromedriver_mac_arm64" can't be
+   opened because Apple cannot check it for malicious software." This is fixed
+   by running `xattr -d com.apple.quarantine <name-of-executable>`
 
 ## Copyright notices
 
 ### Copyright of Centralised Web Accessibility Checker (CWAC)
 
-Crown copyright (c) 2024, Department of Internal Affairs on behalf of the New Zealand Government.
+Crown copyright (c) 2024, Department of Internal Affairs on behalf of the New
+Zealand Government.
 
-This copyright, along with CWAC's GPL-3.0 license, does not extend to the third-party chromedriver binaries located in the `/drivers/` folder. Permission to re-use third party copyright material cannot be given by the Department of Internal Affairs.
+This copyright, along with CWAC's GPL-3.0 license, does not extend to the
+third-party chromedriver binaries located in the `/drivers/` folder. Permission
+to re-use third party copyright material cannot be given by the Department of
+Internal Affairs.
 
 ### chromedriver binaries copyright and license
 
-CWAC includes chromedriver binaries at `/drivers/`. chromedriver licenses can be found in the `/drivers/` folder.
+CWAC includes chromedriver binaries at `/drivers/`. chromedriver licenses can be
+found in the `/drivers/` folder.
 
 ```plain
 // Copyright 2015 The Chromium Authors
