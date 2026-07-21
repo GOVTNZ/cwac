@@ -18,13 +18,7 @@ results/2026-07-14_13-53-12_5
           ├── language_audit.csv
           ├── reflow_audit.csv
           ├── screenshot_audit.csv
-          # screenshots (if any)
-          └── screenshots
-              ├── 10_medium.png
-              ├── 10_small.png
-              ├── 11_medium.png
-              ├── 11_small.png
-              ...
+
           # accessory files for debugging
           ├── 2026-07-14_13-53-12_5.log
           ├── audit_log.csv
@@ -32,6 +26,14 @@ results/2026-07-14_13-53-12_5
           ├── config.json
           ├── pages_scanned.csv
           ├── progress.csv
+
+          # screenshots (if any)
+          └── screenshots
+              ├── 10_medium.png
+              ├── 10_small.png
+              ├── 11_medium.png
+              ├── 11_small.png
+              ...
 
 ```
 
