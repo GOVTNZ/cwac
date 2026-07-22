@@ -11,6 +11,7 @@ import re
 import time
 import urllib
 import urllib.robotparser
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 from queue import SimpleQueue
 from typing import Any
@@ -134,13 +135,7 @@ class Crawler:
     return url
 
   def url_filter_prevent_intersections(self, current_base_url: str, current_url: str) -> bool:
-    """Filter out when a URL intersects with another base_url.
-
-    Prevents, for instance, https://example.com/ from being scanned
-    when https://example.com/abc/ is being scanned and
-    prevents https://example.com/abc/ from being scanned when
-    https://example.com/ is being scanned
-    """
+    """Filter out when a URL intersects with another base_url."""
 
     def normalize_url(url: str) -> str:
       """Normalize the URL for comparing."""
@@ -167,13 +162,9 @@ class Crawler:
         return True
       return candidate.startswith(f'{parent}/')
 
-    # Prepares the base_url and url for the matching algorithm
     current_base_url = normalize_url(current_base_url)
     current_url = normalize_url(current_url)
 
-    # If the current_url does not start with the current_base_url,
-    # then the url should not be scanned as it is not within the
-    # scope of the current_base_url
     if not is_within_scope(current_base_url, current_url):
       logger.info(
         'URL filtered out due to not starting with base_url %s %s',
@@ -182,10 +173,6 @@ class Crawler:
       )
       return False
 
-    # Iterate through all (other) base_urls and check if the current_url
-    # starts with any of them. If it does, then the current_url
-    # should not be scanned as it is within the scope of another
-    # base_url
     for base_url in self.analytics.base_urls:
       base_url = normalize_url(base_url)  # noqa: PLW2901
       if is_within_scope(base_url, current_url) and len(base_url) > len(current_base_url):
@@ -369,6 +356,100 @@ class Crawler:
     query = parsed.query
     return urllib.parse.urlunparse((scheme, netloc, path, '', query, ''))
 
+  def _extract_xml_urls(self, xml_text: str, tag_name: str) -> list[str]:
+    """Extract URL text values from XML for a given local tag name."""
+    try:
+      root = ET.fromstring(xml_text)
+    except ET.ParseError:
+      return []
+
+    urls: list[str] = []
+    for elem in root.iter():
+      local_name = elem.tag.split('}', maxsplit=1)[-1]
+      if local_name == tag_name and elem.text:
+        urls.append(elem.text.strip())
+    return urls
+
+  def get_sitemap_urls(self, base_url: str) -> list[str]:
+    """Fetch sitemap.xml (and sitemap indexes recursively) and return URL entries."""
+    parsed_base = urllib.parse.urlparse(base_url)
+    sitemap_root = f'{parsed_base.scheme}://{parsed_base.netloc}/sitemap.xml'
+    logger.info('Attempting sitemap discovery from %s', sitemap_root)
+
+    to_fetch = [sitemap_root]
+    fetched: set[str] = set()
+    discovered_urls: set[str] = set()
+
+    while to_fetch:
+      sitemap_url = to_fetch.pop()
+      if sitemap_url in fetched:
+        continue
+      fetched.add(sitemap_url)
+
+      try:
+        response = requests.get(
+          sitemap_url,
+          headers={'User-Agent': self.config.user_agent},
+          timeout=15,
+        )
+        response.raise_for_status()
+        xml_text = response.text
+      except requests.exceptions.RequestException:
+        self.drop_reasons['sitemap_fetch_error'] += 1
+        logger.info('Failed to fetch sitemap URL %s', sitemap_url)
+        continue
+
+      sitemap_children = self._extract_xml_urls(xml_text, 'sitemap')
+      if sitemap_children:
+        for child in sitemap_children:
+          to_fetch.append(child)
+        continue
+
+      url_children = self._extract_xml_urls(xml_text, 'loc')
+      if not url_children:
+        self.drop_reasons['sitemap_parse_empty'] += 1
+        continue
+
+      for discovered in url_children:
+        if src.filters.url_filter_not_same_domain(discovered, base_url):
+          discovered_urls.add(discovered)
+        else:
+          self.drop_reasons['sitemap_cross_domain'] += 1
+
+    logger.info('Sitemap discovery found %d candidate URLs for %s', len(discovered_urls), base_url)
+    return list(discovered_urls)
+
+  def seed_queue_with_sitemap(self, base_url: str, queue: 'RandomQueue', visited: set[str]) -> int:
+    """Seed crawl queue with sitemap URLs for better coverage."""
+    added = 0
+    sitemap_urls = self.get_sitemap_urls(base_url)
+
+    for sitemap_url in sitemap_urls:
+      try:
+        sitemap_url = self.url_sanitise(sitemap_url)
+      except ValueError:
+        self.drop_reasons['sitemap_sanitize_error'] += 1
+        continue
+
+      if not self.url_filter.run_url_filters(sitemap_url):
+        self.drop_reasons['sitemap_url_filter_reject'] += 1
+        continue
+
+      if not src.filters.url_filter_not_same_domain(sitemap_url, base_url):
+        self.drop_reasons['sitemap_cross_domain'] += 1
+        continue
+
+      key = self.discovery_key(sitemap_url)
+      if key not in visited:
+        visited.add(key)
+        queue.push((base_url, sitemap_url, 1))
+        added += 1
+      else:
+        self.drop_reasons['sitemap_frontier_duplicate'] += 1
+
+    self.drop_reasons['sitemap_urls_added'] += added
+    return added
+
   def crawl(self, site_data: SiteData, base_url: str) -> None:  # noqa: PLR0912, PLR0915
     """Crawls a domain and executes the AuditManager."""
     action = 'crawl'
@@ -390,6 +471,10 @@ class Crawler:
     # track visited urls using conservative discovery key
     visited = {self.discovery_key(base_url)}
     self.drop_reasons = defaultdict(int)
+
+    # Seed from sitemap.xml for broader discovery
+    sitemap_added = self.seed_queue_with_sitemap(base_url, queue, visited)
+    logger.info('Added %d URLs from sitemap(s) for %s', sitemap_added, base_url)
 
     # Filter and sanitise the initial URL
     if not self.url_filter.run_url_filters(base_url):
