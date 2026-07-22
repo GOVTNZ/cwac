@@ -143,26 +143,37 @@ class Crawler:
     """
 
     def normalize_url(url: str) -> str:
+      """Normalize the URL for comparing."""
       parsed_url = urllib.parse.urlparse(url)
 
+      # lowercase the protocol and domain
       scheme = parsed_url.scheme.lower()
       netloc = parsed_url.netloc.lower()
 
       path = parsed_url.path
+
+      # if the path ends with a file, remove it
       if '.' in path:
         path = path[: path.rfind('/') + 1]
+
+      # remove trailing slash
       path = path.rstrip('/')
 
       return f'{scheme}://{netloc}{path}'
 
     def is_within_scope(parent: str, candidate: str) -> bool:
+      """Return True when candidate is parent or below parent path boundary."""
       if candidate == parent:
         return True
       return candidate.startswith(f'{parent}/')
 
+    # Prepares the base_url and url for the matching algorithm
     current_base_url = normalize_url(current_base_url)
     current_url = normalize_url(current_url)
 
+    # If the current_url does not start with the current_base_url,
+    # then the url should not be scanned as it is not within the
+    # scope of the current_base_url
     if not is_within_scope(current_base_url, current_url):
       logger.info(
         'URL filtered out due to not starting with base_url %s %s',
@@ -171,6 +182,10 @@ class Crawler:
       )
       return False
 
+    # Iterate through all (other) base_urls and check if the current_url
+    # starts with any of them. If it does, then the current_url
+    # should not be scanned as it is within the scope of another
+    # base_url
     for base_url in self.analytics.base_urls:
       base_url = normalize_url(base_url)  # noqa: PLW2901
       if is_within_scope(base_url, current_url) and len(base_url) > len(current_base_url):
@@ -191,10 +206,12 @@ class Crawler:
       logger.exception('Failed to get base element %s', url)
       return url
 
+    # Check that the base_element has same domain as base_url
     if not src.filters.url_filter_not_same_domain(base_element, url):
       logger.info('get_links skipped due to equality of: %s %s', base_element, url)
       return url
 
+    # Check that the protocol is equal between base_element and url
     if not src.filters.url_filter_same_protocol(base_element, url):
       logger.info('get_links skipped due to different protocol of: %s %s', base_element, url)
       return url
@@ -211,6 +228,8 @@ class Crawler:
     links = []
 
     all_a_elements = soup.find_all('a', href=True)
+
+    # Handles if <base> element is manipulating relative URLs
     base_uri = self.handle_base_element(url)
 
     for new_url in all_a_elements:
@@ -221,15 +240,21 @@ class Crawler:
         logger.exception('Failed to join URL %s %s %s', base_uri, href, exc)
         continue
 
+      # Run a range of filters on the URL
       if not self.url_filter.run_url_filters(href):
+        self.drop_reasons['get_links_url_filter_reject'] += 1
         continue
 
+      # If URL is not on the same domain, skip it
       if not src.filters.url_filter_not_same_domain(href, base_url):
+        self.drop_reasons['get_links_cross_domain'] += 1
         continue
 
       if len(href) > 2 and base_url == href[:-1]:
         logger.info('get_links skipped due to equality of: %s %s', base_url, href)
+        self.drop_reasons['get_links_base_url_equality'] += 1
         continue
+
       links.append(href)
 
     return links
@@ -353,17 +378,20 @@ class Crawler:
 
     audit_manager = AuditManager(config=self.config, browser=self.browser, analytics=self.analytics)
 
-    # Coverage metrics (new)
+    # Coverage metrics
     urls_visited = 0
     audits_passed = 0
     audits_failed = 0
 
+    # queue element: (parent_url, url, depth)
     queue = RandomQueue()
     queue.push((base_url, base_url, 0))
 
+    # track visited urls using conservative discovery key
     visited = {self.discovery_key(base_url)}
     self.drop_reasons = defaultdict(int)
 
+    # Filter and sanitise the initial URL
     if not self.url_filter.run_url_filters(base_url):
       self.drop_reasons['base_url_filtered'] += 1
       self.record_pages_scanned(site_data, audits_passed)
@@ -374,24 +402,28 @@ class Crawler:
     while queue:
       parent_url, url, depth = queue.pop()
 
-      # Keep the existing cap semantics against audit pass count
+      # Keep cap semantics tied to successful audit count
       if audits_passed >= self.config.max_links_per_domain:
         logger.info('Max pages scanned reached %s', base_url)
         break
 
+      # Delay
       time.sleep(self.config.delay_between_page_loads)
 
+      # Filter/sanitise the URL
       try:
         url = self.url_sanitise(url)
       except ValueError:
         self.drop_reasons['sanitize_error'] += 1
         continue
 
+      # Check if URL is allowed by robots.txt
       if not self.is_url_allowed_by_robots_txt(url):
         self.drop_reasons['robots_disallow'] += 1
         logger.info('URL disallowed by robots.txt %s', url)
         continue
 
+      # process_url_headers returns a dict with status_code/final_url
       if self.config.perform_header_check:
         url_data = src.filters.process_url_headers(
           self.config,
@@ -416,9 +448,10 @@ class Crawler:
         logger.info('URL has been scanned before %s for %s', url, base_url)
         continue
 
-      # Count coverage once URL passed crawl gates and is about to be audited
+      # Count coverage once page passes crawl gates
       urls_visited += 1
 
+      # Write to audit_log.csv
       csv_writer = CSVWriter()
       csv_writer.add_rows(
         [
@@ -440,13 +473,16 @@ class Crawler:
         audits_passed += 1
       else:
         audits_failed += 1
-        # Do NOT abort crawl on sequential audit failures
+        # keep crawling even if audits fail
         logger.warning('Audit failed for %s (continuing crawl)', url)
 
+      # don't bother getting links if we are only scanning one link per base url
       if self.config.max_links_per_domain == 1:
         break
 
       links = self.get_links(base_url, url)
+
+      # Add all links to the queue
       for new_link in links:
         link_key = self.discovery_key(new_link)
         if link_key not in visited:
@@ -459,13 +495,20 @@ class Crawler:
     self.record_pages_scanned(site_data, audits_passed)
     self.record_crawl_metrics(site_data, urls_visited, audits_passed, audits_failed)
 
-    logger.info('Crawl metrics for %s: visited=%d passed=%d failed=%d', base_url, urls_visited, audits_passed, audits_failed)
+    logger.info(
+      'Crawl metrics for %s: visited=%d passed=%d failed=%d',
+      base_url,
+      urls_visited,
+      audits_passed,
+      audits_failed,
+    )
     logger.info('Crawl drop reasons for %s: %s', base_url, dict(self.drop_reasons))
+
     if self.config.max_links_per_domain != 1:
       logger.info('Crawl exhausted all links %s', base_url)
 
   def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
-    """Record the number of pages that were successfully audited for the site."""
+    """Record successful audits for the site."""
     with self.config.lock:
       csv_writer = src.output.CSVWriter()
       csv_writer.add_rows(
@@ -481,7 +524,7 @@ class Crawler:
       csv_writer.write_csv_file(f'./results/{self.config.audit_name}/pages_scanned.csv')
 
   def record_crawl_metrics(self, site_data: SiteData, urls_visited: int, audits_passed: int, audits_failed: int) -> None:
-    """Record crawl coverage metrics separate from audit success count."""
+    """Record coverage metrics separate from audit success."""
     with self.config.lock:
       csv_writer = src.output.CSVWriter()
       csv_writer.add_rows(
@@ -525,6 +568,7 @@ class RandomQueue:
 
   def biased_rand(self, maximum: int) -> int:
     """Generate a random number with a bias towards 0."""
+    # these random numbers are not used for security
     random_number = random.random()  # nosec # noqa: S311
     random_number *= random.random()  # nosec # noqa: S311
     return int(maximum * random_number)
