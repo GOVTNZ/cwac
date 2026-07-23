@@ -11,7 +11,7 @@ flake8==7.3.0
 flake8-simplify==0.30.0
 opencv-python==5.0.0.93
 numpy==2.5.1
-pandas==3.0.3
+pandas==3.0.5
 pandas-stubs==3.0.3.260530
 nltk==3.10.0
 pyfakefs==6.2.0
