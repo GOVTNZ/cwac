@@ -2,16 +2,16 @@
 
 ## Overview
 
-This audit tests
+This audit provides an indicative check only for
 [WCAG 1.4.10 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html).
 For each URL included in the scan, the page is opened in a 320px wide browser
 window. If the page can be scrolled horizontally then the audit fails.
 
 > [!WARNING]
 >
-> This test does not fully test the normative requirement of
+> This audit does not test conformance with
 > [WCAG 1.4.10](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html). But,
-> it does provide a good indication of whether the page is responsive. Manual
+> it can identify pages that might have reflow or responsive design issues. Manual
 > testing is still required to ensure
 > [WCAG 1.4.10](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) is met.
 
