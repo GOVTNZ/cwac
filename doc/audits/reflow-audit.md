@@ -11,8 +11,8 @@ window. If the page can be scrolled horizontally then the audit fails.
 >
 > This audit does not test conformance with
 > [WCAG 1.4.10](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html). But,
-> it can identify pages that might have reflow or responsive design issues. Manual
-> testing is still required to ensure
+> it can identify pages that might have reflow or responsive design issues.
+> Manual testing is still required to ensure
 > [WCAG 1.4.10](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) is met.
 
 ## Configuration

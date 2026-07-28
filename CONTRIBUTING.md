@@ -33,7 +33,9 @@ meets all the required formatting conventions.
 5. Go to the original CWAC repository, and create a pull request.
 6. Please make sure you keep each pull request focused on one specific
    change/feature, and write good commit messages/descriptions, and a
-   high-quality pull request title/description.
+   high-quality pull request title/description. Using
+   [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) to
+   format your PR is welcomed.
 
 ## Suggesting enhancements, or reporting bugs
 
