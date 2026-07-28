@@ -12,7 +12,7 @@ import time
 import urllib
 import urllib.robotparser
 from queue import SimpleQueue
-from typing import Any
+from typing import Tuple
 
 import requests
 import selenium.common.exceptions
@@ -483,7 +483,7 @@ class Crawler:
     pages_scanned = 0
 
     # queue element: (parent_url, url, depth)
-    queue = RandomQueue()
+    queue = RandomQueue[Tuple[str, str, int]]()
     queue.push((base_url, base_url, 0))
 
     # track visited urls
@@ -606,12 +606,12 @@ class Crawler:
       csv_writer.write_csv_file(f'./results/{self.config.audit_name}/pages_scanned.csv')
 
 
-class RandomQueue:
+class RandomQueue[T]:
   """A queue that pops in random order, but biased toward 0."""
 
   def __init__(self) -> None:
     """Initialise the queue."""
-    self.items: list[Any] = []
+    self.items: list[T] = []
 
   def __len__(self) -> int:
     """Return the length of the queue."""
@@ -621,19 +621,19 @@ class RandomQueue:
     """Return the queue as a string."""
     return str(self.items)
 
-  def push(self, item: Any) -> None:
+  def push(self, item: T) -> None:
     """Push an item onto the queue.
 
     Args:
-        item (Any): item to push onto the queue
+        item (T): item to push onto the queue
     """
     self.items.append(item)
 
-  def pop(self) -> Any:
+  def pop(self) -> T:
     """Pop an item off the queue.
 
     Returns:
-        Any: item popped off the queue
+        T: item popped off the queue
     """
     index = self.biased_rand(len(self.items))
     return self.items.pop(index)
