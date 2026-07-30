@@ -15,7 +15,7 @@ FROM --platform=linux/amd64 ubuntu:noble@sha256:723ad8033f109978f8c7e6421ee684ef
 # Chrome itself since that gets managed using @puppeteer/browsers as part of the npm install
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends wget python3-pip python3.12-venv libnss3-dev libgl1 && \
+    apt-get install -y --no-install-recommends wget python3.12-venv libnss3-dev libgl1 && \
     wget -nv https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     apt-get satisfy -y --no-install-recommends "$(dpkg-deb -f google-chrome-stable_current_amd64.deb Depends | tr '\n' ' ')" && \
     apt-get clean && \
@@ -26,7 +26,7 @@ RUN apt-get update && \
 WORKDIR /cwac
 
 # create .venv
-RUN python3 -m venv .venv
+RUN python3.12 -m venv .venv
 
 ENV VIRTUAL_ENV=".venv" \
     PATH=".venv/bin:$PATH"
@@ -35,7 +35,7 @@ ENV VIRTUAL_ENV=".venv" \
 COPY requirements.txt .
 
 # pip install
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
+RUN python3.12 -m pip install --no-cache-dir -r requirements.txt
 
 # copy node_modules from node_modules_builder
 COPY --from=node_modules_builder /usr/app/node_modules ./node_modules
