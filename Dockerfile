@@ -26,7 +26,7 @@ RUN apt-get update && \
 WORKDIR /cwac
 
 # create .venv
-RUN python3 -m venv .venv
+RUN python3.12 -m venv .venv
 
 ENV VIRTUAL_ENV=".venv" \
     PATH=".venv/bin:$PATH"
@@ -35,7 +35,7 @@ ENV VIRTUAL_ENV=".venv" \
 COPY requirements.txt .
 
 # pip install
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
+RUN python3.12 -m pip install --no-cache-dir -r requirements.txt
 
 # copy node_modules from node_modules_builder
 COPY --from=node_modules_builder /usr/app/node_modules ./node_modules
