@@ -41,15 +41,11 @@ The wins for doing this are:
 
 Doing this deprecation as part of this ticket could make sense if we are happy with the timing.
 
-### Docker warnings
+### Should we be checking chromedriver versions into the repo?
 
-```
- 4 warnings found (use docker --debug to expand):
- - FromPlatformFlagConstDisallowed: FROM --platform flag should not use constant value "linux/amd64" (line 2)
- - FromPlatformFlagConstDisallowed: FROM --platform flag should not use constant value "linux/amd64" (line 12)
- - LegacyKeyValueFormat: "ENV key=value" should be used instead of legacy "ENV key value" format (line 30)
- - LegacyKeyValueFormat: "ENV key=value" should be used instead of legacy "ENV key value" format (line 31)
-```
+Each one is ~20MB and we have 3 so ~60MB added every time we upgrade a version. Feels like something that will make us sad as the years go on.
+
+The downside of not checking them in is that the user has to run an extra script on first setup.
 
 ## Closed Considerations
 
