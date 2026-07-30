@@ -27,8 +27,8 @@ WORKDIR /cwac
 # create .venv
 RUN python3 -m venv .venv
 
-ENV VIRTUAL_ENV .venv
-ENV PATH .venv/bin:$PATH
+ENV VIRTUAL_ENV=".venv" \
+    PATH=".venv/bin:$PATH"
 
 # copy in requirements.txt
 COPY requirements.txt .
