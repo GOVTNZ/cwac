@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import platform
+import sys
 from pathlib import Path
 
 from selenium import webdriver
@@ -59,7 +60,7 @@ def default_chromedriver(repo_root: Path) -> Path | None:
   return repo_root / 'drivers' / driver_name
 
 
-def main():
+def main() -> int:
   """Run a minimal Selenium smoke test to verify Chrome/chromedriver setup."""
   repo_root = Path(__file__).resolve().parent.parent
 
@@ -101,4 +102,4 @@ def main():
 
 
 if __name__ == '__main__':
-  main()
+  sys.exit(main())
