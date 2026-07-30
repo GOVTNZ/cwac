@@ -59,7 +59,7 @@ class TestChromeLocationsAutoResolution:
     ],
   )
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
-  def test_auto_resolves_for_supported_platforms(  # noqa: PLR0913
+  def test_auto_resolves_for_supported_platforms(  # noqa: PLR0913, PLR0917
     self,
     fs: FakeFilesystem,
     mocker: MockerFixture,
