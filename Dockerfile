@@ -9,7 +9,7 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm install
 
-FROM --platform=linux/amd64 ubuntu:noble@sha256:723ad8033f109978f8c7e6421ee684efb624eb5b9251b70c6788fdb2405d050b
+FROM --platform=linux/amd64 ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90
 
 # install the dependencies we need for running Python and Chrome, while avoiding installing
 # Chrome itself since that gets managed using @puppeteer/browsers as part of the npm install
