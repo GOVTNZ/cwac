@@ -36,6 +36,9 @@ RUN python3.12 -m venv .venv
 ENV VIRTUAL_ENV=".venv" \
     PATH=".venv/bin:$PATH"
 
+ENV XDG_CONFIG_HOME=/tmp/.chromium
+ENV XDG_CACHE_HOME=/tmp/.chromium
+
 # copy in requirements.txt
 COPY requirements.txt .
 
