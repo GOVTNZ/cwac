@@ -38,8 +38,9 @@ ENV VIRTUAL_ENV=".venv" \
 # copy in requirements.txt
 COPY requirements.txt .
 
-# pip install
-RUN python3.12 -m pip install --no-cache-dir -r requirements.txt
+# install dependencies, and then remove stuff we don't need when running the tool
+RUN python3.12 -m pip install --no-cache-dir -r requirements.txt && \
+    python3 -m pip uninstall -y ruff mypy pre-commit pyfakefs pytest pytest-mock pip
 
 # copy required dirs from node_modules_builder
 COPY --from=node_modules_builder /usr/app/node_modules ./node_modules
