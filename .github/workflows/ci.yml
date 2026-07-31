@@ -27,8 +27,6 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
-      - run: uv python install
-      - run: uv sync
       - run: uv run bandit -r .
   flake8:
     permissions:
@@ -43,7 +41,6 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
-      - run: uv sync
       - run: uv run flake8 --max-line-length 120 .
   mypy:
     permissions:
@@ -58,7 +55,6 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
-      # - run: uv sync
       - run: uv run mypy .
   pylint:
     permissions:
@@ -102,10 +98,8 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
-      # - run: uv python install
-      # - run: uv sync
-      - run: uv run check-jsonschema config.schema.json --check-metaschema
-      - run: uv run check-jsonschema config/config_default.json --schemafile config.schema.json
+      - run: uvx check-jsonschema config.schema.json --check-metaschema
+      - run: uvx check-jsonschema config/config_default.json --schemafile config.schema.json
   test:
     permissions:
       contents: read # to fetch (actions/checkout)
@@ -119,8 +113,6 @@ jobs:
         with:
           version: "latest"
           enable-cache: true
-      # - run: uv python install
-      # - run: uv sync
       - uses: actions/setup-node@v4
       - run: npm i
       - run: uv run pytest .
