@@ -127,16 +127,15 @@ jobs:
         with:
           persist-credentials: false
       - uses: actions/setup-node@v4
-      - run: |
-          tests/e2e.sh
-      - name: Show chromedriver log
+      - run: tests/e2e.sh
+      - name: Show top of chromedriver log for debugging
         if: ${{ always() }}
         run: |
           log_path=$(find ./results -type f -iname 'chromedriver.log')
           echo $log_path
           if [[ -f "$log_path" ]]; then
-            echo "Contents of chromedriver.log:"
-            cat "$log_path"
+            echo "Top of chromedriver.log:"
+            head -n 200 "$log_path"
           else
             echo "chromedriver.log not found."
           fi

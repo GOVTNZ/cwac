@@ -2,7 +2,9 @@
   "devDependencies": {
   },
   "scripts": {
-    "postinstall": "npx @puppeteer/browsers@2 install chrome@$npm_package_config_chromeVersion && npx @puppeteer/browsers@2 install chromedriver@$npm_package_config_chromeVersion"
+    "postinstall": "npm run install:chrome && npm run install:chromedriver",
+    "install:chrome": "npx @puppeteer/browsers@2 install chrome@$npm_package_config_chromeVersion",
+    "install:chromedriver": "npx @puppeteer/browsers@2 install chromedriver@$npm_package_config_chromeVersion"
   },
   "config": {
     "chromeVersion": "151.0.7922.71"

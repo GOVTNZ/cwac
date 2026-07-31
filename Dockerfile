@@ -36,6 +36,8 @@ RUN python3.12 -m venv .venv
 ENV VIRTUAL_ENV=".venv" \
     PATH=".venv/bin:$PATH"
 
+# set XDG_CONFIG_HOME and XDG_CACHE_HOME to a temporary directory to avoid
+# permission issues when running Chrome in a Docker container
 ENV XDG_CONFIG_HOME=/tmp/.chromium
 ENV XDG_CACHE_HOME=/tmp/.chromium
 
