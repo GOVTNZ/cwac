@@ -275,10 +275,9 @@ class Config:
     raised requesting the option be set manually in the config file
     """
     info = platform.uname()
+    chrome_version = self.__determine_chrome_version()
 
     if self.chrome_binary_location == 'auto':
-      chrome_version = self.__determine_chrome_version()
-
       if info.system == 'Linux' and info.machine == 'x86_64':
         self.chrome_binary_location = f'./chrome/linux-{chrome_version}/chrome-linux64/chrome'
       elif info.system == 'Darwin' and info.machine == 'arm64':
@@ -292,9 +291,9 @@ class Config:
 
     if self.chrome_driver_location == 'auto':
       if info.system == 'Linux' and info.machine == 'x86_64':
-        self.chrome_driver_location = './drivers/chromedriver_linux_x64'
+        self.chrome_driver_location = f'./chromedriver/linux-{chrome_version}/chromedriver-linux64/chromedriver'
       elif info.system == 'Darwin' and info.machine == 'arm64':
-        self.chrome_driver_location = './drivers/chromedriver_mac_arm64'
+        self.chrome_driver_location = f'./chromedriver/mac_arm-{chrome_version}/chromedriver-mac-arm64/chromedriver'
       else:
         raise ValueError(
           f'chrome_driver_location cannot be automatically determined for {info.system} {info.machine} '

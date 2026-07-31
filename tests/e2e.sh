@@ -2,6 +2,11 @@
 
 set -e
 
+# Make sure script runs from project root directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"
+cd "${PROJECT_ROOT}"
+
 # create a url file
 cat <<URLS > base_urls/visit/e2e.csv
 organisation,url,sector
@@ -21,10 +26,11 @@ cat config/config_default.json | jq '
 mkdir -p results
 
 # make sure the package-lock.json exists
-npm i --package-lock-only
+npm i --package-lock-only -y
 
 docker build \
   --iidfile /tmp/cwac_image_id \
+  -t cwac-e2e-test-script:latest \
   --build-arg USER_ID=$(id -u) \
   --build-arg GROUP_ID=$(id -g) \
   .
