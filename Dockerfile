@@ -3,6 +3,10 @@ FROM --platform=linux/amd64 node:22-slim AS node_modules_builder
 
 WORKDIR /usr/app/
 
+# unzip required to install puppeteer chromedriver
+RUN apt-get update && \
+    apt-get install -y unzip
+
 # Copy package.json
 COPY package.json package-lock.json ./
 
@@ -36,17 +40,13 @@ COPY requirements.txt .
 # pip install
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
-# copy node_modules from node_modules_builder
+# copy required dirs from node_modules_builder
 COPY --from=node_modules_builder /usr/app/node_modules ./node_modules
-
-# copy chrome binary from node_modules_builder
 COPY --from=node_modules_builder /usr/app/chrome ./chrome
+COPY --from=node_modules_builder /usr/app/chromedriver ./chromedriver
 
 # copy all top-level files to /cwac/
 COPY . .
-
-# chmod +x the chromedriver
-RUN chmod +x ./drivers/chromedriver_linux_x64
 
 # create volume for ./results folder
 VOLUME /cwac/results

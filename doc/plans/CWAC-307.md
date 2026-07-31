@@ -8,6 +8,25 @@ replicate the findings.
 
 ## Key Considerations
 
+### Remove the existing partial support for Intel based macs
+
+The `drivers/` directory had a binary for x64 Intel macs but cwac itself never
+supported loading it in [config.py](../../config.py). This ticket will not
+attempt to add support Intel based macs.
+
+### Stop committing the chromedriver binaries to the repo.
+
+Each chromedriver binary is ~20MB. If we continue to commit these to the git
+repo then the repo will increase in size by ~40MB on every Chrome upgrade. This
+will make working with the repo increasingly annoying.
+
+This ticket will start using npm puppeteer package for chromedriver downloads,
+similarly to how we already do for Chrome downloads.  After this ticket lands,
+running `npm install` will install both Chrome and chromedriver. Nothing changes
+in terms of setting up the repo for new users.
+
+## Steps for future upgrades
+
 You can find the latest _Chrome for Testing_ version manually by visiting
 https://googlechromelabs.github.io/chrome-for-testing/ or programatically via:
 
@@ -17,35 +36,16 @@ curl --silent https://googlechromelabs.github.io/chrome-for-testing/last-known-g
 
 The steps to upgrade are:
 
-1. Update to latest chromedriver. This is automated in `scripts/upgrade-chromedriver.sh` which you can use as a guide if you wish to do the upgrade manually.
-2. Update `pacakge.json` with the new chromedriver version.
-3. Run `npm install` to download _Chrome for Testing_ binaries corresponding to the new chromedriver version from `package.json`. The new binaries are downloaded to `chrome/`
-4. Run the `scripts/selenium_smoke_test.py` script to verify that the new Chromedriver works on your local machine.
+1. Run the command above (or manually visit site) to get latest stable _Chrome for Testing_.
+2. Update `pacakge.json` with the new version.
+3. Run `npm install` to download _Chrome for Testing_ and _Chromedriver_
+   binaries corresponding to the new version from `package.json`. The binaries
+   are downloaded to `chrome/` and `chromedriver/` respectively.
 4. Run the `tests/e2e.sh` script to verify that the new Chromedriver works in the Docker container.
 
 ## Open Considerations
 
-### Remove x64 mac chromedriver
-
-We can stop downloading the x64 mac chromedriver at some point.
-
-Apple stopped selling their last x64 (Intel) based mac - the Mac Pro - in 2023.
-However that computer was extremely expensive and therefore fairly niche.
-Apple stopped selling intel based versions of their popeular machines (laptops) in 2020.
-As time goes on, the chances of someone wanting to run cwac on an intel based mac reduces.
-
-The wins for doing this are:
-
-1. Removes 18MB from the repo and docker image
-2. Slight simplification of the chromedriver upgrade process
-
-Doing this deprecation as part of this ticket could make sense if we are happy with the timing.
-
-### Should we be checking chromedriver versions into the repo?
-
-Each one is ~20MB and we have 3 so ~60MB added every time we upgrade a version. Feels like something that will make us sad as the years go on.
-
-The downside of not checking them in is that the user has to run an extra script on first setup.
+None.
 
 ## Closed Considerations
 
