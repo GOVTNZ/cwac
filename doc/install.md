@@ -28,9 +28,13 @@ npm -v  # should not fail, should return the installed npm version
 ## Step 2: Set up Python env and install Python packages
 
 Next you need to install the required Python libraries. There are multiple ways
-to achieve this in Python. Below documents using [uv](https://docs.astral.sh/uv/) which manages a lot of the details and is recommended if you don't already have a preferred way of managing Python versions.
+to achieve this in Python. Below documents using
+[uv](https://docs.astral.sh/uv/) which manages a lot of the details and is
+recommended if you don't already have a preferred way of managing Python
+versions.
 
-Before you begin you need to install `uv` via one of the methods listed on https://docs.astral.sh/uv/getting-started/installation/#standalone-installer
+Before you begin you need to install `uv` via one of the methods listed on
+https://docs.astral.sh/uv/getting-started/installation/#standalone-installer
 
 ```bash
 cd cwac # change to project root dir

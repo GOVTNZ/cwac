@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "latest"
+          version: 'latest'
           enable-cache: true
       - run: uv run bandit -r .
   flake8:
@@ -39,7 +39,7 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "latest"
+          version: 'latest'
           enable-cache: true
       - run: uv run flake8 --max-line-length 120 .
   mypy:
@@ -53,7 +53,7 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "latest"
+          version: 'latest'
           enable-cache: true
       - run: uv run mypy .
   pylint:
@@ -67,7 +67,7 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "latest"
+          version: 'latest'
           enable-cache: true
       - run: uv run pylint -rn -sn $(git ls-files '*.py')
   ruff:
@@ -81,7 +81,7 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "latest"
+          version: 'latest'
           enable-cache: true
       - run: uv run ruff check
       - run: uv run ruff format --check --diff
@@ -96,10 +96,12 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "latest"
+          version: 'latest'
           enable-cache: true
       - run: uvx check-jsonschema config.schema.json --check-metaschema
-      - run: uvx check-jsonschema config/config_default.json --schemafile config.schema.json
+      - run:
+          uvx check-jsonschema config/config_default.json --schemafile
+          config.schema.json
   test:
     permissions:
       contents: read # to fetch (actions/checkout)
@@ -111,11 +113,23 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "latest"
+          version: 'latest'
           enable-cache: true
       - uses: actions/setup-node@v4
       - run: npm i
       - run: uv run pytest .
+  prettier:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+      - run: npm i
+      - run: npm run format-check
   e2e:
     permissions:
       contents: read # to fetch (actions/checkout)

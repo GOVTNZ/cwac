@@ -29,10 +29,7 @@
     "browser": {
       "description": "The browser to use for auditing",
       "type": "string",
-      "enum": [
-        "chrome",
-        "firefox"
-      ]
+      "enum": ["chrome", "firefox"]
     },
     "chrome_binary_location": {
       "description": "Path to the Chrome binary. Set to 'auto' to resolve automatically based on the OS and the chromeVersion in package.json",
@@ -148,10 +145,7 @@
             "minimum": 1
           }
         },
-        "required": [
-          "width",
-          "height"
-        ],
+        "required": ["width", "height"],
         "additionalProperties": false
       }
     },
@@ -164,9 +158,7 @@
           "type": "object",
           "properties": {
             "class_name": {
-              "enum": [
-                "AxeCoreAudit"
-              ]
+              "enum": ["AxeCoreAudit"]
             },
             "enabled": {
               "description": "Whether this plugin is active",
@@ -177,11 +169,7 @@
               "type": "boolean"
             }
           },
-          "required": [
-            "class_name",
-            "enabled",
-            "best-practice"
-          ],
+          "required": ["class_name", "enabled", "best-practice"],
           "additionalProperties": false
         },
         "language_audit": {
@@ -189,9 +177,7 @@
           "type": "object",
           "properties": {
             "class_name": {
-              "enum": [
-                "LanguageAudit"
-              ]
+              "enum": ["LanguageAudit"]
             },
             "enabled": {
               "description": "Whether this plugin is active",
@@ -202,11 +188,7 @@
               "type": "boolean"
             }
           },
-          "required": [
-            "class_name",
-            "enabled",
-            "run_sentiment_analysis"
-          ],
+          "required": ["class_name", "enabled", "run_sentiment_analysis"],
           "additionalProperties": false
         },
         "reflow_audit": {
@@ -214,9 +196,7 @@
           "type": "object",
           "properties": {
             "class_name": {
-              "enum": [
-                "ReflowAudit"
-              ]
+              "enum": ["ReflowAudit"]
             },
             "enabled": {
               "description": "Whether this plugin is active",
@@ -245,19 +225,14 @@
           "type": "object",
           "properties": {
             "class_name": {
-              "enum": [
-                "TitleAudit"
-              ]
+              "enum": ["TitleAudit"]
             },
             "enabled": {
               "description": "Whether this plugin is active",
               "type": "boolean"
             }
           },
-          "required": [
-            "class_name",
-            "enabled"
-          ],
+          "required": ["class_name", "enabled"],
           "additionalProperties": false
         },
         "focus_indicator_audit": {
@@ -265,9 +240,7 @@
           "type": "object",
           "properties": {
             "class_name": {
-              "enum": [
-                "FocusIndicatorAudit"
-              ]
+              "enum": ["FocusIndicatorAudit"]
             },
             "enabled": {
               "description": "Whether this plugin is active",
@@ -303,19 +276,14 @@
           "type": "object",
           "properties": {
             "class_name": {
-              "enum": [
-                "ScreenshotAudit"
-              ]
+              "enum": ["ScreenshotAudit"]
             },
             "enabled": {
               "description": "Whether this plugin is active",
               "type": "boolean"
             }
           },
-          "required": [
-            "class_name",
-            "enabled"
-          ],
+          "required": ["class_name", "enabled"],
           "additionalProperties": false
         },
         "element_audit": {
@@ -323,9 +291,7 @@
           "type": "object",
           "properties": {
             "class_name": {
-              "enum": [
-                "ElementAudit"
-              ]
+              "enum": ["ElementAudit"]
             },
             "enabled": {
               "description": "Whether this plugin is active",
@@ -337,11 +303,7 @@
               "minLength": 1
             }
           },
-          "required": [
-            "class_name",
-            "enabled",
-            "target_element_css_selector"
-          ],
+          "required": ["class_name", "enabled", "target_element_css_selector"],
           "additionalProperties": false
         }
       },
