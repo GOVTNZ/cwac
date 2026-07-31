@@ -59,13 +59,8 @@ as a compatible version of chromedriver (which forms the bridge between CWAC and
 the _Chrome for Testing_ instance).
 
 Verify that these have downloaded correctly by manually inspecting the
-`cwac/chrome` and `cwac/drivers` directories. They should contain files and
+`chrome/` and `chromedriver/` directories. They should contain files and
 folders.
-
-> [!NOTE]
->
-> Pull requests improving the automatic detection to cover additional OSs and
-> architectures are welcome
 
 ## Troubleshooting
 
@@ -76,7 +71,7 @@ for Testing and the Chrome driver based on your OS and architecture.
 
 If the paths cannot be determined automatically, you can pass them manually by:
 
-1. Look inside the `cwac/chrome/` directory. Note the folder name for the
+1. Look inside the `chrome/` directory. Note the folder name for the
    version of Chrome for Testing that was downloaded i.e.
    `mac_arm-114.0.5735.90`
 2. Open `cwac/config/`. For every config file in this directory e.g.
@@ -103,5 +98,5 @@ If you run CWAC and get the error
 then running this may resolve it:
 
 ```bash
-xattr -d com.apple.quarantine <name-of-executable>
+xattr -d com.apple.quarantine <path-to-chromedriver-executable>
 ```
