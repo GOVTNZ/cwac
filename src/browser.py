@@ -250,7 +250,7 @@ class Browser:
     if self.config.browser == 'chrome':
       chrome_options = webdriver.ChromeOptions()
       if self.config.headless or headless_override:
-        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--headless=new')
       chrome_options.add_argument(f'--window-size={window_size["width"]},{window_size["height"]}')
       chrome_options.add_argument('--log-level=3')
       chrome_options.add_argument('--disable-gpu')
