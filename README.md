@@ -171,8 +171,7 @@ The value of this key must match a value within the `viewport_sizes` option.
 ## Updating Chrome and Chromedriver versions
 
 You can find the latest _Chrome for Testing_ version manually by visiting
-https://googlechromelabs.github.io/chrome-for-testing/ or programatically via:
-
+https://googlechromelabs.github.io/chrome-for-testing/ or programmatically via:
 ```bash
 curl --silent https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json | jq -r '.channels.Stable.version'
 ```

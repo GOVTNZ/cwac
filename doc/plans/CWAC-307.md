@@ -28,8 +28,7 @@ in terms of setting up the repo for new users.
 ## Steps for future upgrades
 
 You can find the latest _Chrome for Testing_ version manually by visiting
-https://googlechromelabs.github.io/chrome-for-testing/ or programatically via:
-
+https://googlechromelabs.github.io/chrome-for-testing/ or programmatically via:
 ```bash
 curl --silent https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json | jq -r '.channels.Stable.version'
 ```

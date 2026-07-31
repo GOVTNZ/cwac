@@ -5,7 +5,8 @@ WORKDIR /usr/app/
 
 # unzip required to install puppeteer chromedriver
 RUN apt-get update && \
-    apt-get install -y unzip
+    apt-get install -y --no-install-recommends unzip && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy package.json
 COPY package.json package-lock.json ./

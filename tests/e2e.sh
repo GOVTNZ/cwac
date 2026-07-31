@@ -3,9 +3,9 @@
 set -e
 
 # Make sure script runs from project root directory
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="${SCRIPT_DIR}/.."
-cd $PROJECT_ROOT
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"
+cd "${PROJECT_ROOT}"
 
 # create a url file
 cat <<URLS > base_urls/visit/e2e.csv
