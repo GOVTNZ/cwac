@@ -127,4 +127,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: actions/setup-node@v4
-      - run: tests/e2e.sh
+      - run: |
+          ls -lahR ./chrome
+          ls -lahR ./chromedriver
+          tests/e2e.sh
