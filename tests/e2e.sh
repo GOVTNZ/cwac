@@ -34,6 +34,12 @@ docker build \
   --build-arg USER_ID=$(id -u) \
   --build-arg GROUP_ID=$(id -g) \
   .
+docker run --rm \
+  --mount "type=bind,src=./config,dst=/cwac/config" \
+  --mount "type=bind,src=./base_urls,dst=/cwac/base_urls" \
+  --mount "type=bind,src=./results,dst=/cwac/results" \
+  -e CHROME_EXTRA_ARGS='--no-sandbox,--disable-dev-shm-usage' \
+  $(cat /tmp/cwac_image_id) ls -lahR /cwac/chromedriver
 
 docker run --rm \
   --mount "type=bind,src=./config,dst=/cwac/config" \

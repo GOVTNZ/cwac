@@ -128,8 +128,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v4
       - run: |
-          npm i
-          pwd
-          ls -lahR ./chrome
-          ls -lahR ./chromedriver
+          # npm i
+          # pwd
+          # ls -lahR ./chrome
+          # ls -lahR ./chromedriver
           tests/e2e.sh
