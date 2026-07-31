@@ -29,7 +29,7 @@ jobs:
           enable-cache: true
       - run: uv python install
       - run: uv sync
-      - run: bandit -r .
+      - run: uv run bandit -r .
   # flake8:
   #   permissions:
   #     contents: read # to fetch (actions/checkout)
