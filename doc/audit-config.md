@@ -139,12 +139,14 @@ The available configuration options are described below. See the
 
 ## CSV files of base URLs to visit
 
-> [!TIP] Ignore advanced configurations for now. There are advanced
-> configurations of CWAC that use other CSV files - see the settings for
-> `base_urls_nohead_path` above. You can ignore these when getting started - the
-> only CSV file actually required is the "visits" CSV (described below) As well
-> as the JSON configuration, CWAC needs a CSV file with a set of base URLs that
-> will be visited, crawled and scanned.
+> [!TIP]
+>
+> Ignore advanced configurations for now. There are advanced configurations of
+> CWAC that use other CSV files - see the settings for `base_urls_nohead_path`
+> above. You can ignore these when getting started - the only CSV file actually
+> required is the "visits" CSV (described below) As well as the JSON
+> configuration, CWAC needs a CSV file with a set of base URLs that will be
+> visited, crawled and scanned.
 
 These lists of URLs to visit are loaded from every `.csv` file stored under
 `base_urls/visit`. This provides a lot of flexibility when scanning multiple

@@ -172,23 +172,26 @@ The value of this key must match a value within the `viewport_sizes` option.
 
 You can find the latest _Chrome for Testing_ version manually by visiting
 https://googlechromelabs.github.io/chrome-for-testing/ or programmatically via:
+
 ```bash
 curl --silent https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json | jq -r '.channels.Stable.version'
 ```
 
 The steps to upgrade are:
 
-1. Run the command above (or manually visit site) to get latest stable _Chrome for Testing_.
+1. Run the command above (or manually visit site) to get latest stable _Chrome
+   for Testing_.
 2. Update `pacakge.json` with the new version.
 3. Run `npm install` to download _Chrome for Testing_ and _Chromedriver_
    binaries corresponding to the new version from `package.json`. The binaries
    are downloaded to `chrome/` and `chromedriver/` respectively.
-4. Run the `tests/e2e.sh` script to verify that the new Chromedriver works in the Docker container.
+4. Run the `tests/e2e.sh` script to verify that the new Chromedriver works in
+   the Docker container.
 
-> [!TIP]
-> macOS might come up with an error stating "chromedriver_mac_arm64" can't be
-> opened because Apple cannot check it for malicious software." This is fixed by
-> running `xattr -d com.apple.quarantine <path-to-executable-chromedriver>`
+> [!TIP] macOS might come up with an error stating "chromedriver_mac_arm64"
+> can't be opened because Apple cannot check it for malicious software." This is
+> fixed by running
+> `xattr -d com.apple.quarantine <path-to-executable-chromedriver>`
 
 ## Copyright notices
 

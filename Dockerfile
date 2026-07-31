@@ -14,7 +14,7 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm install
 
-FROM --platform=linux/amd64 ubuntu:noble@sha256:723ad8033f109978f8c7e6421ee684efb624eb5b9251b70c6788fdb2405d050b
+FROM --platform=linux/amd64 ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90
 
 # install the dependencies we need for running Python and Chrome, while avoiding installing
 # Chrome itself since that gets managed using @puppeteer/browsers as part of the npm install
@@ -44,9 +44,11 @@ ENV XDG_CACHE_HOME=/tmp/.chromium
 # copy in requirements.txt
 COPY requirements.txt .
 
-# install dependencies, and then remove stuff we don't need when running the tool
+# install dependencies, and then remove stuff we don't need when running the tool,
+# along with test files as they can be quite large for dependencies like pandas
 RUN python3.12 -m pip install --no-cache-dir -r requirements.txt && \
-    python3 -m pip uninstall -y ruff mypy pre-commit pyfakefs pytest pytest-mock pip
+    python3 -m pip uninstall -y ruff mypy pre-commit pyfakefs pytest pytest-mock pip && \
+    find .venv/lib -depth -type d \( -name tests -o -name test \) -exec rm -rf -- {} +
 
 # copy required dirs from node_modules_builder
 COPY --from=node_modules_builder /usr/app/node_modules ./node_modules

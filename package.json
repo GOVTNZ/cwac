@@ -1,7 +1,7 @@
 {
-  "devDependencies": {
-  },
   "scripts": {
+    "format-check": "prettier --check .",
+    "format-fix": "prettier --write .",
     "postinstall": "npm run install:chrome && npm run install:chromedriver",
     "install:chrome": "npx @puppeteer/browsers@2 install chrome@$npm_package_config_chromeVersion",
     "install:chromedriver": "npx @puppeteer/browsers@2 install chromedriver@$npm_package_config_chromeVersion"
@@ -9,8 +9,13 @@
   "config": {
     "chromeVersion": "151.0.7922.71"
   },
+  "prettier": "prettier-config-ackama",
   "dependencies": {
-    "axe-core": "4.12.1",
-    "@mozilla/readability": "^0.6.0"
+    "@mozilla/readability": "^0.6.0",
+    "axe-core": "4.12.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.7.4",
+    "prettier-config-ackama": "^1.2.0"
   }
 }

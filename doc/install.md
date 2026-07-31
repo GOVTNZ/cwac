@@ -58,9 +58,8 @@ stand-alone version of the Chrome browser optimised for testing pages) as well
 as a compatible version of chromedriver (which forms the bridge between CWAC and
 the _Chrome for Testing_ instance).
 
-Verify that these have downloaded correctly by manually inspecting the
-`chrome/` and `chromedriver/` directories. They should contain files and
-folders.
+Verify that these have downloaded correctly by manually inspecting the `chrome/`
+and `chromedriver/` directories. They should contain files and folders.
 
 ## Troubleshooting
 
@@ -71,9 +70,8 @@ for Testing and the Chrome driver based on your OS and architecture.
 
 If the paths cannot be determined automatically, you can pass them manually by:
 
-1. Look inside the `chrome/` directory. Note the folder name for the
-   version of Chrome for Testing that was downloaded i.e.
-   `mac_arm-114.0.5735.90`
+1. Look inside the `chrome/` directory. Note the folder name for the version of
+   Chrome for Testing that was downloaded i.e. `mac_arm-114.0.5735.90`
 2. Open `cwac/config/`. For every config file in this directory e.g.
    `config_default.json`, modify the value of `chrome_binary_location` so the
    correct binary path is specified. For example:
