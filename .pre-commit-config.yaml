@@ -1,5 +1,6 @@
 default_stages: [pre-commit, pre-push]
 default_language_version:
+  # todo: this locks to 3.13 but rest of the project is using 3.12. why?
   python: python3.13
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
