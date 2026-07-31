@@ -100,7 +100,9 @@ jobs:
         with:
           python-version: '3.12'
       - run: pipx run check-jsonschema config.schema.json --check-metaschema
-      - run: pipx run check-jsonschema config/config_default.json --schemafile config.schema.json
+      - run:
+          pipx run check-jsonschema config/config_default.json --schemafile
+          config.schema.json
   test:
     permissions:
       contents: read # to fetch (actions/checkout)
