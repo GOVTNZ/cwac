@@ -13,7 +13,6 @@ dependencies = [
     "opencv-python-headless==5.0.0.93",
     "pandas==3.0.5",
     "pandas-stubs==3.0.3.260530",
-    "pyarrow==24.0.0",
     "pyfakefs==6.2.0",
     "requests==2.34.2",
     "responses==0.26.1",
