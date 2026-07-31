@@ -15,7 +15,7 @@ FROM --platform=linux/amd64 ubuntu:noble@sha256:723ad8033f109978f8c7e6421ee684ef
 # Chrome itself since that gets managed using @puppeteer/browsers as part of the npm install
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends wget python3.12-venv libgl1 && \
+    apt-get install -y --no-install-recommends wget python3.12-venv && \
     wget -nv https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     apt-get satisfy -y --no-install-recommends "$(dpkg-deb -f google-chrome-stable_current_amd64.deb Depends | tr '\n' ' ')" && \
     apt-get clean && \
