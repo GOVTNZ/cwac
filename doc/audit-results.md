@@ -43,7 +43,9 @@ results/2026-07-14_13-53-12_5
 All audit results are stored as CSV files. These files contain the accessibility
 findings discovered by the scan.
 
-> [!WARNING] All CSV files start with Byte-order Mark (BOM) All generated CSV
+> [!WARNING]
+>
+> All CSV files start with Byte-order Mark (BOM) All generated CSV
 > files start with 3 hidden bytes called a
 > [BOM marker](https://en.wikipedia.org/wiki/Byte_order_mark). The BOM allows MS
 > Excel to choose the correct character set for the data and thereby avoid
