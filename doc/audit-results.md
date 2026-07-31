@@ -45,8 +45,8 @@ findings discovered by the scan.
 
 > [!WARNING]
 >
-> All CSV files start with Byte-order Mark (BOM) All generated CSV
-> files start with 3 hidden bytes called a
+> All CSV files start with Byte-order Mark (BOM) All generated CSV files start
+> with 3 hidden bytes called a
 > [BOM marker](https://en.wikipedia.org/wiki/Byte_order_mark). The BOM allows MS
 > Excel to choose the correct character set for the data and thereby avoid
 > broken looking characters.
