@@ -21,5 +21,6 @@ python cwac.py
 python cwac.py config_custom.json
 ```
 
-> [!WARNING] JSON configuration files must always be located in the `./config/`
-> directory.
+> [!WARNING]
+>
+> JSON configuration files must always be located in the `./config/` directory.
