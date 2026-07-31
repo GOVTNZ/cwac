@@ -30,107 +30,108 @@ jobs:
       - run: uv python install
       - run: uv sync
       - run: uv run bandit -r .
-  # flake8:
-  #   permissions:
-  #     contents: read # to fetch (actions/checkout)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         persist-credentials: false
-  #     - uses: astral-sh/setup-uv@v6
-  #       with:
-  #         version: "latest"
-  #         enable-cache: true
-  #     - run: uv pip install --system -r requirements.txt
-  #     - run: flake8 --max-line-length 120 .
-  # mypy:
-  #   permissions:
-  #     contents: read # to fetch (actions/checkout)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         persist-credentials: false
-  #     - uses: astral-sh/setup-uv@v6
-  #       with:
-  #         version: "latest"
-  #         enable-cache: true
-  #     - run: uv pip install --system -r requirements.txt
-  #     - run: mypy .
-  # pylint:
-  #   permissions:
-  #     contents: read # to fetch (actions/checkout)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         persist-credentials: false
-  #     - uses: astral-sh/setup-uv@v6
-  #       with:
-  #         version: "latest"
-  #         enable-cache: true
-  #     - run: uv pip install --system -r requirements.txt
-  #     - run: pylint -rn -sn $(git ls-files '*.py')
-  # ruff:
-  #   permissions:
-  #     contents: read # to fetch code (actions/checkout)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         persist-credentials: false
-  #     - uses: astral-sh/setup-uv@v6
-  #       with:
-  #         version: "latest"
-  #         enable-cache: true
-  #     - run: uv pip install --system -r requirements.txt
-  #     - run: ruff check
-  #     - run: ruff format --check --diff
-  # schemas:
-  #   permissions:
-  #     contents: read # to fetch (actions/checkout)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         persist-credentials: false
-  #     - uses: astral-sh/setup-uv@v6
-  #       with:
-  #         version: "latest"
-  #         enable-cache: true
-  #     - run: uvx check-jsonschema config.schema.json --check-metaschema
-  #     - run: uvx check-jsonschema config/config_default.json --schemafile config.schema.json
-  # test:
-  #   permissions:
-  #     contents: read # to fetch (actions/checkout)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         persist-credentials: false
-  #     - uses: astral-sh/setup-uv@v6
-  #       with:
-  #         version: "latest"
-  #         enable-cache: true
-  #     - run: uv pip install --system -r requirements.txt
-  #     - uses: actions/setup-node@v4
-  #     - run: npm i
-  #     - run: pytest .
-  # e2e:
-  #   permissions:
-  #     contents: read # to fetch (actions/checkout)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         persist-credentials: false
-  #     - uses: actions/setup-node@v4
-  #     - run: tests/e2e.sh
+  flake8:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+      - run: uv sync
+      - run: uv run flake8 --max-line-length 120 .
+  mypy:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+      # - run: uv sync
+      - run: uv run mypy .
+  pylint:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+      - run: uv run pylint -rn -sn $(git ls-files '*.py')
+  ruff:
+    permissions:
+      contents: read # to fetch code (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+      - run: uv run ruff check
+      - run: uv run ruff format --check --diff
+  schemas:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+      # - run: uv python install
+      # - run: uv sync
+      - run: uv run check-jsonschema config.schema.json --check-metaschema
+      - run: uv run check-jsonschema config/config_default.json --schemafile config.schema.json
+  test:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+      # - run: uv python install
+      # - run: uv sync
+      - uses: actions/setup-node@v4
+      - run: npm i
+      - run: uv run pytest .
+  e2e:
+    permissions:
+      contents: read # to fetch (actions/checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+      - run: tests/e2e.sh
