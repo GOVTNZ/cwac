@@ -17,3 +17,4 @@ pyfakefs==6.2.0
 pytest==9.1.1
 pytest-mock==3.15.1
 ruff==0.16.0
+ultimate-sitemap-parser==1.8.1
