@@ -523,12 +523,13 @@ class Crawler:
       logger.error('base_url was filtered out! %s', base_url)
       return
 
-    urls_from_sitemap = self.__crawl_sitemap(base_url)
+    if self.config.crawl_sitemaps:
+      urls_from_sitemap = self.__crawl_sitemap(base_url)
 
-    logger.info('Found %i url%s from sitemaps', len(urls_from_sitemap), '' if len(urls_from_sitemap) == 1 else 's')
+      logger.info('Found %i url%s from sitemaps', len(urls_from_sitemap), '' if len(urls_from_sitemap) == 1 else 's')
 
-    for parent_and_url in urls_from_sitemap:
-      queue.push(parent_and_url)
+      for parent_and_url in urls_from_sitemap:
+        queue.push(parent_and_url)
 
     while queue:
       parent_url, url = queue.pop()

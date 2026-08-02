@@ -103,6 +103,10 @@
       "type": "string",
       "minLength": 1
     },
+    "crawl_sitemaps": {
+      "description": "Whether to crawl sitemaps for base_urls, for additional URLs",
+      "type": "boolean"
+    },
     "record_unexpected_response_codes": {
       "description": "Whether to log and record unexpected HTTP response codes encountered during crawling",
       "type": "boolean"
