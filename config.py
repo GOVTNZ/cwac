@@ -15,6 +15,8 @@ from urllib import parse
 
 logger = getLogger('cwac')
 
+getLogger('usp').parent = logger
+
 
 class SiteData(TypedDict):
   """Holds data for a site that should be crawled and audited."""
