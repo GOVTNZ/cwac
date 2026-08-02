@@ -5,3 +5,5 @@
 !package.json
 !package-lock.json
 !drivers/
+!uv.lock
+!pyproject.toml

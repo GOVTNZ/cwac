@@ -11,6 +11,8 @@ RUN npm install
 
 FROM --platform=linux/amd64 ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90
 
+# todo: python3.12-venv seems to be required to check certs for the wget deb download
+
 # install the dependencies we need for running Python and Chrome, while avoiding installing
 # Chrome itself since that gets managed using @puppeteer/browsers as part of the npm install
 RUN apt-get update && \
@@ -22,23 +24,24 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives && \
     rm google-chrome-stable_current_amd64.deb
 
+# Install uv
+RUN wget -qO- https://astral.sh/uv/install.sh | sh
+
 # create cwac directory
 WORKDIR /cwac
 
-# create .venv
-RUN python3.12 -m venv .venv
+# Copy uv project files
+COPY uv.lock .
+COPY pyproject.toml .
+
+# Create venv and
+RUN ~/.local/bin/uv venv
+
+# install dependencies from uv.lock
+RUN ~/.local/bin/uv sync
 
 ENV VIRTUAL_ENV=".venv" \
     PATH=".venv/bin:$PATH"
-
-# copy in requirements.txt
-COPY requirements.txt .
-
-# install dependencies, and then remove stuff we don't need when running the tool,
-# along with test files as they can be quite large for dependencies like pandas
-RUN python3.12 -m pip install --no-cache-dir -r requirements.txt && \
-    python3 -m pip uninstall -y ruff mypy pre-commit pyfakefs pytest pytest-mock pip && \
-    find .venv/lib -depth -type d \( -name tests -o -name test \) -exec rm -rf -- {} +
 
 # copy node_modules from node_modules_builder
 COPY --from=node_modules_builder /usr/app/node_modules ./node_modules
@@ -66,6 +69,9 @@ RUN mkdir ./nltk_data/ && \
 
 # Change to non-root user
 USER $USER_ID:$GROUP_ID
+
+# test venv works
+RUN .venv/bin/python --version
 
 # run cwac.py config_linux.json
 CMD [".venv/bin/python", "-u", "cwac.py", "config_default.json"]
