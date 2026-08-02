@@ -482,9 +482,9 @@ class Crawler:
     # Counts number of pages scanned
     pages_scanned = 0
 
-    # queue element: (parent_url, url, depth)
-    queue = RandomQueue[Tuple[str, str, int]]()
-    queue.push((base_url, base_url, 0))
+    # queue element: (parent_url, url)
+    queue = RandomQueue[Tuple[str, str]]()
+    queue.push((base_url, base_url))
 
     # track visited urls
     visited = {base_url}
@@ -496,7 +496,7 @@ class Crawler:
       return
 
     while queue:
-      parent_url, url, depth = queue.pop()
+      parent_url, url = queue.pop()
 
       if pages_scanned >= self.config.max_links_per_domain:
         logger.info('Max pages scanned reached %s', base_url)
@@ -582,7 +582,7 @@ class Crawler:
       for new_link in links:
         if new_link not in visited:
           visited.add(new_link)
-          queue.push((url, new_link, depth + 1))
+          queue.push((url, new_link))
 
     self.analytics.record_test_failure(base_url)
     self.record_pages_scanned(site_data, pages_scanned)
