@@ -54,6 +54,7 @@ class Config:
   shuffle_base_urls: bool
   base_urls_visit_path: str
   base_urls_nohead_path: str
+  crawl_sitemaps: bool
   filter_to_organisations: list[str]
   filter_to_urls: list[str]
   viewport_sizes: dict[str, dict[str, int]]
