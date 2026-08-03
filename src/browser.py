@@ -127,7 +127,10 @@ class Browser:
       self.safe_restart()
 
   def get_doctype(self) -> str:
-    """Get the doctype of the currently loaded page in the webdriver.
+    """Get the doctype of the currently loaded page.
+
+    This function does not load the page, it assumes that the page is already
+    loaded in the webdriver.
 
     Returns:
         str: the doctype of the loaded page
@@ -152,7 +155,10 @@ class Browser:
     return doctype_string
 
   def get_base_uri(self) -> str:
-    """Returns document.baseURI of current page.
+    """Returns document.baseURI of currently loaded page.
+
+    This function does not load the page, it assumes that the page is already
+    loaded in the webdriver.
 
     Returns:
         str: base URI of current page.
@@ -165,9 +171,12 @@ class Browser:
       raise exc
 
   def get_page_source(self) -> str:
-    """Return the browser's page source.
+    """Return HTML source of currently loaded page.
 
-    Return:
+    This function does not load the page, it assumes that the page is already
+    loaded in the webdriver.
+
+    Returns:
         str: page source
     """
     try:
