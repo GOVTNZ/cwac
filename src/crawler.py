@@ -54,7 +54,7 @@ class Crawler:
     self.url_filter = src.filters.URLFilter(self.config)
 
   def iterate_through_base_urls(self) -> None:
-    """Pick URLs from url_queue, and initiates a crawl on that URL.
+    """Pick URLs from url_queue and initiate a crawl for each URL.
 
     This is the entry point and main loop of the crawler.
     """

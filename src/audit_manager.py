@@ -206,7 +206,7 @@ class AuditManager:
     state is reset for the next audit:
 
     1. The browser is restarted.
-    2. the viewport size is set again.
+    2. The viewport size is set again.
     3. The page is loaded again via `self.browser.get()`.
 
     Returns:

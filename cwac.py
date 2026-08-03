@@ -31,7 +31,7 @@ class CWAC:
     Args:
         thread_id (int): identifier for the thread
     """
-    # Create the webdriver instance (wrapped in `Browser)` for this thread. This
+    # Create the webdriver instance (wrapped in `Browser`) for this thread. This
     # instance is essentially shared mutable state for all code in the thread.
     browser = Browser(self.config, thread_id)
     crawl = Crawler(config=self.config, browser=browser, url_queue=self.url_queue, analytics=self.analytics)
