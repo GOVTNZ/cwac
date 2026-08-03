@@ -54,8 +54,18 @@ class TestChromeLocationsAutoResolution:
   @pytest.mark.parametrize(
     'system,machine,expected_binary_location,expected_driver_location',
     [
-      ('Linux', 'x86_64', './chrome/linux-123-abc/chrome-linux64/', './drivers/chromedriver_linux_x64'),
-      ('Darwin', 'arm64', './chrome/mac_arm-123-abc/chrome-mac-arm64/', './drivers/chromedriver_mac_arm64'),
+      (
+        'Linux',
+        'x86_64',
+        './chrome/linux-123-abc/chrome-linux64/',
+        './chromedriver/linux-123-abc/chromedriver-linux64',
+      ),
+      (
+        'Darwin',
+        'arm64',
+        './chrome/mac_arm-123-abc/chrome-mac-arm64/',
+        './chromedriver/mac_arm-123-abc/chromedriver-mac-arm64',
+      ),
     ],
   )
   # pylint: disable-next=too-many-arguments,too-many-positional-arguments
@@ -79,7 +89,7 @@ class TestChromeLocationsAutoResolution:
     config = Config('config_default.json')
 
     assert config.chrome_binary_location.startswith(expected_binary_location)
-    assert config.chrome_driver_location == expected_driver_location
+    assert config.chrome_driver_location.startswith(expected_driver_location)
 
   @pytest.mark.parametrize(
     'system,machine',

@@ -2,6 +2,7 @@ node_modules/*
 .venv/
 nltk_data/
 chrome/
+chromedriver/
 .pytest_cache/
 package-lock.json
 htmlcov/
@@ -12,7 +13,6 @@ results/*
 *.log
 config/
 !config/config_default.json
-!/drivers/.gitkeep
 .vscode/
 /base_urls/visit/*
 !/base_urls/visit/example.txt
