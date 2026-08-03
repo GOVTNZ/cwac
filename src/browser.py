@@ -111,21 +111,6 @@ class Browser:
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.last_url_req = ''
 
-  def restart(self) -> None:
-    """Restart the webdriver and restore its dimensions."""
-    try:
-      window_pos = self.driver.get_window_position()
-      window_size = self.driver.get_window_size()
-      self.driver.close()
-      new_driver: WebDriverType = self.spawn_single_webdriver(window_size=window_size)
-      new_driver.set_window_position(**window_pos)
-      new_driver.set_window_size(**window_size)
-      self.driver = new_driver
-      self.last_url_req = ''
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Unhandled exception')
-      self.safe_restart()
-
   def get_doctype(self) -> str:
     """Get the doctype of the currently loaded page.
 
