@@ -85,6 +85,28 @@ code, including:
 - [pylint](https://github.com/PyCQA/pylint), for linting
 - [mypy](https://github.com/python/mypy), for static type checking
 
+You can run linters locally as follows:
+
+```bash
+source .venv/bin/activate
+
+# prettier
+npm run format-check
+npm run format-fix
+
+# ruff
+ruff check # add --fix to auto fix
+ruff format
+
+flake8 --max-line-length=120 .
+
+bandit -r .
+
+mypy .
+
+pylint -rn -sn $(git ls-files '*.py')
+```
+
 ### Audit plugin architecture
 
 CWAC is designed to be extensible with plugins. This enables CWAC to run
