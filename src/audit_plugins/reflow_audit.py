@@ -16,7 +16,6 @@ Disclaimer:
 
 import logging
 import sys
-import time
 from typing import Any
 
 from config import Config
