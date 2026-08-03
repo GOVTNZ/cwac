@@ -8,7 +8,6 @@
   - [Developing CWAC](#developing-cwac)
     - [Core technologies](#core-technologies)
     - [Linting source code](#linting-source-code)
-    - [Setting up pre-commit hooks](#setting-up-pre-commit-hooks)
     - [Audit plugin architecture](#audit-plugin-architecture)
   - [Updating Chrome and Chromedriver versions](#updating-chrome-and-chromedriver-versions)
   - [Copyright notices](#copyright-notices)
@@ -86,22 +85,25 @@ code, including:
 - [pylint](https://github.com/PyCQA/pylint), for linting
 - [mypy](https://github.com/python/mypy), for static type checking
 
-Use `pre-commit run --all-files` to run all pre-commit hooks.
+You can run linters locally as follows:
 
-### Setting up pre-commit hooks
+```bash
+source .venv/bin/activate
 
-To set up CWAC for development, you must first install all required pre-commit
-hooks. This isn't necessary if you just want to run CWAC.
+# prettier
+npm run format-check
+npm run format-fix
 
-1. Open a shell
-2. Run `pre-commit autoupdate`
-3. Run `pre-commit install`
+# ruff
+ruff check # add --fix to auto fix
+ruff format
 
-A series of linters, security checking, and formatting will occur at every git
-commit.
+mypy .
 
-To run the pre-commit hooks at any time, run: `pre-commit run --all-files` This
-is useful for debugging why a pre-commit hook failed.
+flake8 --max-line-length=120 .
+bandit -r .
+pylint -rn -sn $(git ls-files '*.py')
+```
 
 ### Audit plugin architecture
 
