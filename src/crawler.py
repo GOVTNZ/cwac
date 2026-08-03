@@ -215,7 +215,7 @@ class Crawler:
     return True
 
   def handle_base_element(self, url: str) -> str:
-    """See if `<base>` from page currently in browser is better base URL than given one.
+    """Compare given URL and `<base>` URL, returning the most suitable one for resolving relative URLs.
 
     If a URL from `<base>` is found and it has the same domain and protocol as
     the `url` provided, return that URL. Otherwise, we conclude that we can't do
@@ -228,7 +228,7 @@ class Crawler:
     try:
       base_element = self.browser.get_base_uri()
     except Exception:
-      logger.exception('Failed to get base element %s', url)
+      logger.exception('Failed to get <base> element %s', url)
       return url
 
     # Check that the base_element has same domain as base_url

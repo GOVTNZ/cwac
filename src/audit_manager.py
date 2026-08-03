@@ -189,8 +189,7 @@ class AuditManager:
     """Iterate through registered audits and runs them.
 
     Main entry point for running audits. Iterates through all registered audits
-    and runs them on the current page. Each audit is run for each viewport size
-    specified in the config.
+    and runs them on the current page at each configured viewport size.
 
     For each configured viewport size:
 
