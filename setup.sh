@@ -13,12 +13,6 @@ pip install -r requirements.txt
 echo "Install mypy stubs..."
 mypy --install-types
 
-echo "Update pre-commit hooks..."
-pre-commit autoupdate
-
-echo "Installing pre-commit hooks..."
-pre-commit install
-
 echo "Installing Node dependencies..."
 npm install
 
