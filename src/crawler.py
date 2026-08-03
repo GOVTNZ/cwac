@@ -228,7 +228,7 @@ class Crawler:
     try:
       base_element = self.browser.get_base_uri()
     except Exception:
-      logger.exception('Failed to get base element %s', url)
+      logger.exception('Failed to get <base> element %s', url)
       return url
 
     # Check that the base_element has same domain as base_url
