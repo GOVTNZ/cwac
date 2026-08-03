@@ -111,23 +111,8 @@ class Browser:
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.last_url_req = ''
 
-  def restart(self) -> None:
-    """Restart the webdriver and restore its dimensions."""
-    try:
-      window_pos = self.driver.get_window_position()
-      window_size = self.driver.get_window_size()
-      self.driver.close()
-      new_driver: WebDriverType = self.spawn_single_webdriver(window_size=window_size)
-      new_driver.set_window_position(**window_pos)
-      new_driver.set_window_size(**window_size)
-      self.driver = new_driver
-      self.last_url_req = ''
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Unhandled exception')
-      self.safe_restart()
-
   def get_doctype(self) -> str:
-    """Get the doctype of the currently loaded page in the webdriver.
+    """Get the doctype of the currently loaded page.
 
     Returns:
         str: the doctype of the loaded page
@@ -152,7 +137,7 @@ class Browser:
     return doctype_string
 
   def get_base_uri(self) -> str:
-    """Returns document.baseURI of current page.
+    """Returns document.baseURI of currently loaded page.
 
     Returns:
         str: base URI of current page.
@@ -165,9 +150,12 @@ class Browser:
       raise exc
 
   def get_page_source(self) -> str:
-    """Return the browser's page source.
+    """Return HTML source of currently loaded page.
 
-    Return:
+    This function does not load the page, it assumes that the page is already
+    loaded in the webdriver.
+
+    Returns:
         str: page source
     """
     try:

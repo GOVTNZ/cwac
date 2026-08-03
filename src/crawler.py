@@ -18,8 +18,6 @@ import requests
 import selenium.common.exceptions
 from bs4 import BeautifulSoup
 
-import src.audit_manager
-import src.audit_plugins
 import src.filters
 import src.output
 from config import Config
@@ -56,7 +54,10 @@ class Crawler:
     self.url_filter = src.filters.URLFilter(self.config)
 
   def iterate_through_base_urls(self) -> None:
-    """Pick URLs from url_queue, and initiates a crawl on that URL."""
+    """Pick URLs from url_queue, and initiates a crawl on that URL.
+
+    This is the entry point and main loop of the crawler.
+    """
     # Count how many URls have been iterated through
     url_iteration = 0
     while not self.url_queue.empty():
@@ -214,18 +215,26 @@ class Crawler:
     return True
 
   def handle_base_element(self, url: str) -> str:
-    """Handle the base element for relative URLs."""
+    """Compare given URL and `<base>` URL, returning the most suitable one for resolving relative URLs.
+
+    If a URL from `<base>` is found and it has the same domain and protocol as
+    the `url` provided, return that URL. Otherwise, we conclude that we can't do
+    better than the given `url` so we return it.
+
+    This function depends on browser state!. It does not navigate to the page.
+    It assumes the appropriate page is already loaded in the browser.
+    """
     base_element = url
     try:
       base_element = self.browser.get_base_uri()
     except Exception:
-      logger.exception('Failed to get base element %s', url)
+      logger.exception('Failed to get <base> element %s', url)
       return url
 
     # Check that the base_element has same domain as base_url
     if not src.filters.url_filter_not_same_domain(base_element, url):
       logger.info(
-        'get_links skipped due to equality of: %s %s',
+        'Found <base> element %s on page but rejecting it because it has a different domain than: %s',
         base_element,
         url,
       )
@@ -234,7 +243,7 @@ class Crawler:
     # Check that the protocol is equal between base_element and url
     if not src.filters.url_filter_same_protocol(base_element, url):
       logger.info(
-        'get_links skipped due to different protocol of: %s %s',
+        'Found <base> element %s on page but rejecting it because it has a different protocol than: %s',
         base_element,
         url,
       )
@@ -243,14 +252,21 @@ class Crawler:
     return base_element
 
   def get_links(self, base_url: str, url: str) -> list[str]:
-    """Get a list of (viable) links on a page.
+    """Generate a list of viable links for crawling from the page currently loaded in the browser.
+
+    This function depends on browser state! It does not navigate to the page. It
+    assumes the page HTML is already loaded in the browser and that the page
+    loaded in the browser is the same page as the one at `url`.
 
     Args:
-        base_url (str): the base URL being audited
-        url (str): url to find links on (within the scope of base_url)
+        base_url (str): The base URL from the input CSV used for this crawl. Any
+          URLs found outside the scope of this URL are rejected.
+        url (str): The URL currently loaded in the browser
 
     Returns:
-        list[str]: a list of links on the page
+        list[str]: a list of links on the page which are within the scope of the
+          base_url and pass all filters. If an error occurs, returns an empty
+          list.
     """
     try:
       soup = BeautifulSoup(self.browser.driver.page_source, 'lxml')
@@ -458,11 +474,21 @@ class Crawler:
   def crawl(self, site_data: SiteData, base_url: str) -> None:  # noqa: PLR0912, PLR0915
     """Crawls a domain and executes the AuditManager.
 
-    Loads a webpage, and runs a set of tests on that page. If
-    configured to visit more than one link per domain, it also
-    scrapes new links out of the page which are then navigated
-    to for further testing and scraping, effectively crawling
-    the website.
+    Sanitises the URL and checks if it should be crawled by checking:
+
+    - Does the URL pass the URL filters?
+    - Have we already scanned this URL?
+    - Have we hit our maximum number of pages to scan for this domain?
+    - Is the URL allowed by robots.txt?
+    - Is the URL within the scope of the base_url?
+
+    If the URL passes all checks, it is passed to `AuditManager` for testing.
+
+    This function expects that AuditManager will exit with the URL's page fully
+    loaded.
+
+    After audits are complete, this function scrapes the page for new links and
+    adds them to the queue for crawling.
 
     Args:
         site_data (SiteData): contains info about the site
@@ -482,9 +508,9 @@ class Crawler:
     # Counts number of pages scanned
     pages_scanned = 0
 
-    # queue element: (parent_url, url, depth)
-    queue = RandomQueue[Tuple[str, str, int]]()
-    queue.push((base_url, base_url, 0))
+    # queue element: (parent_url, url)
+    queue = RandomQueue[Tuple[str, str]]()
+    queue.push((base_url, base_url))
 
     # track visited urls
     visited = {base_url}
@@ -496,7 +522,7 @@ class Crawler:
       return
 
     while queue:
-      parent_url, url, depth = queue.pop()
+      parent_url, url = queue.pop()
 
       if pages_scanned >= self.config.max_links_per_domain:
         logger.info('Max pages scanned reached %s', base_url)
@@ -582,7 +608,8 @@ class Crawler:
       for new_link in links:
         if new_link not in visited:
           visited.add(new_link)
-          queue.push((url, new_link, depth + 1))
+          queue.push((url, new_link))
+      # End of queue processing loop
 
     self.analytics.record_test_failure(base_url)
     self.record_pages_scanned(site_data, pages_scanned)
