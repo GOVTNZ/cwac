@@ -98,12 +98,10 @@ npm run format-fix
 ruff check # add --fix to auto fix
 ruff format
 
-flake8 --max-line-length=120 .
-
-bandit -r .
-
 mypy .
 
+flake8 --max-line-length=120 .
+bandit -r .
 pylint -rn -sn $(git ls-files '*.py')
 ```
 
