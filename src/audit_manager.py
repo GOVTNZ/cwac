@@ -246,8 +246,12 @@ class AuditManager:
           audit['kwargs']['url'],
         )
 
-        # Only load the page if it's not already loaded
-        browser_status = self.browser.get_if_necessary(audit['kwargs']['url'])
+        # We have just changed the viewport size, so we need to reload the page
+        # to properly simulate a browser of that size visiting the page. Some
+        # websites will serve different content based on the viewport size, and
+        # we want to ensure that the audit is run on the correct version of the
+        # page.
+        browser_status = self.browser.get(audit['kwargs']['url'])
 
         # Test for anti-bot measures
         if self.test_for_anti_bot() != 'Pass':
@@ -304,8 +308,8 @@ class AuditManager:
             self.config.viewport_sizes[viewport]['height'],
           )
 
-          # Reload the page
-          browser_status = self.browser.get_if_necessary(audit['kwargs']['url'])
+          # Reload the page because we have changed viewport size
+          browser_status = self.browser.get(audit['kwargs']['url'])
           if browser_status is False:
             logger.error(
               'After a WebDriverException .get failed on %s %s',

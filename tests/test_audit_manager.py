@@ -30,7 +30,7 @@ def make_audit_manager(mocker: MockerFixture) -> AuditManager:
   config.get_unique_id.return_value = 'page-id'
 
   browser = MagicMock()
-  browser.get_if_necessary.return_value = True
+  browser.get.return_value = True
   browser.driver = MagicMock()
 
   manager = AuditManager(config, browser, MagicMock())
