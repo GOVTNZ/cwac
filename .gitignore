@@ -1,8 +1,8 @@
 node_modules/*
+.*_cache/
 .venv/
 nltk_data/
 chrome/
-.pytest_cache/
 package-lock.json
 htmlcov/
 .DS_Store
@@ -23,4 +23,3 @@ config/
 /reports/*
 !/reports/.gitkeep
 /test_website/*
-.mypy_cache/
