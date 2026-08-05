@@ -634,7 +634,11 @@ class Crawler:
     """Crawls the urls sitemap, if there is one."""
     logger.info('Fetching sitemap for %s', url)
 
-    tree = sitemap_tree_for_homepage(url)
+    try:
+      tree = sitemap_tree_for_homepage(url)
+    except Exception:
+      logger.exception('Failed to get sitemap')
+      return []
 
     parents_and_urls = []
 
