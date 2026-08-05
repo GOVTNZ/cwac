@@ -172,6 +172,32 @@ Each plugin can have an optional `viewport_to_test` item, which allows you to
 run a plugin only at particular viewport sizes, if multiple are being tested.
 The value of this key must match a value within the `viewport_sizes` option.
 
+### Crawling sitemaps
+
+CWAC will attempt to crawl sitemaps if the `crawl_sitemaps` configuration option
+is `true`, which is the default.
+
+This is done using the
+[`ultimate-sitemap-parser`](https://ultimate-sitemap-parser.readthedocs.io/en/latest/get-started.html)
+library which includes support for
+
+- locating sitemaps via `robots.txt`
+- sitemaps compressed with gunzip (`.gz`)
+- [various sitemap locations](https://ultimate-sitemap-parser.readthedocs.io/en/latest/reference/api/usp.tree.html#usp.tree._UNPUBLISHED_SITEMAP_PATHS)
+- `sitemapindex`s
+
+It also comes with a
+[CLI](https://ultimate-sitemap-parser.readthedocs.io/en/latest/reference/cli.html)
+which can be useful in manually checking if sitemaps are set up correctly
+
+```
+$ usp ls https://example.org/
+  https://example.org/
+    https://example.org/robots.txt
+      https://example.org/sitemap.xml
+        https://example.org/page1.html
+```
+
 ## Updating Chrome and Chromedriver versions
 
 From time to time, it might make sense to update the version of Chrome for
