@@ -10,6 +10,7 @@ import random
 import re
 import time
 import urllib
+import urllib.parse
 import urllib.robotparser
 from queue import SimpleQueue
 from typing import Tuple
@@ -17,6 +18,7 @@ from typing import Tuple
 import requests
 import selenium.common.exceptions
 from bs4 import BeautifulSoup
+from usp.tree import sitemap_tree_for_homepage
 
 import src.filters
 import src.output
@@ -31,7 +33,6 @@ from src.output import CSVWriter
 
 
 logger = logging.getLogger('cwac')
-
 
 type SiteData = ConfigSiteData
 
@@ -521,6 +522,8 @@ class Crawler:
       logger.error('base_url was filtered out! %s', base_url)
       return
 
+    has_crawled_sitemap = not self.config.crawl_sitemaps
+
     while queue:
       parent_url, url = queue.pop()
 
@@ -602,6 +605,17 @@ class Crawler:
       if self.config.max_links_per_domain == 1:
         break
 
+      # we delay crawling the sitemap for urls until after the base_url has been
+      # audited to ensure that has happened since the queue provides urls at random
+      if len(queue) == 0 and not has_crawled_sitemap:
+        urls_from_sitemap = self.__crawl_sitemap(base_url)
+
+        logger.info('Found %i url%s from sitemaps', len(urls_from_sitemap), '' if len(urls_from_sitemap) == 1 else 's')
+
+        for parent_and_url in urls_from_sitemap:
+          queue.push(parent_and_url)
+        has_crawled_sitemap = True
+
       links = self.get_links(base_url, url)
 
       # Add all links to the queue
@@ -615,6 +629,24 @@ class Crawler:
     self.record_pages_scanned(site_data, pages_scanned)
     if self.config.max_links_per_domain != 1:
       logger.info('Crawl exhausted all links %s', base_url)
+
+  def __crawl_sitemap(self, url: str) -> list[Tuple[str, str]]:
+    """Crawls the urls sitemap, if there is one."""
+    logger.info('Fetching sitemap for %s', url)
+
+    try:
+      tree = sitemap_tree_for_homepage(url)
+    except Exception:
+      logger.exception('Failed to get sitemap')
+      return []
+
+    parents_and_urls = []
+
+    for sitemap in tree.all_sitemaps():
+      for page in sitemap.all_pages():
+        parents_and_urls.append((sitemap.url, page.url))
+
+    return parents_and_urls
 
   def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
     """Record the number of pages that were scanned for the site."""
