@@ -111,6 +111,8 @@ class Config:
     # if no entry is found for a website.
     self.robots_txt_cache: dict[str, urllib.robotparser.RobotFileParser] = {}
 
+    self.config.setdefault('crawl_sitemaps', True)
+
   def __setup_logger(self, log_filename: str) -> None:
     """Set up the CWAC logger for a new run.
 
