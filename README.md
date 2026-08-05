@@ -8,7 +8,6 @@
   - [Developing CWAC](#developing-cwac)
     - [Core technologies](#core-technologies)
     - [Linting source code](#linting-source-code)
-    - [Setting up pre-commit hooks](#setting-up-pre-commit-hooks)
     - [Audit plugin architecture](#audit-plugin-architecture)
   - [Updating Chrome and Chromedriver versions](#updating-chrome-and-chromedriver-versions)
   - [Copyright notices](#copyright-notices)
@@ -86,22 +85,25 @@ code, including:
 - [pylint](https://github.com/PyCQA/pylint), for linting
 - [mypy](https://github.com/python/mypy), for static type checking
 
-Use `pre-commit run --all-files` to run all pre-commit hooks.
+You can run linters locally as follows:
 
-### Setting up pre-commit hooks
+```bash
+source .venv/bin/activate
 
-To set up CWAC for development, you must first install all required pre-commit
-hooks. This isn't necessary if you just want to run CWAC.
+# prettier
+npm run format-check
+npm run format-fix
 
-1. Open a shell
-2. Run `pre-commit autoupdate`
-3. Run `pre-commit install`
+# ruff
+ruff check # add --fix to auto fix
+ruff format
 
-A series of linters, security checking, and formatting will occur at every git
-commit.
+mypy .
 
-To run the pre-commit hooks at any time, run: `pre-commit run --all-files` This
-is useful for debugging why a pre-commit hook failed.
+flake8 --max-line-length=120 .
+bandit -r .
+pylint -rn -sn $(git ls-files '*.py')
+```
 
 ### Audit plugin architecture
 
@@ -118,45 +120,47 @@ snake case name as the key, and a camel case name as the value for the
 `class_name` property, e.g.:
 
 ```json
-"audit_plugins": {
+{
+  "audit_plugins": {
     "axe_core_audit": {
-        "class_name": "AxeCoreAudit",
-        "best-practice": true,
-        "enabled": true
+      "class_name": "AxeCoreAudit",
+      "best-practice": true,
+      "enabled": true
     },
     "language_audit": {
-        "class_name": "LanguageAudit",
-        "enabled": true,
-        "viewport_to_test": "small",
-        "run_sentiment_analysis": false
+      "class_name": "LanguageAudit",
+      "enabled": true,
+      "viewport_to_test": "small",
+      "run_sentiment_analysis": false
     },
     "reflow_audit": {
-        "class_name": "ReflowAudit",
-        "enabled": true,
-        "viewport_to_test": "small",
-        "screenshot_failures": false
+      "class_name": "ReflowAudit",
+      "enabled": true,
+      "viewport_to_test": "small",
+      "screenshot_failures": false
     },
     "title_audit": {
-        "class_name": "TitleAudit",
-        "enabled": true
+      "class_name": "TitleAudit",
+      "enabled": true
     },
     "screenshot_audit": {
-        "class_name": "ScreenshotAudit",
-        "enabled": true,
-        "viewport_to_test": "small"
+      "class_name": "ScreenshotAudit",
+      "enabled": true,
+      "viewport_to_test": "small"
     },
     "focus_indicator_audit": {
-        "class_name": "FocusIndicatorAudit",
-        "enabled": true,
-        "root_element_css_selector": "main",
-        "pre_tab_key_presses": 0,
-        "max_tab_key_presses": 15
+      "class_name": "FocusIndicatorAudit",
+      "enabled": true,
+      "root_element_css_selector": "main",
+      "pre_tab_key_presses": 0,
+      "max_tab_key_presses": 15
     },
     "element_audit": {
-        "class_name": "ElementAudit",
-        "target_element_css_selector": "input:not([type="search"])",
-        "enabled": true
+      "class_name": "ElementAudit",
+      "target_element_css_selector": "input:not([type='search'])",
+      "enabled": true
     }
+  }
 }
 ```
 

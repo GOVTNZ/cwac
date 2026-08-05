@@ -15,7 +15,6 @@ updates:
           - flake8
           - flake8-simplify
           - mypy
-          - pre-commit
           - pylint
           - ruff
         update-types:
@@ -27,7 +26,6 @@ updates:
           - flake8
           - flake8-simplify
           - mypy
-          - pre-commit
           - pylint
           - ruff
         update-types:

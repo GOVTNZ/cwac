@@ -21,9 +21,6 @@ Please refer to
 
 Follow the instructions in README.md to get up and running.
 
-Please make sure to use `pre-commit` — it will automatically check your code
-meets all the required formatting conventions.
-
 ## Submitting code changes
 
 1. Create a fork of this repository
