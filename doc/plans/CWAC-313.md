@@ -15,122 +15,24 @@ We want to focus on supporting XML based sitemaps as defined in the
 ### When to use the sitemap
 
 We will consider the sitemap when a configuration option such as
-`crawl_urls_from_sitemap` is `true`.
+`crawl_sitemaps` is `true`.
 
 This option will be `true` by default as we think it is desirable most of the
 time.
 
 ### Fetching the sitemap
 
-Before crawling a particular `base_url`, we will attempt to request a sitemap
-from the root of the domain, first checking for a gzipped version of the sitemap
-(i.e. `/sitemap.xml.gz`) before checking for an uncompressed version (i.e.
-`/sitemap.xml`).
+We will use the
+[`ultimate-sitemap-parser`](https://ultimate-sitemap-parser.readthedocs.io/en/latest/get-started.html)
+library, which looks like it does all the things we'd like including:
 
-i.e. if the `base_url` is `https://ackama.com/projects`, then we will look for
-`https://ackama.com/sitemap.xml.gz`, and then `https://ackama.com/sitemap.xml`.
+- locating sitemaps via `robots.txt`
+- sitemaps compressed with gunzip (`.gz`)
+- [various sitemap locations](https://ultimate-sitemap-parser.readthedocs.io/en/latest/reference/api/usp.tree.html#usp.tree._UNPUBLISHED_SITEMAP_PATHS)
+- `sitemapindex`s
 
-For `/sitemap.xml.gz`, if we receive a 200 response with a `Content-Type`
-indicating gzipped content (i.e. `application/x-gzip`, `application/gzip`), we
-will decode the content and attempt to parse it as XML. If that is successful,
-we will consider it a valid sitemap and attempt to convert it to a set of urls,
-or otherwise move on to trying `/sitemap.xml`.
-
-For `/sitemap.xml`, if we receive a 200 response with a `Content-Type`
-indicating XML content (i.e. `text/xml`), we will consider it a valid sitemap,
-and attempt to convert it to a set of urls.
-
-If we receive a redirect response for these requests, we will follow that
-redirect.
-
-These fetches will not be considered towards the `max_links_per_domain` limit.
-
-### Converting a sitemap to a set of URLs
-
-We will parse XML sitemaps per the
-[sitemap protocol](https://www.sitemaps.org/protocol.html).
-
-#### `urlset` sitemaps
-
-If the sitemap is a `urlset`, we will iterate over each `url` and push their
-`loc` value into the queue of urls to be processed for the `base_url`.
-
-Any other properties will be ignored.
-
-For example given this sitemap:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://www.example.com/</loc>
-    <lastmod>2005-01-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.example.com/catalog?item=12&amp;desc=vacation_hawaii</loc>
-    <changefreq>weekly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://www.example.com/catalog?item=73&amp;desc=vacation_new_zealand</loc>
-    <lastmod>2004-12-23</lastmod>
-    <changefreq>weekly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://www.example.com/catalog?item=74&amp;desc=vacation_newfoundland</loc>
-    <lastmod>2004-12-23T18:00:15+00:00</lastmod>
-    <priority>0.3</priority>
-  </url>
-
-  <url>
-    <loc>https://www.example.com/catalog?item=83&amp;desc=vacation_usa</loc>
-    <lastmod>2004-11-23</lastmod>
-  </url>
-</urlset>
-```
-
-We would "crawl" the following:
-
-- https://www.example.com/
-- https://www.example.com/catalog?item=12&amp;desc=vacation_hawaii
-- https://www.example.com/catalog?item=73&amp;desc=vacation_new_zealand
-- https://www.example.com/catalog?item=74&amp;desc=vacation_newfoundland
-- https://www.example.com/catalog?item=83&amp;desc=vacation_usa
-
-#### `sitemapindex` sitemaps
-
-If the sitemap is a `sitemapindex`, we will iterate over each `sitemap`, fetch
-the sitemap pointed to by their `loc`, and then process them accordingly.
-
-Any other properties will be ignored.
-
-These fetches will not be considered towards the `max_links_per_domain` limit.
-
-For example given this sitemap:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-   <sitemap>
-      <loc>https://www.example.com/sitemap1.xml.gz</loc>
-      <lastmod>2004-10-01T18:23:17+00:00</lastmod>
-   </sitemap>
-
-   <sitemap>
-      <loc>https://www.example.com/sitemap2.xml.gz</loc>
-      <lastmod>2005-01-01</lastmod>
-   </sitemap>
-</sitemapindex>
-```
-
-We would process the following sitemaps:
-
-- https://www.example.com/sitemap1.xml.gz
-- https://www.example.com/sitemap2.xml.gz
+It also has a CLI for listing sitemaps locally, which can be useful for
+debugging
 
 ### Ordering and filtering urls added from sitemaps
 
