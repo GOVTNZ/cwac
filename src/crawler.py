@@ -496,7 +496,6 @@ class Crawler:
         base_url (str): the first url to crawl
     """
     action = 'crawl'
-    # todo: come back to this case
     if self.config.max_links_per_domain == 1:
       action = 'visit'
     logger.info('Starting %s of %s', action, base_url)
