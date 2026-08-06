@@ -69,10 +69,6 @@ class ReflowAudit(DefaultAudit):
       print('Width was ' + str(self.browser.driver.get_window_size()['width']))
       sys.exit(1)
 
-    # Reload the page to be confident we are testing a fresh page at the correct
-    # viewport size.
-    self.browser.get(self.url)
-
     # Determine if there is a horisontal overflow
     try:
       self.browser.driver.execute_script('window.scrollTo(100, 0);')

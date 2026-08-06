@@ -15,7 +15,7 @@ from src.analytics import Analytics
 from src.browser import Browser
 from src.output import CSVWriter
 
-# pylint: disable=too-many-branches, too-many-statements
+# pylint: disable=too-many-statements
 
 logger = logging.getLogger('cwac')
 
@@ -245,11 +245,9 @@ class AuditManager:
           audit['kwargs']['url'],
         )
 
-        # We have just changed the viewport size, so we need to reload the page
-        # to properly simulate a browser of that size visiting the page. Some
-        # websites will serve different content based on the viewport size, and
-        # we want to ensure that the audit is run on the correct version of the
-        # page.
+        # Some websites will use viewport size during page load to potentially
+        # show different content.  We want to simulate a user with the current
+        # viewport size visiting the page so we do a full page load here.
         browser_status = self.browser.get(audit['kwargs']['url'])
 
         # Test for anti-bot measures
@@ -307,14 +305,6 @@ class AuditManager:
             self.config.viewport_sizes[viewport]['height'],
           )
 
-          # Reload the page because we have changed viewport size
-          browser_status = self.browser.get(audit['kwargs']['url'])
-          if browser_status is False:
-            logger.error(
-              'After a WebDriverException .get failed on %s %s',
-              audit_name,
-              audit['kwargs']['url'],
-            )
           continue
 
         except Exception:  # pylint: disable=broad-exception-caught
