@@ -10,7 +10,7 @@
   "prettier": "prettier-config-ackama",
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
-    "axe-core": "4.12.1"
+    "axe-core": "4.13.0"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
