@@ -247,8 +247,8 @@ class AuditManager:
 
         # The first time through this loop, we load the page to ensure that the
         # page is loaded with the correct viewport size.  On subsequent
-        # iterations, we refresh the page to ensure that any changes made by a
-        # previous audit do not affect the next audit.
+        # iterations, we load the page again to ensure that any changes (e.g.
+        # injected JS) made by a previous audit do not affect the next audit.
         browser_status = self.browser.get(audit['kwargs']['url'])
 
         # Test for anti-bot measures
