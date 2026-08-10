@@ -174,29 +174,28 @@ The value of this key must match a value within the `viewport_sizes` option.
 
 ## Updating Chrome and Chromedriver versions
 
-From time to time, it might make sense to update the version of Chrome for
-Testing that CWAC uses.
+You can find the latest _Chrome for Testing_ version manually by visiting
+https://googlechromelabs.github.io/chrome-for-testing/ or programmatically via:
 
-To do this:
+```bash
+curl --silent https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json | jq -r '.channels.Stable.version'
+```
 
-1. Visit
-   [Chrome for Testing - GitHub](https://github.com/GoogleChromeLabs/chrome-for-testing)
-2. Open the API endpoint `last-known-good-versions-with-downloads.json` in a
-   JSON viewer (Firefox has one built-in)
-3. Find the entry for the latest stable version of Chrome for Testing
-4. Download the `chromedriver` that matches the version of Chrome for Testing
-   you want to use
-5. Place the `chromedriver` executable into the `/drivers/` folder in `cwac`,
-   with a unique filename
-6. Update the `chromeVersion` config property in `package.json`, ensuring it
-   matches the `chromedriver` version
-7. Run `npm install` to install the newly specified version of Chrome for
-   Testing
-8. Note: the `chromedriver` executable may need to have `chmod +x` run on it in
-   order to give it execution permissions
-9. macOS might come up with an error stating "chromedriver_mac_arm64" can't be
-   opened because Apple cannot check it for malicious software." This is fixed
-   by running `xattr -d com.apple.quarantine <name-of-executable>`
+The steps to upgrade are:
+
+1. Run the command above (or manually visit site) to get latest stable _Chrome
+   for Testing_.
+2. Update `pacakge.json` with the new version.
+3. Run `npm install` to download _Chrome for Testing_ and _Chromedriver_
+   binaries corresponding to the new version from `package.json`. The binaries
+   are downloaded to `chrome/` and `chromedriver/` respectively.
+4. Run the `tests/e2e.sh` script to verify that the new Chromedriver works in
+   the Docker container.
+
+> [!TIP] macOS might come up with an error stating "chromedriver_mac_arm64"
+> can't be opened because Apple cannot check it for malicious software." This is
+> fixed by running
+> `xattr -d com.apple.quarantine <path-to-executable-chromedriver>`
 
 ## Copyright notices
 

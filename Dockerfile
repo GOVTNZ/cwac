@@ -3,6 +3,11 @@ FROM --platform=linux/amd64 node:22-slim AS node_modules_builder
 
 WORKDIR /usr/app/
 
+# unzip required to install puppeteer chromedriver
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends unzip && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy package.json
 COPY package.json package-lock.json ./
 
@@ -31,6 +36,11 @@ RUN python3.12 -m venv .venv
 ENV VIRTUAL_ENV=".venv" \
     PATH=".venv/bin:$PATH"
 
+# set XDG_CONFIG_HOME and XDG_CACHE_HOME to a temporary directory to avoid
+# permission issues when running Chrome in a Docker container
+ENV XDG_CONFIG_HOME=/tmp/.chromium
+ENV XDG_CACHE_HOME=/tmp/.chromium
+
 # copy in requirements.txt
 COPY requirements.txt .
 
@@ -40,17 +50,13 @@ RUN python3.12 -m pip install --no-cache-dir -r requirements.txt && \
     python3 -m pip uninstall -y ruff mypy pyfakefs pytest pytest-mock pip && \
     find .venv/lib -depth -type d \( -name tests -o -name test \) -exec rm -rf -- {} +
 
-# copy node_modules from node_modules_builder
+# copy required dirs from node_modules_builder
 COPY --from=node_modules_builder /usr/app/node_modules ./node_modules
-
-# copy chrome binary from node_modules_builder
 COPY --from=node_modules_builder /usr/app/chrome ./chrome
+COPY --from=node_modules_builder /usr/app/chromedriver ./chromedriver
 
 # copy all top-level files to /cwac/
 COPY . .
-
-# chmod +x the chromedriver
-RUN chmod +x ./drivers/chromedriver_linux_x64
 
 # create volume for ./results folder
 VOLUME /cwac/results

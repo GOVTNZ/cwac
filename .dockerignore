@@ -4,4 +4,3 @@
 !*.py
 !package.json
 !package-lock.json
-!drivers/
