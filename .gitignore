@@ -19,7 +19,7 @@ config/
 /base_urls/nohead/*
 !/base_urls/nohead/example.txt
 /base_urls/store/*
-!/base_urls/store/.gitkeep
+!/base_urls/store/example.txt
 /reports/*
 !/reports/.gitkeep
 /test_website/*

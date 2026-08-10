@@ -1,0 +1,1 @@
+The cwac tool does not use this directory. It is here for you to store your previously used url lists.
