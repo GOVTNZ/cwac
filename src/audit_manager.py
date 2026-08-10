@@ -245,9 +245,10 @@ class AuditManager:
           audit['kwargs']['url'],
         )
 
-        # Some websites will use viewport size during page load to potentially
-        # show different content.  We want to simulate a user with the current
-        # viewport size visiting the page so we do a full page load here.
+        # The first time through this loop, we load the page to ensure that the
+        # page is loaded with the correct viewport size.  On subsequent
+        # iterations, we refresh the page to ensure that any changes made by a
+        # previous audit do not affect the next audit.
         browser_status = self.browser.get(audit['kwargs']['url'])
 
         # Test for anti-bot measures
