@@ -47,7 +47,7 @@ COPY requirements.txt .
 # install dependencies, and then remove stuff we don't need when running the tool,
 # along with test files as they can be quite large for dependencies like pandas
 RUN python3.12 -m pip install --no-cache-dir -r requirements.txt && \
-    python3 -m pip uninstall -y ruff mypy pre-commit pyfakefs pytest pytest-mock pip && \
+    python3 -m pip uninstall -y ruff mypy pyfakefs pytest pytest-mock pip && \
     find .venv/lib -depth -type d \( -name tests -o -name test \) -exec rm -rf -- {} +
 
 # copy required dirs from node_modules_builder
