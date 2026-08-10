@@ -120,45 +120,47 @@ snake case name as the key, and a camel case name as the value for the
 `class_name` property, e.g.:
 
 ```json
-"audit_plugins": {
+{
+  "audit_plugins": {
     "axe_core_audit": {
-        "class_name": "AxeCoreAudit",
-        "best-practice": true,
-        "enabled": true
+      "class_name": "AxeCoreAudit",
+      "best-practice": true,
+      "enabled": true
     },
     "language_audit": {
-        "class_name": "LanguageAudit",
-        "enabled": true,
-        "viewport_to_test": "small",
-        "run_sentiment_analysis": false
+      "class_name": "LanguageAudit",
+      "enabled": true,
+      "viewport_to_test": "small",
+      "run_sentiment_analysis": false
     },
     "reflow_audit": {
-        "class_name": "ReflowAudit",
-        "enabled": true,
-        "viewport_to_test": "small",
-        "screenshot_failures": false
+      "class_name": "ReflowAudit",
+      "enabled": true,
+      "viewport_to_test": "small",
+      "screenshot_failures": false
     },
     "title_audit": {
-        "class_name": "TitleAudit",
-        "enabled": true
+      "class_name": "TitleAudit",
+      "enabled": true
     },
     "screenshot_audit": {
-        "class_name": "ScreenshotAudit",
-        "enabled": true,
-        "viewport_to_test": "small"
+      "class_name": "ScreenshotAudit",
+      "enabled": true,
+      "viewport_to_test": "small"
     },
     "focus_indicator_audit": {
-        "class_name": "FocusIndicatorAudit",
-        "enabled": true,
-        "root_element_css_selector": "main",
-        "pre_tab_key_presses": 0,
-        "max_tab_key_presses": 15
+      "class_name": "FocusIndicatorAudit",
+      "enabled": true,
+      "root_element_css_selector": "main",
+      "pre_tab_key_presses": 0,
+      "max_tab_key_presses": 15
     },
     "element_audit": {
-        "class_name": "ElementAudit",
-        "target_element_css_selector": "input:not([type="search"])",
-        "enabled": true
+      "class_name": "ElementAudit",
+      "target_element_css_selector": "input:not([type='search'])",
+      "enabled": true
     }
+  }
 }
 ```
 
