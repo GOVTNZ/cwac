@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # image: cwac:latest
     command:
       [
         '.venv/bin/python',
