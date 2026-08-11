@@ -1,4 +1,4 @@
-# Installing CWAC
+# Local dev setup
 
 ## Step 1: Ensure appropriate Python and NodeJS are installed
 
