@@ -14,6 +14,7 @@ scheme `./results/<scan-timestamp>/*`.
 results/2026-07-14_13-53-12_5
           # Accessibility findings from the audits
           ├── axe_core_audit.csv
+          ├── axe_core_audit.xlsx
           ├── axe_core_audit_template_aware.csv
           ├── element_audit.csv
           ├── language_audit.csv
@@ -42,6 +43,15 @@ results/2026-07-14_13-53-12_5
 
 All audit results are stored as CSV files. These files contain the accessibility
 findings discovered by the scan.
+
+CWAC also generates `axe_core_audit.xlsx` when the axe-core audit results are
+present. The workbook contains two worksheets:
+
+- `Raw Data` stores the `axe_core_audit.csv` rows in spreadsheet form.
+- `Statistics` contains formulas and charts summarising the raw results.
+
+CSV-derived values written into the workbook are treated as untrusted input and
+stored as literal cell data rather than executable formulas or hyperlinks.
 
 > [!WARNING]
 >

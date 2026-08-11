@@ -15,6 +15,10 @@ from config import Config
 
 logger = logging.getLogger('cwac')
 
+RAW_DATA_SHEET_NAME = 'Raw Data'
+STATISTICS_SHEET_NAME = 'Statistics'
+RAW_DATA_TABLE_NAME = 'AxeRawData'
+
 
 class CSVWriter:
   """Simple writer for CSV files."""
@@ -313,3 +317,146 @@ def generate_axe_core_template_aware_results(audit_name: str) -> None:
     columns=list(processed_column_order),
     encoding='utf-8-sig',
   )
+
+
+def generate_axe_core_xlsx_results(audit_name: str) -> None:
+  """Generate an XLSX report for axe-core results.
+
+  Args:
+      audit_name (str): The name of the audit that was just run
+  """
+
+  results_path = f'./results/{audit_name}'
+  csv_path = f'{results_path}/axe_core_audit.csv'
+  xlsx_path = f'{results_path}/axe_core_audit.xlsx'
+  data_frame = pd.read_csv(csv_path)
+  data_frame = data_frame.fillna('')
+
+  with pd.ExcelWriter(
+    xlsx_path,
+    engine='xlsxwriter',
+    engine_kwargs={
+      'options': {
+        'strings_to_formulas': False,
+        'strings_to_urls': False,
+      },
+    },
+  ) as writer:
+    data_frame.to_excel(writer, sheet_name=RAW_DATA_SHEET_NAME, index=False)
+
+    workbook: Any = writer.book
+    raw_data_sheet: Any = writer.sheets[RAW_DATA_SHEET_NAME]
+    statistics_sheet = workbook.add_worksheet(STATISTICS_SHEET_NAME)
+    writer.sheets[STATISTICS_SHEET_NAME] = statistics_sheet
+
+    header_format = workbook.add_format({'bold': True, 'bg_color': '#DCE6F1', 'border': 1})
+    section_header_format = workbook.add_format({'bold': True, 'font_size': 12})
+    label_format = workbook.add_format({'bold': True})
+    integer_format = workbook.add_format({'num_format': '#,##0'})
+
+    raw_data_sheet.freeze_panes(1, 0)
+    raw_data_sheet.autofit(300)
+    raw_data_sheet.add_table(
+      0,
+      0,
+      len(data_frame),
+      len(data_frame.columns) - 1,
+      {
+        'name': RAW_DATA_TABLE_NAME,
+        'style': 'Table Style Medium 2',
+        'columns': [{'header': column_name} for column_name in data_frame.columns],
+      },
+    )
+
+    summary_formulas = [
+      ('Total result rows', f'=COUNTA({RAW_DATA_TABLE_NAME}[audit_type])'),
+      ('Total issue count', f'=SUM({RAW_DATA_TABLE_NAME}[num_issues])'),
+      ('Rows with issues', f'=COUNTIF({RAW_DATA_TABLE_NAME}[num_issues],">0")'),
+      ('Rows with zero issues', f'=COUNTIF({RAW_DATA_TABLE_NAME}[num_issues],0)'),
+    ]
+
+    statistics_sheet.set_column('A:A', 30)
+    statistics_sheet.set_column('B:B', 18, integer_format)
+    statistics_sheet.set_column('D:E', 18)
+    statistics_sheet.write('A1', 'Axe-core statistics', section_header_format)
+
+    for row_index, (label, formula) in enumerate(summary_formulas, start=2):
+      statistics_sheet.write_string(row_index - 1, 0, label, label_format)
+      statistics_sheet.write_formula(row_index - 1, 1, formula, integer_format)
+
+    impact_labels = ['critical', 'serious', 'moderate', 'minor', '']
+    statistics_sheet.write('A8', 'Issue count by impact', section_header_format)
+    statistics_sheet.write_row('A9', ['Impact', 'Count'], header_format)
+    for row_index, impact_label in enumerate(impact_labels, start=10):
+      display_label = impact_label if impact_label else 'blank'
+      criteria = '""' if impact_label == '' else f'"{impact_label}"'
+      statistics_sheet.write_string(row_index - 1, 0, display_label)
+      statistics_sheet.write_formula(
+        row_index - 1,
+        1,
+        f'=COUNTIF({RAW_DATA_TABLE_NAME}[impact],{criteria})',
+        integer_format,
+      )
+
+    best_practice_labels = ['Yes', 'No']
+    statistics_sheet.write('A16', 'Issue count by best-practice flag', section_header_format)
+    statistics_sheet.write_row('A17', ['Best-practice', 'Count'], header_format)
+    for row_index, best_practice_label in enumerate(best_practice_labels, start=18):
+      statistics_sheet.write_string(row_index - 1, 0, best_practice_label)
+      statistics_sheet.write_formula(
+        row_index - 1,
+        1,
+        f'=COUNTIF({RAW_DATA_TABLE_NAME}[best-practice],"{best_practice_label}")',
+        integer_format,
+      )
+
+    top_rules = (
+      data_frame[data_frame['id'].astype(str) != '']
+      .groupby('id', dropna=False)['num_issues']
+      .sum()
+      .sort_values(ascending=False)
+      .head(10)
+      .index
+      .tolist()
+    )
+    statistics_sheet.write('A22', 'Top rule IDs by issue count', section_header_format)
+    statistics_sheet.write_row('A23', ['Rule ID', 'Issue count'], header_format)
+    if top_rules:
+      for row_index, rule_id in enumerate(top_rules, start=24):
+        statistics_sheet.write_string(row_index - 1, 0, str(rule_id))
+        statistics_sheet.write_formula(
+          row_index - 1,
+          1,
+          f'=SUMIF({RAW_DATA_TABLE_NAME}[id],A{row_index},{RAW_DATA_TABLE_NAME}[num_issues])',
+          integer_format,
+        )
+    else:
+      statistics_sheet.write_string(23, 0, 'No rule IDs found')
+      statistics_sheet.write_number(23, 1, 0, integer_format)
+
+    impact_chart = workbook.add_chart({'type': 'column'})
+    impact_chart.add_series(
+      {
+        'name': 'Issues by impact',
+        'categories': f'={STATISTICS_SHEET_NAME}!$A$10:$A$14',
+        'values': f'={STATISTICS_SHEET_NAME}!$B$10:$B$14',
+        'fill': {'color': '#4F81BD'},
+      },
+    )
+    impact_chart.set_title({'name': 'Issues by impact'})
+    impact_chart.set_y_axis({'name': 'Count'})
+    statistics_sheet.insert_chart('D2', impact_chart, {'description': 'Column chart showing axe-core issue counts by impact level.'})
+
+    top_rules_chart = workbook.add_chart({'type': 'bar'})
+    top_rules_end_row = 23 + max(len(top_rules), 1)
+    top_rules_chart.add_series(
+      {
+        'name': 'Top rules',
+        'categories': f'={STATISTICS_SHEET_NAME}!$A$24:$A${top_rules_end_row}',
+        'values': f'={STATISTICS_SHEET_NAME}!$B$24:$B${top_rules_end_row}',
+        'fill': {'color': '#9BBB59'},
+      },
+    )
+    top_rules_chart.set_title({'name': 'Top rule IDs'})
+    top_rules_chart.set_x_axis({'name': 'Issue count'})
+    statistics_sheet.insert_chart('D20', top_rules_chart, {'description': 'Bar chart showing the top axe-core rule IDs by issue count.'})
