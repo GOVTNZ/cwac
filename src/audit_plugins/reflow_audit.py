@@ -16,7 +16,6 @@ Disclaimer:
 
 import logging
 import sys
-import time
 from typing import Any
 
 from config import Config
@@ -69,12 +68,6 @@ class ReflowAudit(DefaultAudit):
       print('ReflowAudit must only run at 320px wide')
       print('Width was ' + str(self.browser.driver.get_window_size()['width']))
       sys.exit(1)
-
-    # Only load the page if it's not already loaded
-    self.browser.get_if_necessary(self.url)
-
-    # Wait for the page to render
-    time.sleep(0.3)
 
     # Determine if there is a horisontal overflow
     try:
