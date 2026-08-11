@@ -15,6 +15,8 @@ from urllib import parse
 
 logger = getLogger('cwac')
 
+getLogger('usp').parent = logger
+
 
 class SiteData(TypedDict):
   """Holds data for a site that should be crawled and audited."""
@@ -52,6 +54,7 @@ class Config:
   shuffle_base_urls: bool
   base_urls_visit_path: str
   base_urls_nohead_path: str
+  crawl_sitemaps: bool
   filter_to_organisations: list[str]
   filter_to_urls: list[str]
   viewport_sizes: dict[str, dict[str, int]]
@@ -107,6 +110,8 @@ class Config:
     # the Crawler queries this and populates it
     # if no entry is found for a website.
     self.robots_txt_cache: dict[str, urllib.robotparser.RobotFileParser] = {}
+
+    self.config.setdefault('crawl_sitemaps', True)
 
   def __setup_logger(self, log_filename: str) -> None:
     """Set up the CWAC logger for a new run.
