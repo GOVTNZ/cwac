@@ -59,7 +59,8 @@ performance, or the existence of a privacy or copyright statement.
 
 ## Developing CWAC
 
-Get started by reading the [local dev environment setup guide](./doc/local-dev-setup.md)
+Get started by reading the
+[local dev environment setup guide](./doc/local-dev-setup.md)
 
 ### Core technologies
 
