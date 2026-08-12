@@ -20,7 +20,9 @@ CWAC is designed and developed by the Web Standards team at <span lang="mi">Te
 Pūnaha Matihiko</span> | Government Digital Delivery Agency, New Zealand
 Government.
 
-**Note:** "CWAC" is pronounced "quack", like a duck.
+> [!TIP]
+>
+> "CWAC" is pronounced "quack", like a duck.
 
 CWAC is a tool that can scan hundreds of websites for accessibility issues,
 automatically.
@@ -218,10 +220,11 @@ The steps to upgrade are:
 4. Run the `tests/e2e.sh` script to verify that the new Chromedriver works in
    the Docker container.
 
-> [!TIP] macOS might come up with an error stating "chromedriver_mac_arm64"
-> can't be opened because Apple cannot check it for malicious software." This is
-> fixed by running
-> `xattr -d com.apple.quarantine <path-to-executable-chromedriver>`
+> [!TIP]
+>
+> macOS might come up with an error stating "chromedriver_mac_arm64" can't be
+> opened because Apple cannot check it for malicious software." This is fixed by
+> running `xattr -d com.apple.quarantine <path-to-executable-chromedriver>`
 
 ## Copyright notices
 
