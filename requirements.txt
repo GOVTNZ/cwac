@@ -9,7 +9,7 @@ pylint==4.0.6
 flake8==7.3.0
 flake8-simplify==0.30.0
 opencv-python-headless==5.0.0.93
-numpy==2.5.1
+numpy==2.5.2
 pandas==3.0.5
 pandas-stubs==3.0.5.260730
 nltk==3.10.2
