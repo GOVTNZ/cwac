@@ -7,7 +7,6 @@ changed, then the focus indicator is invisible.
 """
 
 import logging
-import sys
 import time
 from typing import Any
 
@@ -157,7 +156,10 @@ class FocusIndicatorAudit(DefaultAudit):
     if not self.config.headless:
       logger.error('ERROR: FocusIndicatorAudit needs headless=True in config.json')
       print('ERROR: FocusIndicatorAudit needs headless=True in config.json')
-      sys.exit(1)
+
+      # We cannot run this audit so return letting AuditManager know that the
+      # audit failed
+      return False
 
     original_window_size = self.browser.driver.get_window_size()
 

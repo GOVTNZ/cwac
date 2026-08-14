@@ -54,8 +54,12 @@ class AxeCoreAudit(DefaultAudit):
           logger.info('Reading axe.min.js')
           axe_min_js = file.read()
       except FileNotFoundError:
-        logger.exception('axe.min.js not found. Please run `npm install`')
-        print('axe.min.js not found. Please run `npm install`')
+        msg = 'axe.min.js not found. Please run `npm install`'
+        logger.error(msg)
+        print(msg)
+
+        # Being unable to load axe.min.js indicates a misconfigured environment
+        # that we cannot recover from, so exit the program.
         sys.exit(1)
       run_axe = (
         'var callback = arguments[arguments.length - 1];'
