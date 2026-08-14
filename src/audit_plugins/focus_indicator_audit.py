@@ -156,9 +156,6 @@ class FocusIndicatorAudit(DefaultAudit):
     if not self.config.headless:
       logger.error('ERROR: FocusIndicatorAudit needs headless=True in config.json')
       print('ERROR: FocusIndicatorAudit needs headless=True in config.json')
-
-      # We cannot run this audit so return letting AuditManager know that the
-      # audit failed
       return False
 
     original_window_size = self.browser.driver.get_window_size()
