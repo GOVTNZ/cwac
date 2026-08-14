@@ -102,9 +102,15 @@ The columns in `axe_core_audit.csv` are:
 - `audit_type`
   - The plugin that produced the row (`AxeCoreAudit`).
 - `issue_id`
-  - A hash uniquely identifying this issue instance (based on base URL, rule ID,
-    element HTML, and viewport). Useful for tracking the same issue across
-    multiple scans.
+  - A hash uniquely identifying this issue instance. Based on:
+
+    1. Base URL (`base_url` column in this CSV)
+    2. Axe-core Rule ID (`id` column in this CSV e.g. `color-contrast`,
+       `link-name`)
+    3. Element HTML (`html` column in this CSV)
+    4. Viewport dimensions (`viewport_size` column in this CSV).
+
+    Useful for tracking the same issue across multiple scans.
 - `description`
   - A human-readable summary of the rule being tested.
 - `target`

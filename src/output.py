@@ -233,83 +233,143 @@ def print_progress_bar(
 
 
 def generate_axe_core_template_aware_results(audit_name: str) -> None:
-  """Combine repeated axe-core issues.
+  """Filter axe-core results for issues with same HTML repeated across multiple pages.
 
-  Used for detecting template-level errors.
+  These issues are likely to be template-level problems, rather than isolated
+  page-specific issues, and are extracted to a new CSV file for easier analysis.
+
+  This function uses Pandas to process axe-core audit results, attempting to
+  identify issues with identical HTML structure that seem to be repeated across
+  multiple pages. These issues are likely to be template-level problems, rather
+  than isolated page-specific issues so they are extracted to a new CSV file for
+  easier analysis. This helps developers identify and fix systematic
+  accessibility problems that affect multiple pages.
+
+  Issues are grouped by the following fields:
+    - base_url: The organization/domain being audited
+    - id: The axe-core rule ID (e.g., 'color-contrast', 'image-alt')
+    - html: The exact HTML code of the problem element
+    - viewport_size: The screen size tested (mobile vs desktop issues may differ)
+
+  Extra fields are added to each group:
+    - num_issues: Summed total of all instances across pages
+    - num_pages: Number of distinct URLs affected by this issue
+
+  Each group becomes a single row in the output CSV.
+
+  The output is sorted by frequency (most impactful issues first) and written to
+  `axe_core_audit_template_aware.csv` for easier template-level analysis.
 
   Args:
-      audit_name (str): The name of the audit that was just run
+      audit_name (str): Name of axe-core audit. `results/{audit_name}/axe_core_audit.csv` must exist.
+
+  Returns:
+      None. Writes results to results/{audit_name}/axe_core_audit_template_aware.csv
   """
-
-  def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) -> pd.DataFrame:
-    """Template aware algorithm - finds template-level issues.
-
-    Uses pandas to group/aggregate axe-core data to show template
-    level issues within websites.
-
-    Args:
-        input_df (pd.DataFrame): The input dataframe.
-        groupby_cols (list[str]): The columns to group by.
-
-    Returns:
-        pd.DataFrame: The grouped and aggregated dataframe.
-    """
-    # Collect all rows where count is 0
-    zero_count_rows = input_df[input_df['num_issues'] == 0]
-
-    # Remove the zero count rows from the input_df
-    no_zero_count_df = input_df[input_df['num_issues'] != 0]
-
-    # Group the data
-    grouped_df = no_zero_count_df.groupby(groupby_cols)
-
-    # Generate the aggregation dictionary
-    agg_dict = {'num_issues': 'sum'}
-
-    # Add in 'first' for all other columns
-    for col in input_df.columns:
-      if col not in agg_dict and col not in groupby_cols:
-        agg_dict[col] = 'first'
-
-    # Aggregate the data
-    agg_df = grouped_df.agg(agg_dict)
-
-    # Reset the index
-    agg_df = agg_df.reset_index()
-
-    # Concatenate the zero count rows with the agg data
-    agg_df = pd.concat([agg_df, zero_count_rows])
-
-    # Generate column for the number of pages impacted by an issue
-    agg_df['num_pages'] = agg_df.apply(lambda row: agg_df[agg_df['issue_id'] == row.issue_id]['url'].nunique(), axis=1)
-    agg_df.reset_index()
-
-    return agg_df
-
   results_path = f'./results/{audit_name}'
 
-  # Read the CSV file into a DataFrame
+  # Read the raw axe-core audit results into a DataFrame
   data_frame = pd.read_csv(f'{results_path}/axe_core_audit.csv')
 
-  # Get and update the column order for the page count column
+  # The generated CSV will have the same columns as the input, plus 'num_pages'
+  # (placed before 'num_issues') to indicate how many distinct pages share the
+  # same issue.
   processed_column_order = list(data_frame.columns)
   processed_column_order.insert(processed_column_order.index('num_issues'), 'num_pages')
 
-  # Group and aggregate the data
+  # Aggregate issues at the template level, combining duplicate issues found
+  # on different pages but with identical HTML element structure
   data_frame = template_aware_algorithm(
     input_df=data_frame,
     groupby_cols=['base_url', 'id', 'html', 'viewport_size'],
   )
 
+  # We want to present the most repeated (and therefore likely template-wide)
+  # issues first, as these are the most critical to address.
   data_frame = data_frame.sort_values(
     by=['num_issues', 'organisation', 'base_url', 'url'],
     ascending=[False, True, True, True],
   )
 
-  # Write the data to CSV file with original column order
+  # Write the aggregated results to CSV file, preserving the prepared column order
   data_frame.to_csv(
     f'{results_path}/axe_core_audit_template_aware.csv',
     index=False,
     columns=list(processed_column_order),
     encoding='utf-8-sig',
   )
+
+
+def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) -> pd.DataFrame:
+  """Aggregate accessibility issues by grouping identical problems across pages.
+
+  For rows in `input_df` that represent issues (num_issues > 0) it:
+
+  1. Applies the given grouping (given by `groupby_cols`) to the given data
+     frame (`input_df`)
+  2. Adds a `num_pages` column to indicate how many distinct pages were put in
+     each group.
+
+  For rows that represent no issues (num_issues == 0), it preserves them unchanged.
+
+  Args:
+      input_df (pd.DataFrame): Raw axe-core audit results.
+        Expected columns: base_url, id, html, viewport_size, num_issues,
+        issue_id, url, etc.
+      groupby_cols (list[str]): Rows in `input_df` with the same values for
+        these column names are put in the same group.
+
+  Returns:
+      pd.DataFrame: Includes all columns from `input_df` as well as 2 new columns:
+        1. num_issues
+          - Count of all issues with identical values for columns in `groupby_cols`
+        2. num_pages
+          - Count of distinct URLs which have the same `issue_id` as the current row.
+  """
+  # Select pages with no issues. These are preserved unchanged.
+  zero_count_rows = input_df[input_df['num_issues'] == 0]
+
+  # Select only the rows where num_issues is not zero, as these are the ones we
+  # want to aggregate
+  no_zero_count_df = input_df[input_df['num_issues'] != 0]
+
+  # Create groups within the DataFrame based on the values in the specified
+  # columns.
+  grouped_df = no_zero_count_df.groupby(groupby_cols)
+
+  # Now we use aggregation to reduce each group to a single row.  We define an
+  # aggregation (as a Dict) to tell Pandas how to reduce each column.  For the
+  # num_issues column, we sum the counts. For all other columns, we take the
+  # first occurrence in each group.
+  agg_dict = {'num_issues': 'sum'}
+  for col in input_df.columns:
+    if col not in agg_dict and col not in groupby_cols:
+      agg_dict[col] = 'first'
+  # agg_dict example: {'num_issues': 'sum', 'base_url': 'first', 'id': 'first', ...}
+
+  # Apply aggregation to reduce each group to a single row
+  agg_df = grouped_df.agg(agg_dict)
+
+  # Resetting the index of the DataFrame to ensure that the groupby columns are
+  # treated as regular columns rather than index levels. This is important for
+  # further processing and for writing the DataFrame to CSV.
+  agg_df = agg_df.reset_index()
+
+  # Add back in the rows with no issues which are passed through unchanged.
+  agg_df = pd.concat([agg_df, zero_count_rows])
+
+  # Update the whole `num_pages` column in the DataFrame. For each row, the
+  # right-hand side calculates:
+  #
+  # 1. Find all rows with the same issue_id as the current row.
+  # 2. Count how many distinct url values are in that set.
+  # 3. Put that count into num_pages for that row.
+  #
+  # So the effect is: every row gets a page-count showing how widely that issue
+  # appears across different pages.
+  agg_df['num_pages'] = agg_df.apply(lambda row: agg_df[agg_df['issue_id'] == row.issue_id]['url'].nunique(), axis=1)
+
+  # Reset the index of the final DataFrame to ensure a clean output
+  agg_df.reset_index()
+
+  return agg_df
