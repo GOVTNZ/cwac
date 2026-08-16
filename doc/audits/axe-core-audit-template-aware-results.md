@@ -49,28 +49,3 @@ failure).
 
 For example if the current row has `id=image-alt` and `num_pages=12` then we
 know that 12 scanned pages had an `image-alt` issue.
-
-## Questions
-
-possible improvements
-
-- capture more than 100char of html
-
-This is an attempt to highlight f Is this the right grouping for "same page"?
-(base_url, id, html, viewport)
-
-- Needs to be base_url not url because we want to compare across pages
-- id is the issue id so needs to be there because it's the type of the failure
-- html is the line that failed (or 100 chars of)
-- viewport ???
-  - means that if the same failure happens at both viewports then it won't be
-    double counted
-  - necessary because axe_core_audit is not one row per failure
-  - but we will still double count eh? - both viewports will be included, just
-    not grouped?
-
-why html not target? when would html be the same but target would not? if html
-is the same but target is not then is it the same element? the idea is that
-footer.php could be inserted in different places so might not always be same
-target the downside is that if the same html appears in multiple lines it will
-be counted as a dupe when it shouldn't be Should target maybe be part of this?
