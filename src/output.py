@@ -248,7 +248,7 @@ def generate_axe_core_template_aware_results(audit_name: str) -> None:
   Issues are grouped by the following fields:
     - base_url: The organization/domain being audited
     - id: The axe-core rule ID (e.g., 'color-contrast', 'image-alt')
-    - html: The exact HTML code of the problem element
+    - html: The opening HTML code of the problem element (truncated to 100 chars - see `axe_core_audit.py` )
     - viewport_size: The screen size tested (mobile vs desktop issues may differ)
 
   Extra fields are added to each group:
@@ -374,6 +374,6 @@ def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) ->
   agg_df['num_pages'] = agg_df.apply(lambda row: agg_df[agg_df['issue_id'] == row.issue_id]['url'].nunique(), axis=1)
 
   # Reset the index of the final DataFrame to ensure a clean output
-  agg_df.reset_index()
+  agg_df = agg_df.reset_index()
 
   return agg_df
