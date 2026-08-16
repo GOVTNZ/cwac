@@ -301,16 +301,20 @@ def generate_axe_core_template_aware_results(audit_name: str) -> None:
 
 
 def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) -> pd.DataFrame:
-  """Aggregate accessibility issues by grouping identical problems across pages.
+  """Update the given DataFrame with metrics columns.
 
-  For rows in `input_df` that represent issues (num_issues > 0) it:
+  The metrics columns are:
 
-  1. Applies the given grouping (given by `groupby_cols`) to the given data
-     frame (`input_df`)
-  2. Adds a `num_pages` column to indicate how many distinct pages were put in
-     each group.
-
-  For rows that represent no issues (num_issues == 0), it preserves them unchanged.
+  1. `num_issues` (WARNING: this function changes column meaning)
+    - This column already exists in `input_df`. This function re-uses the column
+    but now the value is the count of all issues with identical values for all
+    columns in `groupby_cols`. For example, if the groupby_cols are:
+      ['base_url', 'id', 'html', 'viewport_size']
+    then `num_issues` will be the count of all rows in `input_df` that have the
+    same values for those four columns.
+  2. `num_pages`
+    - A new column added by this function.
+    - It's value is the count of distinct URLs which have the same `issue_id` as the current row.
 
   Args:
       input_df (pd.DataFrame): Raw axe-core audit results.
@@ -320,9 +324,9 @@ def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) ->
         these column names are put in the same group.
 
   Returns:
-      pd.DataFrame: Includes all columns from `input_df` as well as 2 new columns:
-        1. num_issues
-          - Count of all issues with identical values for columns in `groupby_cols`
+      pd.DataFrame: Includes all columns from `input_df` as well as the mertrics columns:
+        1. -num_issues (WARNING: this function changes column meaning)
+          - Count of all issues with identical values for all columns in `groupby_cols`
         2. num_pages
           - Count of distinct URLs which have the same `issue_id` as the current row.
   """
