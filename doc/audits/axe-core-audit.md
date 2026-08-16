@@ -70,10 +70,8 @@ If the axe-core audit was enabled for a scan, its results will be in 2 files in
 the results:
 
 1. `axe_core_audit.csv` — contains all violations found during the scan.
-2. `axe_core_audit_template_aware.csv` — a filtered version where violations
-   appearing on multiple pages due to shared template/component code are
-   de-duplicated. This file helps identify systemic issues that need to be fixed
-   in templates rather than on individual pages.
+2. `axe_core_audit_template_aware.csv` — documented in
+   [axe-core audit template aware results](./axe-core-audit-template-aware-results.md)
 
 ### Report columns
 
