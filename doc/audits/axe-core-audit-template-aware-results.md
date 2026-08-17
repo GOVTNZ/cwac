@@ -38,6 +38,25 @@ and `html`.
 Higher values of `num_issues` indicate that the chunk of HTML had the same
 axe-core failure across multiple URLs.
 
+### Why did we choose those columns?
+
+`num_issues` is based on grouping results. Below is the rationale used for
+inclusion of each column:
+
+- `base_url`
+  - Compare all URLs under a given `base_url`
+- `id`
+  - We want to group axe-core findings of the same type together e.g.
+    `image-alt`, `color-contrast`
+- `viewport_size`
+  - Treat findings at different viewport sizes as different even if they have
+    the same HTML
+- `html`
+  - Compare the chunks of HTML which had the problem
+
+TODO: We should discuss whether viewport should be in the grouping and whether
+`target` should be added to cover cases where HTML snippet is quite generic
+
 ## Interpreting `num_pages`
 
 The goal of `num_pages` is to give you a sense of which kinds of accessibility
