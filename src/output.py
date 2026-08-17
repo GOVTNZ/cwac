@@ -374,6 +374,6 @@ def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) ->
   agg_df['num_pages'] = agg_df.apply(lambda row: agg_df[agg_df['issue_id'] == row.issue_id]['url'].nunique(), axis=1)
 
   # Reset the index of the final DataFrame to ensure a clean output
-  agg_df = agg_df.reset_index()
+  agg_df.reset_index()
 
   return agg_df
