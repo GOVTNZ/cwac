@@ -1,13 +1,9 @@
 # axe-core audit template aware results
 
 Once scanning is complete, the [axe_core_audit.csv](./axe-core-audit.md) is used
-to generate `axe_core_audit_template_aware.csv`
-
-This CSV adds some metrics to make it easier for you to identify failures which
-_might_ be part of a reusable template.
-
-The template aware CSV makes the following changes from the standard axe-core
-results:
+to generate `axe_core_audit_template_aware.csv`. This CSV adds some metrics to
+make it easier for you to identify failures which _might_ be part of a reusable
+template. It makes the following changes from the standard axe-core results:
 
 1. The `num_issues` column now represents the total number of failures in the
    result-set that have the same value for `base_url`, `id`, `viewport_size`,
@@ -35,36 +31,14 @@ For the row you are looking at, `num_issues` is the total number of failures in
 the result-set that have the same value for `base_url`, `id`, `viewport_size`,
 and `html`.
 
-Higher values of `num_issues` indicate that the chunk of HTML had the same
-axe-core failure across multiple URLs.
-
-### Why did we choose those columns?
-
-`num_issues` is based on grouping results. Below is the rationale used for
-inclusion of each column:
-
-- `base_url`
-  - Compare all URLs under a given `base_url`
-- `id`
-  - We want to group axe-core findings of the same type together e.g.
-    `image-alt`, `color-contrast`
-- `viewport_size`
-  - Treat findings at different viewport sizes as different even if they have
-    the same HTML
-- `html`
-  - Compare the chunks of HTML which had the problem
-
-TODO: We should discuss whether viewport should be in the grouping and whether
-`target` should be added to cover cases where HTML snippet is quite generic
-
 ## Interpreting `num_pages`
 
 The goal of `num_pages` is to give you a sense of which kinds of accessibility
 issue are the most common across the scanned pages.
 
 For the row you are looking at, the `num_pages` value is the total number of
-URLs in the result-set that had the same `id` value (same kind of Axe-core
-failure).
+URLs in the result-set that had the same `id` value (`id` is the type of
+Axe-core failure).
 
 For example if the current row has `id=image-alt` and `num_pages=12` then we
 know that 12 scanned pages had an `image-alt` issue.
