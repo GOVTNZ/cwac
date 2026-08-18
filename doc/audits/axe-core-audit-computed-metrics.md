@@ -1,4 +1,4 @@
-# Highlighting findings which potentially have a common cause
+# Axe-core audit computed metrics
 
 Sometimes multiple axe-core accessibility findings can have a common cause e.g.
 a shared template or a single CSS style. CWAC does not have enough information

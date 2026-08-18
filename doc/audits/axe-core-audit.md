@@ -71,7 +71,7 @@ the results:
 
 1. `axe_core_audit.csv` — contains all violations found during the scan.
 2. `axe_core_audit_template_aware.csv` — documented in
-   [axe-core audit template aware results](./axe-core-audit-template-aware-results.md)
+   [axe-core audit template aware results](./axe-core-audit-computed-metrics.md)
 
 ### Report columns
 
