@@ -233,32 +233,25 @@ def print_progress_bar(
 
 
 def generate_axe_core_template_aware_results(audit_name: str) -> None:
-  """Filter axe-core results for issues with same HTML repeated across multiple pages.
+  """Derive new CSV from axe-core results with added frequency stats.
 
-  These issues are likely to be template-level problems, rather than isolated
-  page-specific issues, and are extracted to a new CSV file for easier analysis.
-
-  This function uses Pandas to process axe-core audit results, attempting to
-  identify issues with identical HTML structure that seem to be repeated across
-  multiple pages. These issues are likely to be template-level problems, rather
-  than isolated page-specific issues so they are extracted to a new CSV file for
-  easier analysis. This helps developers identify and fix systematic
-  accessibility problems that affect multiple pages.
+  Process axe-core audit results, attempting to identify issues with a common
+  cause by searching for issues with a similar HTML structure repeated across
+  multiple pages. These issues are extracted to a new CSV file for easier
+  analysis.
 
   Issues are grouped by the following fields:
     - base_url: The organization/domain being audited
     - id: The axe-core rule ID (e.g., 'color-contrast', 'image-alt')
-    - html: The opening HTML code of the problem element (truncated to 100 chars - see `axe_core_audit.py` )
+    - html: The opening HTML code of the problem element (first 100 chars)
     - viewport_size: The screen size tested (mobile vs desktop issues may differ)
 
   Extra fields are added to each group:
-    - num_issues: Summed total of all instances across pages
-    - num_pages: Number of distinct URLs affected by this issue
+    - num_issues: No. of issues with same `id` and similar HTML structure
+    - num_pages: No. of distinct URLs with the same `id` (axe-core rule violation name)
 
-  Each group becomes a single row in the output CSV.
-
-  The output is sorted by frequency (most impactful issues first) and written to
-  `axe_core_audit_template_aware.csv` for easier template-level analysis.
+  Each group becomes a single row in the output CSV. The output is written to
+  `axe_core_audit_template_aware.csv` for easier analysis.
 
   Args:
       audit_name (str): Name of axe-core audit. `results/{audit_name}/axe_core_audit.csv` must exist.

@@ -1,9 +1,14 @@
-# axe-core audit template aware results
+# Highlighting findings which potentially have a common cause
+
+Sometimes multiple axe-core accessibility findings can have a common cause e.g.
+a shared template or a single CSS style. CWAC does not have enough information
+to be certain about when issues have a common cause but we can compute some
+metrics to help your analysis of this.
 
 Once scanning is complete, the [axe_core_audit.csv](./axe-core-audit.md) is used
-to generate `axe_core_audit_template_aware.csv`. This CSV adds some metrics to
-make it easier for you to identify failures which _might_ be part of a reusable
-template. It makes the following changes from the standard axe-core results:
+to generate `axe_core_audit_template_aware.csv`.
+
+It makes the following changes from the standard axe-core results:
 
 1. The `num_issues` column now represents the total number of failures in the
    result-set that have the same value for `base_url`, `id`, `viewport_size`,
