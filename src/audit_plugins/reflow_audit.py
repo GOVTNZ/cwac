@@ -15,7 +15,6 @@ Disclaimer:
 """
 
 import logging
-import sys
 from typing import Any
 
 from config import Config
@@ -58,16 +57,17 @@ class ReflowAudit(DefaultAudit):
     """
     if not self.config.headless:
       # Log an error and quit
-      logger.error('Headless mode must be enabled for ReflowAudit.')
-      print('Headless mode must be enabled for ReflowAudit.')
-      sys.exit(1)
+      msg = 'Headless mode must be enabled for ReflowAudit.'
+      logger.error(msg)
+      print(msg)
+      return False
 
     # If browser is not 320px wide
     if self.browser.driver.get_window_size()['width'] != 320:
-      logger.error('ReflowAudit must only run at 320px wide')
-      print('ReflowAudit must only run at 320px wide')
-      print('Width was ' + str(self.browser.driver.get_window_size()['width']))
-      sys.exit(1)
+      msg = f'ReflowAudit must only run at 320px wide. Width was {self.browser.driver.get_window_size()["width"]}'
+      logger.error(msg)
+      print(msg)
+      return False
 
     # Determine if there is a horisontal overflow
     try:
