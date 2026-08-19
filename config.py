@@ -236,13 +236,6 @@ class Config:
           reader = csv.reader(file)
           header = next(reader)
           for row in reader:
-            if len(row) != 3:
-              raise ValueError(
-                'CSV files must have 3 columns',
-                row,
-                filename,
-              )
-
             subject = cast(SiteData, dict(zip(header, row, strict=True)))
 
             # Parse the URL to get just the domain
