@@ -25,6 +25,7 @@ class SiteData(TypedDict):
   url: str
   sector: str
   supports_head: bool
+  columns: dict[str, str]
 
 
 class Config:
@@ -236,7 +237,15 @@ class Config:
           reader = csv.reader(file)
           header = next(reader)
           for row in reader:
-            subject = cast(SiteData, dict(zip(header, row, strict=True)))
+            columns = dict(zip(header, row, strict=True))
+
+            subject = SiteData(
+              organisation=columns['organisation'],
+              url=columns['url'],
+              sector=columns['sector'],
+              supports_head=True,
+              columns=columns,
+            )
 
             # Parse the URL to get just the domain
             parsed_url = parse.urlparse(subject['url'])
@@ -258,6 +267,7 @@ class Config:
               continue
 
             subject['url'] = self.__normalize_url(subject['url'])
+            subject['columns']['url'] = subject['url']
 
             subject['supports_head'] = subject['url'] not in headless_base_urls
 
