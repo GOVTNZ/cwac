@@ -181,7 +181,7 @@ class AuditManager:
       if not detail.get_attribute('open'):
         try:
           self.browser.driver.execute_script("arguments[0].setAttribute('open', '')", detail)
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:  # noqa: BLE001 # pylint: disable=broad-exception-caught
           logger.warning("Could not open <details> element titled '%s'", detail.text)
           continue
 

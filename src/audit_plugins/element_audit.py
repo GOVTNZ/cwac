@@ -43,14 +43,14 @@ class ElementAudit(DefaultAudit):
     # Scrape the page source of the loaded browser
     try:
       page_source = self.browser.get_page_source()
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
       logger.error('Error getting page source: %s', exc)
       return False
 
     # Try to parse using BeautifulSoup
     try:
       soup = BeautifulSoup(page_source, 'lxml')
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
       logger.error('Error parsing page source: %s', exc)
       return False
 

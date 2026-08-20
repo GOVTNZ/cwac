@@ -113,7 +113,7 @@ class Browser:
             document.doctype.systemId + '"' : '') + '>';"""
     try:
       doctype_string = self.driver.execute_script(doctype_js)
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:  # noqa: BLE001 # pylint: disable=broad-exception-caught
       logger.error(
         ("An error occurred while trying to get this website's doctype. Defaulting to html5 for %s"),
         self.driver.current_url,

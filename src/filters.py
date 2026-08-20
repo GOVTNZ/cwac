@@ -276,7 +276,7 @@ def url_filter_same_protocol(url_a: str, url_b: str) -> bool:
   try:
     parsed_a = urllib.parse.urlparse(url_a)
     parsed_b = urllib.parse.urlparse(url_b)
-  except Exception as e:
+  except Exception as e:  # noqa: BLE001
     logger.error('Failed to parse URL: %s', e)
     return False
 
@@ -320,7 +320,7 @@ class URLFilter:
     """
     try:
       parsed_url = urllib.parse.urlparse(url)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
       logger.error('Failed to parse URL: %s', e)
       return False
 
