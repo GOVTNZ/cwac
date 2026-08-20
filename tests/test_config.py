@@ -328,3 +328,213 @@ class TestUrlLoading:
       'https://stark.com/finance',
       'https://stark.com/rd',
     ]
+
+  def test_urls_have_the_same_columns(self, fs: FakeFilesystem) -> None:
+    """Adds the same columns to all urls, to avoid csv writer errors."""
+    fs.add_real_file('config/config_default.json')
+
+    with open('base_urls/visit/my urls.csv', 'w', encoding='utf-8') as f:
+      f.write(
+        textwrap.dedent("""
+          organisation,url,sector,priority
+          ACME,https://acme.com/finance,Finance,High
+          ACME,https://acme.com/hr,Human Resources,Medium
+          ACME,https://acme.com/legal,Legal,Low
+          Stark Industries,https://stark.com/rd,R&D,High
+          Stark Industries,https://stark.com/finance,Finance,Medium
+        """).strip(),
+      )
+    with open('base_urls/visit/q3_2024_urls.csv', 'w', encoding='utf-8') as f:
+      f.write(
+        textwrap.dedent("""
+          url,sector,region,priority
+          https://wayne.com/security,Security,Wellington,High
+          https://wayne.com/finance,Finance,Auckland,Medium
+          https://wayne.com/legal,Legal,Wellington,Low
+          https://cyberdyne.com/rd,R&D,Auckland,High
+          https://cyberdyne.com/security,Security,Wellington,Medium
+        """).strip(),
+      )
+    with open('base_urls/visit/theirs_urls.csv', 'w', encoding='utf-8') as f:
+      f.write(
+        textwrap.dedent("""
+          url
+          https://umbrella.com
+          https://bnl.com/
+          https://umbrella.com/hr
+          https://umbrella.com/legal
+          https://bnl.com/finance
+        """).strip(),
+      )
+
+    config = Config('config_default.json')
+
+    expected: list[SiteData] = [
+      {
+        'url': 'https://acme.com/finance',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'ACME',
+          'url': 'https://acme.com/finance',
+          'sector': 'Finance',
+          'priority': 'High',
+          'region': '',
+        },
+      },
+      {
+        'url': 'https://acme.com/hr',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'ACME',
+          'url': 'https://acme.com/hr',
+          'sector': 'Human Resources',
+          'priority': 'Medium',
+          'region': '',
+        },
+      },
+      {
+        'url': 'https://acme.com/legal',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'ACME',
+          'url': 'https://acme.com/legal',
+          'sector': 'Legal',
+          'priority': 'Low',
+          'region': '',
+        },
+      },
+      {
+        'url': 'https://bnl.com/',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://bnl.com/',
+          'organisation': '',
+          'priority': '',
+          'region': '',
+          'sector': '',
+        },
+      },
+      {
+        'url': 'https://bnl.com/finance',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://bnl.com/finance',
+          'organisation': '',
+          'priority': '',
+          'region': '',
+          'sector': '',
+        },
+      },
+      {
+        'url': 'https://cyberdyne.com/rd',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://cyberdyne.com/rd',
+          'sector': 'R&D',
+          'region': 'Auckland',
+          'priority': 'High',
+          'organisation': '',
+        },
+      },
+      {
+        'url': 'https://cyberdyne.com/security',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://cyberdyne.com/security',
+          'sector': 'Security',
+          'region': 'Wellington',
+          'priority': 'Medium',
+          'organisation': '',
+        },
+      },
+      {
+        'url': 'https://stark.com/finance',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Stark Industries',
+          'url': 'https://stark.com/finance',
+          'sector': 'Finance',
+          'priority': 'Medium',
+          'region': '',
+        },
+      },
+      {
+        'url': 'https://stark.com/rd',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Stark Industries',
+          'url': 'https://stark.com/rd',
+          'sector': 'R&D',
+          'priority': 'High',
+          'region': '',
+        },
+      },
+      {
+        'url': 'https://umbrella.com',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://umbrella.com',
+          'organisation': '',
+          'priority': '',
+          'region': '',
+          'sector': '',
+        },
+      },
+      {
+        'url': 'https://umbrella.com/hr',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://umbrella.com/hr',
+          'organisation': '',
+          'priority': '',
+          'region': '',
+          'sector': '',
+        },
+      },
+      {
+        'url': 'https://umbrella.com/legal',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://umbrella.com/legal',
+          'organisation': '',
+          'priority': '',
+          'region': '',
+          'sector': '',
+        },
+      },
+      {
+        'url': 'https://wayne.com/finance',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://wayne.com/finance',
+          'sector': 'Finance',
+          'region': 'Auckland',
+          'priority': 'Medium',
+          'organisation': '',
+        },
+      },
+      {
+        'url': 'https://wayne.com/legal',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://wayne.com/legal',
+          'sector': 'Legal',
+          'region': 'Wellington',
+          'priority': 'Low',
+          'organisation': '',
+        },
+      },
+      {
+        'url': 'https://wayne.com/security',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://wayne.com/security',
+          'sector': 'Security',
+          'region': 'Wellington',
+          'priority': 'High',
+          'organisation': '',
+        },
+      },
+    ]
+
+    assert sorted(config.audit_subjects, key=lambda site: site['url']) == expected
