@@ -287,7 +287,6 @@ class Crawler:
       try:
         href = urllib.parse.urljoin(base_uri, href)
       except ValueError:
-        # Log base_uri, href, and the exception
         logger.exception('Failed to join URL %s %s', base_uri, href)
         continue
 
