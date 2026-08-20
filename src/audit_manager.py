@@ -4,7 +4,7 @@ import logging
 import os
 import time
 import urllib.parse
-from typing import Any, Type
+from typing import Any
 
 import selenium
 from selenium.webdriver.common.by import By
@@ -39,7 +39,7 @@ class AuditManager:
     # if they are blocked by anti-bot measures.
     self.discarded_urls: dict[str, str] = {}
 
-  def register_audit(self, audit_name: str, audit_class: Type[Any], **kwargs: Any) -> None:
+  def register_audit(self, audit_name: str, audit_class: type[Any], **kwargs: Any) -> None:
     """Register audits to be run by run_audits().
 
     This can also be used to re-run a test with updated kwargs.
@@ -185,7 +185,7 @@ class AuditManager:
           logger.warning("Could not open <details> element titled '%s'", detail.text)
           continue
 
-  def run_audits(self) -> bool:  # noqa: PLR0912, PLR0915
+  def run_audits(self) -> bool:  # noqa: PLR0915
     """Iterate through registered audits and runs them.
 
     Main entry point for running audits. Iterates through all registered audits

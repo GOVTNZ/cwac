@@ -103,8 +103,7 @@ class LanguageAudit(DefaultAudit):
       output = output[0].upper() + output[1:]
 
     # If it ends with a colon, remove it
-    if output.endswith(':'):
-      output = output[:-1]
+    output = output.removesuffix(':')
 
     # Common punctuation that ends a sentence
     end_punct = set(['.', '!', '?'])

@@ -13,7 +13,6 @@ import urllib
 import urllib.parse
 import urllib.robotparser
 from queue import SimpleQueue
-from typing import Tuple
 
 import requests
 import selenium.common.exceptions
@@ -510,7 +509,7 @@ class Crawler:
     pages_scanned = 0
 
     # queue element: (parent_url, url)
-    queue = RandomQueue[Tuple[str, str]]()
+    queue = RandomQueue[tuple[str, str]]()
     queue.push((base_url, base_url))
 
     # track visited urls
@@ -630,7 +629,7 @@ class Crawler:
     if self.config.max_links_per_domain != 1:
       logger.info('Crawl exhausted all links %s', base_url)
 
-  def __crawl_sitemap(self, url: str) -> list[Tuple[str, str]]:
+  def __crawl_sitemap(self, url: str) -> list[tuple[str, str]]:
     """Crawls the urls sitemap, if there is one."""
     logger.info('Fetching sitemap for %s', url)
 

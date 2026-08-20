@@ -2,7 +2,8 @@
 
 import logging
 import urllib.parse
-from typing import Any, Callable, TypedDict
+from collections.abc import Callable
+from typing import Any, TypedDict
 
 import requests
 
