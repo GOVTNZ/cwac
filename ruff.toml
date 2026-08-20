@@ -11,17 +11,17 @@ ignore = [
   'PLR2004'  # most numbers are not magic
 ]
 extend-select = [
-  'E',    # pycodestyle
-  'W',    # pycodestyle
-  'F',    # Pyflakes
   'D',    # pydocstyle
-  'SIM',  # flake8-simplify
+  'E',    # pycodestyle
+  'F',    # Pyflakes
   'I',    # isort
-  'S',    # flake8-bandit
   'PLC',  # pylint conventions
   'PLE',  # pylint errors
   'PLR',  # pylint refactors
-  'PLW'   # pylint warnings
+  'PLW',  # pylint warnings
+  'S',    # flake8-bandit
+  'SIM',  # flake8-simplify
+  'W'     # pycodestyle
 ]
 
 [lint.pydocstyle]
