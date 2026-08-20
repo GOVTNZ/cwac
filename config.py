@@ -22,7 +22,6 @@ class SiteData(TypedDict):
   """Holds data for a site that should be crawled and audited."""
 
   url: str
-  sector: str
   supports_head: bool
   columns: dict[str, str]
 
@@ -240,7 +239,6 @@ class Config:
 
             subject = SiteData(
               url=columns['url'],
-              sector=columns['sector'],
               supports_head=True,
               columns=columns,
             )
@@ -410,9 +408,7 @@ class Config:
       # Strip whitespace
       domain = domain.strip()
 
-      base_urls[domain] = {
-        'sector': subject['sector'],
-      }
+      base_urls[domain] = {}
     return base_urls
 
   def is_path_subdir(self, path: str, parent_path: str) -> bool:

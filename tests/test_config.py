@@ -194,7 +194,6 @@ class TestUrlLoading:
     expected: list[SiteData] = [
       {
         'url': 'https://bnl.com/',
-        'sector': 'Sales',
         'supports_head': True,
         'columns': {
           'organisation': "Buy 'n' Large",
@@ -206,7 +205,6 @@ class TestUrlLoading:
       },
       {
         'url': 'https://bnl.com/finance',
-        'sector': 'Finance',
         'supports_head': True,
         'columns': {
           'organisation': "Buy 'n' Large",
@@ -218,7 +216,6 @@ class TestUrlLoading:
       },
       {
         'url': 'https://cyberdyne.com/rd',
-        'sector': 'R&D',
         'supports_head': True,
         'columns': {
           'organisation': 'Cyberdyne Systems',
@@ -230,7 +227,6 @@ class TestUrlLoading:
       },
       {
         'url': 'https://cyberdyne.com/security',
-        'sector': 'Security',
         'supports_head': True,
         'columns': {
           'organisation': 'Cyberdyne Systems',
@@ -242,7 +238,6 @@ class TestUrlLoading:
       },
       {
         'url': 'https://umbrella.com',
-        'sector': 'R&D',
         'supports_head': True,
         'columns': {
           'organisation': 'Umbrella Corp',
@@ -254,7 +249,6 @@ class TestUrlLoading:
       },
       {
         'url': 'https://umbrella.com/hr',
-        'sector': 'Human Resources',
         'supports_head': True,
         'columns': {
           'organisation': 'Umbrella Corp',
@@ -266,7 +260,6 @@ class TestUrlLoading:
       },
       {
         'url': 'https://umbrella.com/legal',
-        'sector': 'Legal',
         'supports_head': True,
         'columns': {
           'organisation': 'Umbrella Corp',
@@ -278,7 +271,6 @@ class TestUrlLoading:
       },
       {
         'url': 'https://wayne.com/finance',
-        'sector': 'Finance',
         'supports_head': True,
         'columns': {
           'organisation': 'Wayne Enterprises',
@@ -290,7 +282,6 @@ class TestUrlLoading:
       },
       {
         'url': 'https://wayne.com/legal',
-        'sector': 'Legal',
         'supports_head': True,
         'columns': {
           'organisation': 'Wayne Enterprises',
@@ -302,7 +293,6 @@ class TestUrlLoading:
       },
       {
         'url': 'https://wayne.com/security',
-        'sector': 'Security',
         'supports_head': True,
         'columns': {
           'organisation': 'Wayne Enterprises',
