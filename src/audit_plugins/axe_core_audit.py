@@ -67,7 +67,7 @@ class AxeCoreAudit(DefaultAudit):
         "resultTypes:['violations']"
         '}).then((r)=> {callback(r)});'
       )
-      AuditManager.axe_core_js = ''.join((axe_min_js, run_axe))
+      AuditManager.axe_core_js = f'{axe_min_js}{run_axe}'
 
   def run_generate_expanded_results(self, axe_core_results: dict[Any, Any]) -> list[dict[Any, Any]]:
     """Generate an expanded list of axe-core violations.

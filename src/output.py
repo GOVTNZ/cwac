@@ -5,7 +5,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any
+from typing import Any, ClassVar
 
 import pandas as pd
 
@@ -21,7 +21,7 @@ class CSVWriter:
 
   # A dict of file paths that map to locks to
   # prevent multiple threads writing to the same file
-  file_locks: dict[str, threading.Lock] = {}
+  file_locks: ClassVar[dict[str, threading.Lock]] = {}
 
   # A lock to prevent multiple threads writing to file_locks dict
   lock_for_file_locks = threading.Lock()
@@ -129,7 +129,7 @@ def output_init_message(config: Config) -> None:
   print_log('Viewport sizes:')
   for viewport_name, viewport_size in config.viewport_sizes.items():
     print_log(f'    {viewport_name}: {viewport_size}')
-  for _, audit_plugin in config.audit_plugins.items():
+  for audit_plugin in config.audit_plugins.values():
     print_log(f'Audit plugin: {audit_plugin["class_name"]}')
     for setting_key, setting_value in audit_plugin.items():
       if setting_key == audit_plugin['class_name']:

@@ -13,7 +13,6 @@ import urllib
 import urllib.parse
 import urllib.robotparser
 from queue import SimpleQueue
-from typing import Tuple
 
 import requests
 import selenium.common.exceptions
@@ -287,9 +286,8 @@ class Crawler:
       href = new_url.get('href').strip()
       try:
         href = urllib.parse.urljoin(base_uri, href)
-      except ValueError as exc:
-        # Log base_uri, href, and the exception
-        logger.exception('Failed to join URL %s %s %s', base_uri, href, exc)
+      except ValueError:
+        logger.exception('Failed to join URL %s %s', base_uri, href)
         continue
 
       # Run a range of filters on the URL
@@ -407,9 +405,9 @@ class Crawler:
       is_content_type_set = 'Content-Type' in response.headers
       if is_content_type_set and not re.search('^text/plain(?:;|$)', response.headers['Content-Type'], re.IGNORECASE):
         raise ValueError(f'robots.txt has invalid Content-Type {robots_txt_url} {response.headers["Content-Type"]}')
-    except requests.exceptions.RequestException as exc:
+    except requests.exceptions.RequestException:
       logger.error('Failed to fetch robots.txt %s', robots_txt_url)
-      raise exc
+      raise
 
     logger.info('Fetched robots.txt %s', robots_txt_url)
 
@@ -510,7 +508,7 @@ class Crawler:
     pages_scanned = 0
 
     # queue element: (parent_url, url)
-    queue = RandomQueue[Tuple[str, str]]()
+    queue = RandomQueue[tuple[str, str]]()
     queue.push((base_url, base_url))
 
     # track visited urls
@@ -630,7 +628,7 @@ class Crawler:
     if self.config.max_links_per_domain != 1:
       logger.info('Crawl exhausted all links %s', base_url)
 
-  def __crawl_sitemap(self, url: str) -> list[Tuple[str, str]]:
+  def __crawl_sitemap(self, url: str) -> list[tuple[str, str]]:
     """Crawls the urls sitemap, if there is one."""
     logger.info('Fetching sitemap for %s', url)
 

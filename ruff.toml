@@ -10,7 +10,7 @@ ignore = [
   'D417',    # don't require documentation for every function parameter
   'PLR2004'  # most numbers are not magic
 ]
-select = [
+extend-select = [
   'E',    # pycodestyle
   'W',    # pycodestyle
   'F',    # Pyflakes

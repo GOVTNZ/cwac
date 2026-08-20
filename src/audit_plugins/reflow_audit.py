@@ -74,7 +74,7 @@ class ReflowAudit(DefaultAudit):
       self.browser.driver.execute_script('window.scrollTo(100, 0);')
       overflow_amount = self.browser.driver.execute_script('return window.scrollX;')
     except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Failed to scroll to 100px %s', self.url, exc_info=True)
+      logger.exception('Failed to scroll to 100px %s', self.url)
       return False
 
     # Run a ScreenshotAudit if the page overflows
@@ -99,7 +99,6 @@ class ReflowAudit(DefaultAudit):
       logger.exception(
         'Failed to reset scroll position after test %s',
         self.url,
-        exc_info=True,
       )
 
     return [

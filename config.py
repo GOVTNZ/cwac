@@ -77,8 +77,8 @@ class Config:
     # Sanitise audit_name
     self.config['audit_name'] = self.sanitise_string(self.audit_name)
 
-    # Add a timestamp to the test name
-    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    # Add a timestamp to the test name, using the local timezone
+    timestamp = datetime.datetime.now(tz=datetime.timezone.utc).astimezone().strftime('%Y-%m-%d_%H-%M-%S')
     self.config['audit_name'] = timestamp + '_' + self.audit_name
 
     # Create the results folder
@@ -288,7 +288,7 @@ class Config:
         self.chrome_binary_location = f'./chrome/linux-{chrome_version}/chrome-linux64/chrome'
       elif info.system == 'Darwin' and info.machine == 'arm64':
         # pylint: disable-next=line-too-long
-        self.chrome_binary_location = f'./chrome/mac_arm-{chrome_version}/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'  # noqa: E501
+        self.chrome_binary_location = f'./chrome/mac_arm-{chrome_version}/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'  # noqa: E501 RUF100
       else:
         raise ValueError(
           f'chrome_binary_location cannot be automatically determined for {info.system} {info.machine} '

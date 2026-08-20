@@ -103,11 +103,10 @@ class LanguageAudit(DefaultAudit):
       output = output[0].upper() + output[1:]
 
     # If it ends with a colon, remove it
-    if output.endswith(':'):
-      output = output[:-1]
+    output = output.removesuffix(':')
 
     # Common punctuation that ends a sentence
-    end_punct = set(['.', '!', '?'])
+    end_punct = {'.', '!', '?'}
 
     # If the element's content doesn't end with punctuation, add a period
     if not output.endswith(tuple(end_punct)):
@@ -222,7 +221,7 @@ class LanguageAudit(DefaultAudit):
         int: the number of syllables in the word
     """
     try:
-      return [len(list(y for y in x if y[-1].isdigit())) for x in dictionary[word.lower()]][0]
+      return next(len([y for y in x if y[-1].isdigit()]) for x in dictionary[word.lower()])
     except KeyError:
       return 1
 
