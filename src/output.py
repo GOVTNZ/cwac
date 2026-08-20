@@ -5,7 +5,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any
+from typing import Any, ClassVar
 
 import pandas as pd
 
@@ -21,7 +21,7 @@ class CSVWriter:
 
   # A dict of file paths that map to locks to
   # prevent multiple threads writing to the same file
-  file_locks: dict[str, threading.Lock] = {}
+  file_locks: ClassVar[dict[str, threading.Lock]] = {}
 
   # A lock to prevent multiple threads writing to file_locks dict
   lock_for_file_locks = threading.Lock()
