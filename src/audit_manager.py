@@ -21,7 +21,10 @@ logger = logging.getLogger('cwac')
 
 
 class AuditData(TypedDict):
+  """Data for running an audit."""
+
   audit_class: type[Any]
+  site_data: SiteData
   kwargs: dict[str, Any]
 
 
@@ -58,10 +61,11 @@ class AuditManager:
     # Register the audit (or update its kwargs)
     self.audits[audit_name] = {
       'audit_class': audit_class,
+      'site_data': site_data,
       'kwargs': {**kwargs, 'site_data': site_data},
     }
 
-  def test_for_anti_bot(self) -> str:
+  def test_for_anti_bot(self, site_data: SiteData) -> str:
     """Inspect the currently loaded page for anti-bot blocking.
 
     If bot blocking services such as Cloudflare, Incapsula, Azure Front Door,
@@ -127,9 +131,6 @@ class AuditManager:
       status = 'Azure Front Door'
 
     if status != 'Pass':
-      # Get the URL's organisation
-      org = self.config.lookup_organisation(url)
-
       # Get URL's netloc
       netloc = urllib.parse.urlparse(url).netloc
 
@@ -146,9 +147,9 @@ class AuditManager:
       csv_writer.append_rows(
         f'./results/{self.config.audit_name}/anti_bot.csv',
         {
-          'organisation': org['organisation'],
-          'domain': netloc,
+          **site_data['columns'],
           'url': url,
+          'domain': netloc,
           'anti_bot_check': status,
           'viewport_size': self.browser.viewport_size,
         },
@@ -257,7 +258,7 @@ class AuditManager:
         browser_status = self.browser.get(audit['kwargs']['url'])
 
         # Test for anti-bot measures
-        if self.test_for_anti_bot() != 'Pass':
+        if self.test_for_anti_bot(audit['site_data']) != 'Pass':
           # If URL is blocked, skip this URL
           logger.warning(
             'Skipping test %s on %s due to anti-bot',

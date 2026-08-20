@@ -103,6 +103,7 @@ class Config:
 
     self.audit_subjects: list[SiteData] = self.__import_base_urls()
 
+    # todo: see if we can remove this?
     self.url_lookup = self.__map_base_urls_by_domain()
 
     # global variable to store robots.txt data
@@ -362,34 +363,8 @@ class Config:
       # Write the config file to the results folder
       return json.load(file)
 
-  def lookup_organisation(self, url: str) -> dict[str, str]:
-    """Lookup the agency details from a URL.
-
-    Args:
-        url (str): the URL to lookup
-
-    Returns:
-        dict[str, str]: a dictionary with "organisation" and
-        "sector" as the keys, and the agency name and sector as
-        the values.
-    """
-    # Parse the URL to get just the domain
-    parsed_url = parse.urlparse(url)
-    domain = parsed_url.netloc.lower()
-
-    if domain not in self.url_lookup:
-      logger.warning('Agency data missing for: %s', url)
-      return {'organisation': 'Unknown', 'sector': 'Unknown'}
-    return {
-      'organisation': self.url_lookup[domain]['organisation'],
-      'sector': self.url_lookup[domain]['sector'],
-    }
-
   def __map_base_urls_by_domain(self) -> dict[str, dict[str, str]]:
     """Build a dictionary mapping base url information to their domain.
-
-    This data is primarily used for looking up the agency details
-    given a URL by using the lookup_organisation() method.
 
     Returns:
         dict[str, dict[str, str]]: a dictionary with the URL as the key,
