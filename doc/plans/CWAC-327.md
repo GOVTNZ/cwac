@@ -25,33 +25,16 @@ impactful for crawling and auditing, and are not meaningful in all use cases.
 We will remove the requirement that there be three columns in the
 `base_urls/visit` CSVs, and instead enforce that there is a `url` column.
 
+After parsing, we will ensure that all rows have the same columns to ensure they
+can be written as CSVs.
+
 ### Filtering
 
-We will replace the `filter_to_organisations` and `filter_to_urls` configuration
-properties with a single `filters` object whose keys are column names.
+We will leave the `filter_to_organisations` and `filter_to_urls` configuration
+properties alone, since they will both continue to work.
 
-Each value will be an array of strings, and any row whose column value is not in
-the array will be skipped.
-
-For example, given a configuration like this:
-
-```json
-{
-  "filter_to_organisations": ["ACME"],
-  "filter_to_urls": ["https://example.com"]
-}
-```
-
-This would be changed to:
-
-```json
-{
-  "filters": {
-    "organisation": ["ACME"],
-    "url": ["https://example.com"]
-  }
-}
-```
+We will ensure that the handling of `filter_to_organisations` accounts for the
+column potentially not being present.
 
 ### Sorting
 
@@ -70,6 +53,10 @@ This will allow developers to add arbitrary columns, and preserve the
 ## Questions
 
 ### What if a column is not present in all CSVs?
+
+> [!NOTE]
+>
+> It was decided to go with Option 2
 
 The `CSVWriter` will error if rows don't all have the same columns.
 
@@ -104,28 +91,60 @@ Cons:
 
 - Ordering might be off at times?
 
-### What should we do with existing configurations?
+### What should we do with the `filter_to_organisations` property?
+
+> [!NOTE]
+>
+> It was decided to go with Option 1
+
+With "organisation" becoming optional, this filter property is a bit awkward.
 
 #### Option 1: do nothing
 
 Pros:
 
-- We'll be able to move away from the old properties faster
+- we don't have to worry about breaking existing configurations
+- the filter will still continue to work if the column is present
 
 Cons:
 
-- Developers will need to update their configurations
-- Wrappers of the tool (such as web applications) will need to ensure their
-  configurations are migrated
+- no ways to filter by other columns
 
-#### Option 1: support mapping `filter_to_organisations` and `filter_to_urls` to `filters`
+#### Option 2: replace with a more flexible `filters` feature
+
+We could replace both `filter_to_organisations` and `filter_to_urls` with a
+single `filters` object whose keys are column names.
+
+Each value would be an array of strings, and any row whose column value is not
+in the array would be skipped.
+
+For example, given a configuration like this:
+
+```json
+{
+  "filter_to_organisations": ["ACME"],
+  "filter_to_urls": ["https://example.com"]
+}
+```
+
+This would be changed to:
+
+```json
+{
+  "filters": {
+    "organisation": ["ACME"],
+    "url": ["https://example.com"]
+  }
+}
+```
 
 Pros:
 
-- Developers won't need to immediately change their configurations
+- not specific to the "organisations" column
+- would reduce the total number of configuration properties by one
 
 Cons:
 
-- we will want to remove these eventually
+- would break existing configurations
 
 ## Appendix
