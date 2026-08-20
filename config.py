@@ -21,7 +21,6 @@ getLogger('usp').parent = logger
 class SiteData(TypedDict):
   """Holds data for a site that should be crawled and audited."""
 
-  organisation: str
   url: str
   sector: str
   supports_head: bool
@@ -200,7 +199,7 @@ class Config:
     found_org = False
     if self.filter_to_organisations:
       for org in self.filter_to_organisations:
-        if org in row['organisation']:
+        if org in row['columns'].get('organisation', ''):
           found_org = True
           break
 
@@ -240,7 +239,6 @@ class Config:
             columns = dict(zip(header, row, strict=True))
 
             subject = SiteData(
-              organisation=columns['organisation'],
               url=columns['url'],
               sector=columns['sector'],
               supports_head=True,
@@ -413,7 +411,6 @@ class Config:
       domain = domain.strip()
 
       base_urls[domain] = {
-        'organisation': subject['organisation'],
         'sector': subject['sector'],
       }
     return base_urls

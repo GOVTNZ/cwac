@@ -8,7 +8,7 @@ import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
 
-from config import Config
+from config import Config, SiteData
 
 
 @pytest.fixture(autouse=True)
@@ -191,9 +191,8 @@ class TestUrlLoading:
 
     config = Config('config_default.json')
 
-    assert sorted(config.audit_subjects, key=lambda site: site['url']) == [
+    expected: list[SiteData] = [
       {
-        'organisation': "Buy 'n' Large",
         'url': 'https://bnl.com/',
         'sector': 'Sales',
         'supports_head': True,
@@ -206,7 +205,6 @@ class TestUrlLoading:
         },
       },
       {
-        'organisation': "Buy 'n' Large",
         'url': 'https://bnl.com/finance',
         'sector': 'Finance',
         'supports_head': True,
@@ -219,7 +217,6 @@ class TestUrlLoading:
         },
       },
       {
-        'organisation': 'Cyberdyne Systems',
         'url': 'https://cyberdyne.com/rd',
         'sector': 'R&D',
         'supports_head': True,
@@ -232,7 +229,6 @@ class TestUrlLoading:
         },
       },
       {
-        'organisation': 'Cyberdyne Systems',
         'url': 'https://cyberdyne.com/security',
         'sector': 'Security',
         'supports_head': True,
@@ -245,7 +241,6 @@ class TestUrlLoading:
         },
       },
       {
-        'organisation': 'Umbrella Corp',
         'url': 'https://umbrella.com',
         'sector': 'R&D',
         'supports_head': True,
@@ -258,7 +253,6 @@ class TestUrlLoading:
         },
       },
       {
-        'organisation': 'Umbrella Corp',
         'url': 'https://umbrella.com/hr',
         'sector': 'Human Resources',
         'supports_head': True,
@@ -271,7 +265,6 @@ class TestUrlLoading:
         },
       },
       {
-        'organisation': 'Umbrella Corp',
         'url': 'https://umbrella.com/legal',
         'sector': 'Legal',
         'supports_head': True,
@@ -284,7 +277,6 @@ class TestUrlLoading:
         },
       },
       {
-        'organisation': 'Wayne Enterprises',
         'url': 'https://wayne.com/finance',
         'sector': 'Finance',
         'supports_head': True,
@@ -297,7 +289,6 @@ class TestUrlLoading:
         },
       },
       {
-        'organisation': 'Wayne Enterprises',
         'url': 'https://wayne.com/legal',
         'sector': 'Legal',
         'supports_head': True,
@@ -310,7 +301,6 @@ class TestUrlLoading:
         },
       },
       {
-        'organisation': 'Wayne Enterprises',
         'url': 'https://wayne.com/security',
         'sector': 'Security',
         'supports_head': True,
@@ -323,6 +313,8 @@ class TestUrlLoading:
         },
       },
     ]
+
+    assert sorted(config.audit_subjects, key=lambda site: site['url']) == expected
 
   def test_urls_are_loaded_from_set_path(self, fs: FakeFilesystem) -> None:
     """Loads urls from csv files within a directory pointed to by config."""
