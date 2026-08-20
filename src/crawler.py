@@ -574,10 +574,9 @@ class Crawler:
       csv_writer.append_rows(
         f'./results/{self.config.audit_name}/audit_log.csv',
         {
-          'organisation': site_data['organisation'],
+          **site_data['columns'],
           'base_url': site_data['url'],
           'url': url,
-          'sector': site_data['sector'],
         },
       )
 
@@ -649,10 +648,9 @@ class Crawler:
       csv_writer.append_rows(
         f'./results/{self.config.audit_name}/pages_scanned.csv',
         {
-          'organisation': site_data['organisation'],
+          **site_data['columns'],
           'base_url': site_data['url'],
           'number_of_pages': pages_scanned,
-          'sector': site_data['sector'],
         },
       )
 
