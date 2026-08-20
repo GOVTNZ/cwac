@@ -34,7 +34,7 @@ class Browser:
     self.thread_id = thread_id
     self.num_retries = 2
     self.viewport_size = {'width': 320, 'height': 450}
-    self.driver: WebDriverType = self.spawn_single_webdriver(window_size=list(self.config.viewport_sizes.values())[0])
+    self.driver: WebDriverType = self.spawn_single_webdriver(window_size=next(iter(self.config.viewport_sizes.values())))
     self.last_url_req = ''
 
   def get(self, url: str) -> bool:
@@ -130,10 +130,10 @@ class Browser:
     """
     try:
       return cast(str, self.driver.execute_script('return document.baseURI'))
-    except Exception as exc:
+    except Exception:
       logger.exception('TimeoutException when getting base URI')
       self.safe_restart()
-      raise exc
+      raise
 
   def get_page_source(self) -> str:
     """Return HTML source of currently loaded page.
@@ -146,10 +146,10 @@ class Browser:
     """
     try:
       return self.get_doctype() + '\n' + self.driver.page_source
-    except selenium.common.exceptions.TimeoutException as exc:
+    except selenium.common.exceptions.TimeoutException:
       logger.exception('TimeoutException when getting page source')
       self.safe_restart()
-      raise exc
+      raise
 
   def close(self) -> None:
     """Close the browser."""

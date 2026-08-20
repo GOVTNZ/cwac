@@ -406,9 +406,9 @@ class Crawler:
       is_content_type_set = 'Content-Type' in response.headers
       if is_content_type_set and not re.search('^text/plain(?:;|$)', response.headers['Content-Type'], re.IGNORECASE):
         raise ValueError(f'robots.txt has invalid Content-Type {robots_txt_url} {response.headers["Content-Type"]}')
-    except requests.exceptions.RequestException as exc:
+    except requests.exceptions.RequestException:
       logger.error('Failed to fetch robots.txt %s', robots_txt_url)
-      raise exc
+      raise
 
     logger.info('Fetched robots.txt %s', robots_txt_url)
 
