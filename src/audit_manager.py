@@ -294,7 +294,6 @@ class AuditManager:
             audit_name,
             viewport,
             audit['kwargs']['url'],
-            exc_info=True,
           )
           # If the browser crashes, skip this test
           # and restart the browser
@@ -313,7 +312,6 @@ class AuditManager:
             'Unhandled exception %s %s',
             audit_name,
             audit['kwargs']['url'],
-            exc_info=True,
           )
           continue
 
