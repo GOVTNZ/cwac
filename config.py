@@ -77,8 +77,8 @@ class Config:
     # Sanitise audit_name
     self.config['audit_name'] = self.sanitise_string(self.audit_name)
 
-    # Add a timestamp to the test name
-    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    # Add a timestamp to the test name, using the local timezone
+    timestamp = datetime.datetime.now(tz=datetime.timezone.utc).astimezone().strftime('%Y-%m-%d_%H-%M-%S')
     self.config['audit_name'] = timestamp + '_' + self.audit_name
 
     # Create the results folder
