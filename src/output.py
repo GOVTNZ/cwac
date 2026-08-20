@@ -129,7 +129,7 @@ def output_init_message(config: Config) -> None:
   print_log('Viewport sizes:')
   for viewport_name, viewport_size in config.viewport_sizes.items():
     print_log(f'    {viewport_name}: {viewport_size}')
-  for _, audit_plugin in config.audit_plugins.items():
+  for audit_plugin in config.audit_plugins.values():
     print_log(f'Audit plugin: {audit_plugin["class_name"]}')
     for setting_key, setting_value in audit_plugin.items():
       if setting_key == audit_plugin['class_name']:
