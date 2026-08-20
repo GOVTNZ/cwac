@@ -9,6 +9,7 @@
     - [Core technologies](#core-technologies)
     - [Linting source code](#linting-source-code)
     - [Audit plugin architecture](#audit-plugin-architecture)
+    - [Crawling sitemaps](#crawling-sitemaps)
   - [Updating Chrome and Chromedriver versions](#updating-chrome-and-chromedriver-versions)
   - [Copyright notices](#copyright-notices)
     - [Copyright of Centralised Web Accessibility Checker (CWAC)](#copyright-of-centralised-web-accessibility-checker-cwac)
@@ -53,13 +54,15 @@ performance, or the existence of a privacy or copyright statement.
 
 ## Using CWAC
 
-- [Installing CWAC](./doc/install.md)
 - [Understanding audits](./doc/audits.md)
 - [Configuring audits](./doc/audit-config.md)
 - [Running CWAC CLI](./doc/run-cwac.md)
 - [Working with audit results](./doc/audit-results.md)
 
 ## Developing CWAC
+
+Get started by reading the
+[local dev environment setup guide](./doc/local-dev-setup.md)
 
 ### Core technologies
 

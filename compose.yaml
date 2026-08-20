@@ -1,0 +1,23 @@
+services:
+  cwac:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:
+      [
+        '.venv/bin/python',
+        '-u',
+        'cwac.py',
+        '${CWAC_CONFIG:-config_default.json}'
+      ]
+    # network_mode: host
+    volumes:
+      - type: bind
+        source: ./config
+        target: /cwac/config
+      - type: bind
+        source: ./base_urls
+        target: /cwac/base_urls
+      - type: bind
+        source: ./results
+        target: /cwac/results
