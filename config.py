@@ -288,7 +288,7 @@ class Config:
         self.chrome_binary_location = f'./chrome/linux-{chrome_version}/chrome-linux64/chrome'
       elif info.system == 'Darwin' and info.machine == 'arm64':
         # pylint: disable-next=line-too-long
-        self.chrome_binary_location = f'./chrome/mac_arm-{chrome_version}/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
+        self.chrome_binary_location = f'./chrome/mac_arm-{chrome_version}/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'  # noqa: E501 RUF100
       else:
         raise ValueError(
           f'chrome_binary_location cannot be automatically determined for {info.system} {info.machine} '

@@ -34,7 +34,9 @@ class Browser:
     self.thread_id = thread_id
     self.num_retries = 2
     self.viewport_size = {'width': 320, 'height': 450}
-    self.driver: WebDriverType = self.spawn_single_webdriver(window_size=next(iter(self.config.viewport_sizes.values())))
+    self.driver: WebDriverType = self.spawn_single_webdriver(
+      window_size=next(iter(self.config.viewport_sizes.values()))
+    )
     self.last_url_req = ''
 
   def get(self, url: str) -> bool:
