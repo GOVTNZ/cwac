@@ -4,13 +4,13 @@ import logging
 import os
 import time
 import urllib.parse
-from typing import Any
+from typing import Any, TypedDict
 
 import selenium
 from selenium.webdriver.common.by import By
 
 import src.filters
-from config import Config
+from config import Config, SiteData
 from src.analytics import Analytics
 from src.browser import Browser
 from src.output import CSVWriter
@@ -18,6 +18,11 @@ from src.output import CSVWriter
 # pylint: disable=too-many-statements
 
 logger = logging.getLogger('cwac')
+
+
+class AuditData(TypedDict):
+  audit_class: type[Any]
+  kwargs: dict[str, Any]
 
 
 class AuditManager:
@@ -31,7 +36,7 @@ class AuditManager:
     self.config = config
     self.browser = browser
     self.analytics = analytics
-    self.audits: dict[Any, dict[Any, Any]] = {}
+    self.audits: dict[str, AuditData] = {}
     self.filter = src.filters.URLFilter(self.config)
 
     # Stores URLs discarded as a key-value pair
@@ -39,7 +44,7 @@ class AuditManager:
     # if they are blocked by anti-bot measures.
     self.discarded_urls: dict[str, str] = {}
 
-  def register_audit(self, audit_name: str, audit_class: type[Any], **kwargs: Any) -> None:
+  def register_audit(self, audit_name: str, audit_class: type[Any], site_data: SiteData, **kwargs: Any) -> None:
     """Register audits to be run by run_audits().
 
     This can also be used to re-run a test with updated kwargs.
@@ -47,12 +52,13 @@ class AuditManager:
     Args:
         audit_name (str): Human-readable name for audit
         audit_class (Type[Any]): Reference to a class that runs the audit
+        site_data (SiteData): Data about the site being audited
         kwargs (Any): Arbitrary args to be passed to audit_class
     """
     # Register the audit (or update its kwargs)
     self.audits[audit_name] = {
       'audit_class': audit_class,
-      'kwargs': kwargs,
+      'kwargs': {**kwargs, 'site_data': site_data},
     }
 
   def test_for_anti_bot(self) -> str:
