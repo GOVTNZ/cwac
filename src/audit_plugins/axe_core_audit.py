@@ -154,8 +154,5 @@ class AxeCoreAudit(DefaultAudit):
 
     expanded_results = self.run_generate_expanded_results(axe_core_results)
 
-    # Add default_test_row to all results
-    final_output = []
-    for axe_row in expanded_results:
-      final_output.append({**default_audit_row, **axe_row})
-    return final_output
+    # Return each row with the defaults columns included
+    return [{**default_audit_row, **axe_row} for axe_row in expanded_results]
