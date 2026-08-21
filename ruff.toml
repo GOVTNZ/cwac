@@ -21,6 +21,7 @@ extend-select = [
   'FIX',
   'FLY',
   'I',    # isort
+  'PERF', # performance
   'PLC',  # pylint conventions
   'PLE',  # pylint errors
   'PLR',  # pylint refactors
