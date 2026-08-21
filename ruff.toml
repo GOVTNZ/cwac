@@ -12,6 +12,7 @@ ignore = [
 ]
 extend-select = [
   'A',
+  'B',    # flake8-bugbear
   'D',    # pydocstyle
   'E',    # pycodestyle
   'EXE',
