@@ -240,8 +240,6 @@ class FocusIndicatorAudit(DefaultAudit):
           continue
         result_list.append({'html': html[:100], 'tab_press': i + 1})
 
-    final_results = []
-
     # If result_list is empty, return a success result
     if not result_list:
       return [
@@ -254,19 +252,17 @@ class FocusIndicatorAudit(DefaultAudit):
         }
       ]
 
-    # Iterate through results_list and add to final_results
-    for result in result_list:
-      final_results.append(
-        {
-          **common_properties,
-          'description': (f'Tab key press #{result["tab_press"]} did not show a focus indicator'),
-          'html': result['html'],
-          'num_issues': 1,
-          'helpUrl': ('https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html'),
-        }
-      )
-
     # Reset browser size
     self.browser.driver.set_window_size(**original_window_size)
 
-    return final_results
+    # Return each row with the common properties included
+    return [
+      {
+        **common_properties,
+        'description': (f'Tab key press #{result["tab_press"]} did not show a focus indicator'),
+        'html': result['html'],
+        'num_issues': 1,
+        'helpUrl': ('https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html'),
+      }
+      for result in result_list
+    ]
