@@ -11,9 +11,14 @@ ignore = [
   'PLR2004'  # most numbers are not magic
 ]
 extend-select = [
+  'A',
   'D',    # pydocstyle
   'E',    # pycodestyle
+  'EXE',
   'F',    # Pyflakes
+  'FA',
+  'FIX',
+  'FLY',
   'I',    # isort
   'PLC',  # pylint conventions
   'PLE',  # pylint errors
