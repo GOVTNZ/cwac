@@ -68,9 +68,5 @@ class ElementAudit(DefaultAudit):
     # Get page information from DefaultAudit
     default_audit_row = self._default_audit_row
 
-    # Add default_test_row to all results
-    final_output = []
-    for found_element in found_elements:
-      final_output.append({**default_audit_row, **found_element})
-
-    return final_output
+    # Return each row with the defaults columns included
+    return [{**default_audit_row, **found_element} for found_element in found_elements]
