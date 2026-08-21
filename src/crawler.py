@@ -638,11 +638,10 @@ class Crawler:
       logger.exception('Failed to get sitemap')
       return []
 
-    parents_and_urls = []
+    parents_and_urls: list[tuple[str, str]] = []
 
     for sitemap in tree.all_sitemaps():
-      for page in sitemap.all_pages():
-        parents_and_urls.append((sitemap.url, page.url))
+      parents_and_urls.extend((sitemap.url, page.url) for page in sitemap.all_pages())
 
     return parents_and_urls
 
