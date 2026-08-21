@@ -69,7 +69,7 @@ class Config:
 
   def __init__(self, config_filename: str) -> None:
     """Read config.json into self.config."""
-    with open('./config/' + config_filename, 'r', encoding='utf-8-sig') as file:
+    with open('./config/' + config_filename, encoding='utf-8-sig') as file:
       self.config: dict[str, Any] = json.load(file)
 
     self.unique_id = 0
@@ -307,7 +307,7 @@ class Config:
         )
 
   def __determine_chrome_version(self) -> str:
-    with open('package.json', 'r', encoding='utf-8-sig') as file:
+    with open('package.json', encoding='utf-8-sig') as file:
       package_json = json.load(file)
 
       return str(package_json['config']['chromeVersion'])
@@ -359,7 +359,7 @@ class Config:
         raise ValueError('config_filename must be alphanumeric, underscores, and hyphens')
     else:
       config_filename = 'config_default.json'
-    with open('./config/' + config_filename, 'r', encoding='utf-8-sig') as file:
+    with open('./config/' + config_filename, encoding='utf-8-sig') as file:
       # Write the config file to the results folder
       return json.load(file)
 

@@ -53,7 +53,7 @@ class CSVWriter:
     Returns:
         list[dict[Any, Any]]: list of dictionaries
     """
-    with self.get_file_lock(path), open(path, 'r', encoding='utf-8-sig') as csvfile:
+    with self.get_file_lock(path), open(path, encoding='utf-8-sig') as csvfile:
       reader = csv.DictReader(csvfile)
       rows = list(reader)
     return rows
