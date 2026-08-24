@@ -39,11 +39,11 @@ class CSVWriter:
       return CSVWriter.file_locks[path]
 
   def append_rows(self, path: str, *rows: dict[Any, Any]) -> None:
-    """Add a list of rows to a CSV file.
+    """Append one or more rows to a CSV file.
 
     Args:
         path (str): path to file
-        rows (list[dict[Any, Any]]): list of rows of data
+        *rows (dict[str, Any]): one or more rows of data
     """
     if not rows:
       return
