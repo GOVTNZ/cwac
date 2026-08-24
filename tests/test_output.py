@@ -16,7 +16,7 @@ class TestCSVWriter:
     """Skips writing a file when no rows have been added."""
     writer = CSVWriter()
 
-    writer.write_csv_file('file.csv')
+    writer.append_rows('file.csv')
 
     assert os.path.exists('file.csv') is not True
 
@@ -24,13 +24,13 @@ class TestCSVWriter:
     """Writes each row to a csv file, with a header."""
     writer = CSVWriter()
 
-    writer.add_rows(
+    writer.append_rows(
+      'file.csv',
       {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
       {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
       {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
     )
 
-    writer.write_csv_file('file.csv')
     assert os.path.exists('file.csv') is True
 
     expected = """
@@ -47,13 +47,12 @@ class TestCSVWriter:
     """Writes a bom before the header row."""
     writer = CSVWriter()
 
-    writer.add_rows(
+    writer.append_rows(
+      'file.csv',
       {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
       {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
       {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
     )
-
-    writer.write_csv_file('file.csv')
 
     assert os.path.exists('file.csv') is True
 
@@ -67,24 +66,22 @@ class TestCSVWriter:
     with open('file.csv', encoding='utf-8') as f:
       assert f.read() == textwrap.dedent(expected).lstrip()
 
-  def test_multiple_writes_to_same_file(self) -> None:
+  def test_appends_to_existing_file(self) -> None:
     """Writes new rows to a csv file, without duplicating the header."""
     writer = CSVWriter()
 
-    writer.add_rows(
+    writer.append_rows(
+      'file.csv',
       {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
     )
 
-    writer.write_csv_file('file.csv')
-
     assert os.path.exists('file.csv') is True
 
-    writer.add_rows(
+    writer.append_rows(
+      'file.csv',
       {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
       {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
     )
-
-    writer.write_csv_file('file.csv')
 
     expected = """
       name,age,location
@@ -100,13 +97,12 @@ class TestCSVWriter:
     """Orders columns based on the first row."""
     writer = CSVWriter()
 
-    writer.add_rows(
+    writer.append_rows(
+      'file.csv',
       {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
       {'age': 31, 'name': 'Alice', 'location': 'Wellington'},
       {'location': 'Auckland', 'age': 23, 'name': 'Greg'},
     )
-
-    writer.write_csv_file('file.csv')
 
     assert os.path.exists('file.csv') is True
 

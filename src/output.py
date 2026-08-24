@@ -26,10 +26,6 @@ class CSVWriter:
   # A lock to prevent multiple threads writing to file_locks dict
   lock_for_file_locks = threading.Lock()
 
-  def __init__(self) -> None:
-    """Init variables."""
-    self.rows: list[dict[Any, Any]] = []
-
   def _get_file_lock(self, path: str) -> threading.Lock:
     """Get a lock for a file.
 
@@ -44,25 +40,17 @@ class CSVWriter:
         CSVWriter.file_locks[path] = threading.Lock()
       return CSVWriter.file_locks[path]
 
-  def add_rows(self, *rows: dict[Any, Any]) -> None:
-    """Add a list of rows to the CSV row buffer.
+  def append_rows(self, path: str, *rows: dict[Any, Any]) -> None:
+    """Add a list of rows to a CSV file.
 
     Args:
+        path (str): path to file
         rows (list[dict[Any, Any]]): list of rows of data
     """
-    for row in rows:
-      self.rows.append(row)
-
-  def write_csv_file(self, path: str) -> None:
-    """Write data to a CSV file.
-
-    Args:
-        path (str): path to write data
-    """
-    if not self.rows:
+    if not rows:
       return
 
-    keys = self.rows[0].keys()
+    keys = rows[0].keys()
 
     with self._get_file_lock(path):
       file_already_exists = os.path.exists(path)
@@ -70,9 +58,7 @@ class CSVWriter:
         writer = csv.DictWriter(csvfile, fieldnames=keys)
         if not file_already_exists:
           writer.writeheader()
-        writer.writerows(self.rows)
-
-    self.rows = []
+        writer.writerows(rows)
 
 
 def output_init_message(config: Config) -> None:
@@ -183,20 +169,18 @@ def print_progress_bar(
 
   # Write progress data to CSV file
   csv_writer = CSVWriter()
-
-  output_row = {
-    'time': time.time(),
-    'iteration': iteration,
-    'total': total,
-    'speed': f'{speed:.2f}',
-    'percent': percent,
-    'elapsed': f'{elapsed}',
-    'remaining': f'{time_est}',
-  }
-
-  csv_writer.add_rows(output_row)
-
-  csv_writer.write_csv_file(f'./results/{config.audit_name}/progress.csv')
+  csv_writer.append_rows(
+    f'./results/{config.audit_name}/progress.csv',
+    {
+      'time': time.time(),
+      'iteration': iteration,
+      'total': total,
+      'speed': f'{speed:.2f}',
+      'percent': percent,
+      'elapsed': f'{elapsed}',
+      'remaining': f'{time_est}',
+    },
+  )
 
   # Print New Line on Complete
   if iteration == total:
