@@ -39,6 +39,7 @@ The available configuration options are described below. See the
     `base_urls_visit_path`
   - if set to 1 then pages will just be visited without any crawling for
     additional links
+  - if set to 0 then all pages found within scope will be scanned
 - `thread_count`
   - the number of browsers, and threads CWAC will use
   - a number equal to the number of CPU cores is most efficient

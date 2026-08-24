@@ -16,6 +16,10 @@ def verify_axe_results(max_links_per_domain: int, pages_scanned: dict[str, set[s
   """
   # Check that each site had the correct number of pages scanned
   # outputs non-conforming sites to the log
+  # A max_links_per_domain of 0 means no limit, so there is no expected count
+  # to compare against and the check is skipped.
+  if max_links_per_domain == 0:
+    return
   for key, value in pages_scanned.items():
     correct_len = max_links_per_domain
     if len(value) != correct_len:

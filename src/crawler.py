@@ -525,7 +525,7 @@ class Crawler:
     while queue:
       parent_url, url = queue.pop()
 
-      if pages_scanned >= self.config.max_links_per_domain:
+      if self.config.max_links_per_domain and pages_scanned >= self.config.max_links_per_domain:
         logger.info('Max pages scanned reached %s', base_url)
         break
 

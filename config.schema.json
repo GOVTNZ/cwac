@@ -17,9 +17,9 @@
       "type": "boolean"
     },
     "max_links_per_domain": {
-      "description": "Maximum number of pages to crawl per domain. Set to 1 to audit only the base URL",
+      "description": "Maximum number of pages to crawl per domain. Set to 1 to audit only the base URL, or 0 to scan all pages within scope",
       "type": "integer",
-      "minimum": 1
+      "minimum": 0
     },
     "thread_count": {
       "description": "Number of parallel browser threads to use. Set to 1 to disable multithreading (useful for profiling)",
