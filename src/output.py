@@ -53,18 +53,15 @@ class CSVWriter:
     for row in rows:
       self.rows.append(row)
 
-  def write_csv_file(self, path: str, overwrite: bool = False) -> bool:
+  def write_csv_file(self, path: str, overwrite: bool = False) -> None:
     """Write data to a CSV file.
 
     Args:
         path (str): path to write data
         overwrite (bool): overwrite existing file
-
-    Returns:
-        bool: True if write successful, else False
     """
     if not self.rows:
-      return False
+      return
 
     keys = self.rows[0].keys()
 
@@ -78,8 +75,6 @@ class CSVWriter:
         writer.writerows(self.rows)
 
     self.rows = []
-
-    return True
 
 
 def output_init_message(config: Config) -> None:

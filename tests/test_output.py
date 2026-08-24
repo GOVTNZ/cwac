@@ -16,7 +16,7 @@ class TestCSVWriter:
     """Skips writing a file when no rows have been added."""
     writer = CSVWriter()
 
-    assert not writer.write_csv_file('file.csv')
+    writer.write_csv_file('file.csv')
 
     assert os.path.exists('file.csv') is not True
 
@@ -32,7 +32,7 @@ class TestCSVWriter:
       ]
     )
 
-    assert writer.write_csv_file('file.csv')
+    writer.write_csv_file('file.csv')
     assert os.path.exists('file.csv') is True
 
     expected = """
@@ -57,7 +57,8 @@ class TestCSVWriter:
       ]
     )
 
-    assert writer.write_csv_file('file.csv')
+    writer.write_csv_file('file.csv')
+
     assert os.path.exists('file.csv') is True
 
     expected = """
@@ -82,7 +83,8 @@ class TestCSVWriter:
       ]
     )
 
-    assert writer.write_csv_file('file.csv')
+    writer.write_csv_file('file.csv')
+
     assert os.path.exists('file.csv') is True
 
     expected = """
