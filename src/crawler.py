@@ -368,13 +368,15 @@ class Crawler:
       )
       # Write bad response codes with CSVWriter
       csv_writer = src.output.CSVWriter()
-      csv_writer.add_row(
-        {
-          'base_url': base_url,
-          'parent_url': parent_url,
-          'url': url_data['final_url'],
-          'status_code': url_data['status_code'],
-        }
+      csv_writer.add_rows(
+        [
+          {
+            'base_url': base_url,
+            'parent_url': parent_url,
+            'url': url_data['final_url'],
+            'status_code': url_data['status_code'],
+          }
+        ]
       )
       if self.config.record_unexpected_response_codes:
         csv_writer.write_csv_file(f'./results/{self.config.audit_name}/unexpected_response_codes.csv')
