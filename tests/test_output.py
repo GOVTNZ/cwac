@@ -25,11 +25,9 @@ class TestCSVWriter:
     writer = CSVWriter()
 
     writer.add_rows(
-      [
-        {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
-        {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
-        {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
-      ]
+      {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
+      {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
+      {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
     )
 
     writer.write_csv_file('file.csv')
@@ -50,11 +48,9 @@ class TestCSVWriter:
     writer = CSVWriter()
 
     writer.add_rows(
-      [
-        {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
-        {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
-        {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
-      ]
+      {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
+      {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
+      {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
     )
 
     writer.write_csv_file('file.csv')
@@ -76,9 +72,7 @@ class TestCSVWriter:
     writer = CSVWriter()
 
     writer.add_rows(
-      [
-        {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
-      ]
+      {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
     )
 
     writer.write_csv_file('file.csv')
@@ -86,10 +80,8 @@ class TestCSVWriter:
     assert os.path.exists('file.csv') is True
 
     writer.add_rows(
-      [
-        {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
-        {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
-      ]
+      {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
+      {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
     )
 
     writer.write_csv_file('file.csv')
@@ -109,11 +101,9 @@ class TestCSVWriter:
     writer = CSVWriter()
 
     writer.add_rows(
-      [
-        {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
-        {'age': 31, 'name': 'Alice', 'location': 'Wellington'},
-        {'location': 'Auckland', 'age': 23, 'name': 'Greg'},
-      ]
+      {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
+      {'age': 31, 'name': 'Alice', 'location': 'Wellington'},
+      {'location': 'Auckland', 'age': 23, 'name': 'Greg'},
     )
 
     writer.write_csv_file('file.csv')

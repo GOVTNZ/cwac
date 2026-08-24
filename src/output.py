@@ -44,7 +44,7 @@ class CSVWriter:
         CSVWriter.file_locks[path] = threading.Lock()
       return CSVWriter.file_locks[path]
 
-  def add_rows(self, rows: list[dict[Any, Any]]) -> None:
+  def add_rows(self, *rows: dict[Any, Any]) -> None:
     """Add a list of rows to the CSV row buffer.
 
     Args:
@@ -194,7 +194,7 @@ def print_progress_bar(
     'remaining': f'{time_est}',
   }
 
-  csv_writer.add_rows([output_row])
+  csv_writer.add_rows(output_row)
 
   csv_writer.write_csv_file(f'./results/{config.audit_name}/progress.csv')
 

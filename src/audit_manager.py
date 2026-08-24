@@ -138,15 +138,13 @@ class AuditManager:
       # Write to anti-bot.csv
       csv_writer = CSVWriter()
       csv_writer.add_rows(
-        [
-          {
-            'organisation': org['organisation'],
-            'domain': netloc,
-            'url': url,
-            'anti_bot_check': status,
-            'viewport_size': self.browser.viewport_size,
-          }
-        ]
+        {
+          'organisation': org['organisation'],
+          'domain': netloc,
+          'url': url,
+          'anti_bot_check': status,
+          'viewport_size': self.browser.viewport_size,
+        }
       )
       csv_writer.write_csv_file(f'./results/{self.config.audit_name}/anti_bot.csv')
       self.discarded_urls[url] = status
@@ -287,7 +285,7 @@ class AuditManager:
         test_instance = audit['audit_class'](config=self.config, browser=self.browser, **audit['kwargs'])
 
         try:
-          audit_result = test_instance.run()
+          audit_result: list[dict[str, Any]] | bool = test_instance.run()
         except selenium.common.exceptions.WebDriverException:
           logger.exception(
             'Due to WebDriverException, test %s skipped on viewport %s for website %s',
@@ -359,7 +357,7 @@ class AuditManager:
 
         # Write results
         csv_writer = CSVWriter()
-        csv_writer.add_rows(audit_result)
+        csv_writer.add_rows(*audit_result)
         csv_writer.write_csv_file(f'./results/{self.config.audit_name}/{audit_name}.csv')
 
         # At least one audit successfully produced results
