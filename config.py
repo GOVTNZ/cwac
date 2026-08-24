@@ -171,7 +171,7 @@ class Config:
           reader = csv.reader(file)
           header = next(reader)
           for row in reader:
-            dict_row = cast(dict[str, str], dict(zip(header, row)))
+            dict_row = cast(dict[str, str], dict(zip(header, row, strict=True)))
 
             # Strip whitespace from URL
             dict_row['url'] = dict_row['url'].strip()
@@ -243,7 +243,7 @@ class Config:
                 filename,
               )
 
-            subject = cast(SiteData, dict(zip(header, row)))
+            subject = cast(SiteData, dict(zip(header, row, strict=True)))
 
             # Parse the URL to get just the domain
             parsed_url = parse.urlparse(subject['url'])
