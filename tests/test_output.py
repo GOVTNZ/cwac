@@ -71,6 +71,39 @@ class TestCSVWriter:
     with open('file.csv', encoding='utf-8') as f:
       assert f.read() == textwrap.dedent(expected).lstrip()
 
+  def test_multiple_writes_to_same_file(self) -> None:
+    """Writes new rows to a csv file, without duplicating the header."""
+    writer = CSVWriter()
+
+    writer.add_rows(
+      [
+        {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
+      ]
+    )
+
+    writer.write_csv_file('file.csv')
+
+    assert os.path.exists('file.csv') is True
+
+    writer.add_rows(
+      [
+        {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
+        {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
+      ]
+    )
+
+    writer.write_csv_file('file.csv')
+
+    expected = """
+      name,age,location
+      Bob,20,Wellington
+      Alice,31,Wellington
+      Greg,23,Auckland
+    """
+
+    with open('file.csv', encoding='utf-8-sig') as f:
+      assert f.read() == textwrap.dedent(expected).lstrip()
+
   def test_column_ordering_is_consistent(self) -> None:
     """Orders columns based on the first row."""
     writer = CSVWriter()

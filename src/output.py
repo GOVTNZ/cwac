@@ -53,12 +53,11 @@ class CSVWriter:
     for row in rows:
       self.rows.append(row)
 
-  def write_csv_file(self, path: str, overwrite: bool = False) -> None:
+  def write_csv_file(self, path: str) -> None:
     """Write data to a CSV file.
 
     Args:
         path (str): path to write data
-        overwrite (bool): overwrite existing file
     """
     if not self.rows:
       return
@@ -66,11 +65,10 @@ class CSVWriter:
     keys = self.rows[0].keys()
 
     with self._get_file_lock(path):
-      file_exists = False if overwrite else os.path.exists(path)
-      file_mode = 'w' if overwrite else 'a'
-      with open(path, file_mode, encoding='utf-8-sig') as csvfile:
+      file_already_exists = os.path.exists(path)
+      with open(path, 'a', encoding='utf-8-sig') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=keys)
-        if not file_exists:
+        if not file_already_exists:
           writer.writeheader()
         writer.writerows(self.rows)
 
