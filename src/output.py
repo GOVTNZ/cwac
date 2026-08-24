@@ -30,7 +30,7 @@ class CSVWriter:
     """Init variables."""
     self.rows: list[dict[Any, Any]] = []
 
-  def get_file_lock(self, path: str) -> threading.Lock:
+  def _get_file_lock(self, path: str) -> threading.Lock:
     """Get a lock for a file.
 
     Args:
@@ -76,7 +76,7 @@ class CSVWriter:
 
     keys = self.rows[0].keys()
 
-    with self.get_file_lock(path):
+    with self._get_file_lock(path):
       file_exists = False if overwrite else os.path.exists(path)
       file_mode = 'w' if overwrite else 'a'
       with open(path, file_mode, encoding='utf-8-sig') as csvfile:
