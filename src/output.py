@@ -11,8 +11,6 @@ import pandas as pd
 
 from config import Config
 
-# pylint: disable=too-many-locals
-
 logger = logging.getLogger('cwac')
 
 
