@@ -93,6 +93,44 @@ class TestCSVWriter:
     with open('file.csv', encoding='utf-8-sig') as f:
       assert f.read() == textwrap.dedent(expected).lstrip()
 
+  def test_ignores_missing_columns(self) -> None:
+    """Ignores columns missing in subsequent rows."""
+    writer = CSVWriter()
+
+    writer.append_rows(
+      'file.csv',
+      {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
+      {'name': 'Alice', 'age': 31},
+      {'age': 23, 'location': 'Auckland'},
+    )
+
+    assert os.path.exists('file.csv') is True
+
+    expected = """
+      name,age,location
+      Bob,20,Wellington
+      Alice,31,
+      ,23,Auckland
+    """
+
+    with open('file.csv', encoding='utf-8-sig') as f:
+      assert f.read() == textwrap.dedent(expected).lstrip()
+
+  def test_raises_extra_columns(self) -> None:
+    """Errors when rows have extra columns."""
+    writer = CSVWriter()
+
+    with pytest.raises(ValueError):
+      writer.append_rows(
+        'file.csv',
+        {'name': 'Bob', 'age': 20},
+        {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
+        {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
+      )
+
+    # the file will still end up being created due to the open mode
+    assert os.path.exists('file.csv')
+
   def test_column_ordering_is_consistent(self) -> None:
     """Orders columns based on the first row."""
     writer = CSVWriter()
