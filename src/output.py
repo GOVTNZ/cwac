@@ -44,20 +44,6 @@ class CSVWriter:
         CSVWriter.file_locks[path] = threading.Lock()
       return CSVWriter.file_locks[path]
 
-  def read_csv(self, path: str) -> list[dict[Any, Any]]:
-    """Read a CSV file as a list of dictionaries.
-
-    Args:
-        path (str): path to CSV file
-
-    Returns:
-        list[dict[Any, Any]]: list of dictionaries
-    """
-    with self.get_file_lock(path), open(path, encoding='utf-8-sig') as csvfile:
-      reader = csv.DictReader(csvfile)
-      rows = list(reader)
-    return rows
-
   def add_row(self, row: dict[Any, Any]) -> None:
     """Add a row to the CSV row buffer.
 
