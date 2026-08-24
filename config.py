@@ -270,12 +270,12 @@ class Config:
 
             subjects.append(subject)
 
-    columns = sorted(set().union(*[subject['columns'].keys() for subject in subjects]))
+    all_columns = sorted(set().union(*[subject['columns'].keys() for subject in subjects]))
 
     # ensure each site has the same columns, otherwise
     # we'll get errors when trying to write our csvs
     for subject in subjects:
-      for column in columns:
+      for column in all_columns:
         subject['columns'].setdefault(column, '')
 
     return subjects
