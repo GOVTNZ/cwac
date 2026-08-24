@@ -103,8 +103,8 @@ class Config:
 
     self.audit_subjects: list[SiteData] = self.__import_base_urls()
 
-    # todo: see if we can remove this?
-    self.url_lookup = self.__map_base_urls_by_domain()
+    # store a set of normalized domains
+    self.url_lookup = {parse.urlparse(subject['url']).netloc.lower().strip() for subject in self.audit_subjects}
 
     # global variable to store robots.txt data
     # the Crawler queries this and populates it
@@ -370,29 +370,6 @@ class Config:
     with open('./config/' + config_filename, encoding='utf-8-sig') as file:
       # Write the config file to the results folder
       return json.load(file)
-
-  def __map_base_urls_by_domain(self) -> dict[str, dict[str, str]]:
-    """Build a dictionary mapping base url information to their domain.
-
-    Returns:
-        dict[str, dict[str, str]]: a dictionary with the URL as the key,
-        and a list that contains the agency name, and the sector
-        as the value.
-    """
-    base_urls: dict[str, dict[str, str]] = {}
-
-    for subject in self.audit_subjects:
-      # Parse the URL to get just the domain
-      parsed_url = parse.urlparse(subject['url'])
-
-      # Cast to lowercase
-      domain = parsed_url.netloc.lower()
-
-      # Strip whitespace
-      domain = domain.strip()
-
-      base_urls[domain] = {}
-    return base_urls
 
   def is_path_subdir(self, path: str, parent_path: str) -> bool:
     """Check if a path is a subdirectory of another path.
