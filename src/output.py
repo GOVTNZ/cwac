@@ -233,8 +233,8 @@ def generate_axe_core_template_aware_results(audit_name: str) -> None:
   # We want to present the most repeated (and therefore likely template-wide)
   # issues first, as these are the most critical to address.
   data_frame = data_frame.sort_values(
-    by=['num_issues', 'organisation', 'base_url', 'url'],
-    ascending=[False, True, True, True],
+    by=['num_issues', 'base_url', 'url'],
+    ascending=[False, True, True],
   )
 
   # Write the aggregated results to CSV file, preserving the prepared column order
