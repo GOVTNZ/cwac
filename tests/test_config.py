@@ -539,6 +539,24 @@ class TestUrlLoading:
 
     assert sorted(config.audit_subjects, key=lambda site: site['url']) == expected
 
+  def test_raises_on_csv_missing_url_column(self, fs: FakeFilesystem) -> None:
+    """Raises a helpful error when a csv does not have the required "url" column."""
+    fs.add_real_file('config/config_default.json')
+
+    fs.create_file(
+      'base_urls/visit/bad.csv',
+      contents=textwrap.dedent("""
+        organisation,sector,region,priority
+        ACME,Human Resources,Wellington,High
+        ACME,Legal,Auckland,Low
+      """).strip(),
+    )
+
+    with pytest.raises(ValueError) as err:
+      Config('config_default.json')
+
+    assert str(err.value) == 'bad.csv does not have the required "url" column'
+
   def test_raises_on_csv_missing_columns(self, fs: FakeFilesystem) -> None:
     """Raises a helpful error when a csv has a row with missing columns."""
     fs.add_real_file('config/config_default.json')

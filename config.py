@@ -241,8 +241,12 @@ class Config:
             except ValueError as e:
               raise ValueError(f"{filename} has a row whose columns don't match the headers: {row}") from e
 
+            url = columns.get('url')
+            if url is None:
+              raise ValueError(f'{filename} does not have the required "url" column')
+
             subject = SiteData(
-              url=columns['url'],
+              url=url,
               supports_head=True,
               columns=columns,
             )
