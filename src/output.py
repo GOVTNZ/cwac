@@ -2,7 +2,6 @@
 
 import csv
 import logging
-import os
 import threading
 import time
 from typing import Any, ClassVar
@@ -48,19 +47,23 @@ class CSVWriter:
     if not rows:
       return
 
-    keys = list(rows[0].keys())
+    keys = None
+    write_header = False
 
     with self._get_file_lock(path):
-      file_already_exists = os.path.exists(path)
-
-      # attempt to preserve the header order if the file already exists
-      if file_already_exists:
+      try:
+        # attempt to preserve the header order if the file already exists
         with open(path, encoding='utf-8-sig') as csvfile:
-          keys = list(csv.DictReader(csvfile).fieldnames or keys)
+          keys = csv.DictReader(csvfile).fieldnames
+      except FileNotFoundError:
+        write_header = True
+
+      if keys is None:
+        keys = list(rows[0].keys())
 
       with open(path, 'a', encoding='utf-8-sig') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=keys)
-        if not file_already_exists:
+        if write_header:
           writer.writeheader()
         writer.writerows(rows)
 
