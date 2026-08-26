@@ -245,15 +245,14 @@ class Config:
             except ValueError as e:
               raise ValueError(f"{filename} has a row whose columns don't match the headers: {row}") from e
 
-            url = columns.get('url')
-            if not url:
-              raise ValueError(f'{filename} has a row whose "url" column is blank: {row}')
-
             subject = SiteData(
-              url=url,
+              url=columns['url'],
               supports_head=True,
               columns=columns,
             )
+
+            if not subject['url']:
+              raise ValueError(f'{filename} has a row whose "url" column is blank: {row}')
 
             # Parse the URL to get just the domain
             parsed_url = parse.urlparse(subject['url'])
