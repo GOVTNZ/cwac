@@ -60,6 +60,7 @@ class CSVWriter:
 
       if keys is None:
         keys = list(rows[0].keys())
+        write_header = True
 
       with open(path, 'a', encoding='utf-8-sig') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=keys)

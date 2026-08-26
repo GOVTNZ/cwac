@@ -93,6 +93,36 @@ class TestCSVWriter:
     with open('file.csv', encoding='utf-8-sig') as f:
       assert f.read() == textwrap.dedent(expected).lstrip()
 
+  def test_appends_to_empty_file(self) -> None:
+    """Writes new rows to an empty csv file, without duplicating the header."""
+    with open('file.csv', 'w', encoding='utf-8-sig') as f:
+      f.write('')
+
+    writer = CSVWriter()
+
+    writer.append_rows(
+      'file.csv',
+      {'name': 'Bob', 'age': 20, 'location': 'Wellington'},
+    )
+
+    assert os.path.exists('file.csv') is True
+
+    writer.append_rows(
+      'file.csv',
+      {'name': 'Alice', 'age': 31, 'location': 'Wellington'},
+      {'name': 'Greg', 'age': 23, 'location': 'Auckland'},
+    )
+
+    expected = """
+      name,age,location
+      Bob,20,Wellington
+      Alice,31,Wellington
+      Greg,23,Auckland
+    """
+
+    with open('file.csv', encoding='utf-8-sig') as f:
+      assert f.read() == textwrap.dedent(expected).lstrip()
+
   def test_ignores_missing_columns(self) -> None:
     """Ignores columns missing in subsequent rows."""
     writer = CSVWriter()
