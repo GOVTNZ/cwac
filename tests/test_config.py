@@ -575,7 +575,7 @@ class TestUrlLoading:
 
     assert (
       str(err.value)
-      == "bad.csv has a row whose columns don't match the headers: ['ACME', 'https://acme.com/consult', 'Legal', 'Auckland']"
+      == "bad.csv has a row whose columns don't match the headers: ['ACME', 'https://acme.com/consult', 'Legal', 'Auckland']"  # noqa: E501 RUF100
     )
 
   def test_raises_on_csv_extra_columns(self, fs: FakeFilesystem) -> None:
@@ -596,5 +596,5 @@ class TestUrlLoading:
 
     assert (
       str(err.value)
-      == "bad.csv has a row whose columns don't match the headers: ['ACME', 'https://acme.com/consult', 'Legal', 'Auckland', 'Low', 'External']"
+      == "bad.csv has a row whose columns don't match the headers: ['ACME', 'https://acme.com/consult', 'Legal', 'Auckland', 'Low', 'External']"  # noqa: E501 RUF100
     )
