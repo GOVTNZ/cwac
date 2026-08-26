@@ -538,3 +538,45 @@ class TestUrlLoading:
     ]
 
     assert sorted(config.audit_subjects, key=lambda site: site['url']) == expected
+
+  def test_raises_on_csv_missing_columns(self, fs: FakeFilesystem) -> None:
+    """Raises a helpful error when a csv has a row with missing columns."""
+    fs.add_real_file('config/config_default.json')
+
+    fs.create_file(
+      'base_urls/visit/bad.csv',
+      contents=textwrap.dedent("""
+        organisation,url,sector,region,priority
+        ACME,https://acme.com/humans,Human Resources,Wellington,High
+        ACME,https://acme.com/consult,Legal,Auckland
+      """).strip(),
+    )
+
+    with pytest.raises(ValueError) as err:
+      Config('config_default.json')
+
+    assert (
+      str(err.value)
+      == "bad.csv has a row whose columns don't match the headers: ['ACME', 'https://acme.com/consult', 'Legal', 'Auckland']"
+    )
+
+  def test_raises_on_csv_extra_columns(self, fs: FakeFilesystem) -> None:
+    """Raises a helpful error when a csv has a row with extra columns."""
+    fs.add_real_file('config/config_default.json')
+
+    fs.create_file(
+      'base_urls/visit/bad.csv',
+      contents=textwrap.dedent("""
+        organisation,url,sector,region,priority
+        ACME,https://acme.com/humans,Human Resources,Wellington,High
+        ACME,https://acme.com/consult,Legal,Auckland,Low,External
+      """).strip(),
+    )
+
+    with pytest.raises(ValueError) as err:
+      Config('config_default.json')
+
+    assert (
+      str(err.value)
+      == "bad.csv has a row whose columns don't match the headers: ['ACME', 'https://acme.com/consult', 'Legal', 'Auckland', 'Low', 'External']"
+    )

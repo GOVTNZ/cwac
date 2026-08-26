@@ -236,7 +236,10 @@ class Config:
           reader = csv.reader(file)
           header = next(reader)
           for row in reader:
-            columns = dict(zip(header, row, strict=True))
+            try:
+              columns = dict(zip(header, row, strict=True))
+            except ValueError as e:
+              raise ValueError(f"{filename} has a row whose columns don't match the headers: {row}") from e
 
             subject = SiteData(
               url=columns['url'],
