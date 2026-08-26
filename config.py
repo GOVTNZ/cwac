@@ -235,6 +235,10 @@ class Config:
         ) as file:
           reader = csv.reader(file)
           header = next(reader)
+
+          if 'url' not in header:
+            raise ValueError(f'{filename} does not have the required "url" header')
+
           for row in reader:
             try:
               columns = dict(zip(header, row, strict=True))
@@ -242,8 +246,8 @@ class Config:
               raise ValueError(f"{filename} has a row whose columns don't match the headers: {row}") from e
 
             url = columns.get('url')
-            if url is None:
-              raise ValueError(f'{filename} does not have the required "url" column')
+            if not url:
+              raise ValueError(f'{filename} has a row whose "url" column is blank: {row}')
 
             subject = SiteData(
               url=url,

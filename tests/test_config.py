@@ -539,8 +539,8 @@ class TestUrlLoading:
 
     assert sorted(config.audit_subjects, key=lambda site: site['url']) == expected
 
-  def test_raises_on_csv_missing_url_column(self, fs: FakeFilesystem) -> None:
-    """Raises a helpful error when a csv does not have the required "url" column."""
+  def test_raises_on_csv_missing_url_header(self, fs: FakeFilesystem) -> None:
+    """Raises a helpful error when a csv does not have the required "url" header."""
     fs.add_real_file('config/config_default.json')
 
     fs.create_file(
@@ -555,7 +555,25 @@ class TestUrlLoading:
     with pytest.raises(ValueError) as err:
       Config('config_default.json')
 
-    assert str(err.value) == 'bad.csv does not have the required "url" column'
+    assert str(err.value) == 'bad.csv does not have the required "url" header'
+
+  def test_raises_on_csv_blank_url_column(self, fs: FakeFilesystem) -> None:
+    """Raises a helpful error when a csv has a row whose "url" column is blank."""
+    fs.add_real_file('config/config_default.json')
+
+    fs.create_file(
+      'base_urls/visit/bad.csv',
+      contents=textwrap.dedent("""
+        organisation,url,sector,region,priority
+        ACME,https://acme.com/humans,Human Resources,Wellington,High
+        ACME,,Legal,Auckland,Low
+      """).strip(),
+    )
+
+    with pytest.raises(ValueError) as err:
+      Config('config_default.json')
+
+    assert str(err.value) == "bad.csv has a row whose \"url\" column is blank: ['ACME', '', 'Legal', 'Auckland', 'Low']"
 
   def test_raises_on_csv_missing_columns(self, fs: FakeFilesystem) -> None:
     """Raises a helpful error when a csv has a row with missing columns."""
