@@ -53,7 +53,7 @@ class CSVWriter:
     with self._get_file_lock(path):
       try:
         # attempt to preserve the header order if the file already exists
-        with open(path, encoding='utf-8-sig') as csvfile:
+        with open(path, encoding='utf-8-sig', newline='') as csvfile:
           keys = csv.DictReader(csvfile).fieldnames
       except FileNotFoundError:
         write_header = True
@@ -62,7 +62,7 @@ class CSVWriter:
         keys = list(rows[0].keys())
         write_header = True
 
-      with open(path, 'a', encoding='utf-8-sig') as csvfile:
+      with open(path, 'a', encoding='utf-8-sig', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=keys)
         if write_header:
           writer.writeheader()
