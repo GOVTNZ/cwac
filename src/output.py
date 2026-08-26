@@ -48,10 +48,16 @@ class CSVWriter:
     if not rows:
       return
 
-    keys = rows[0].keys()
+    keys = list(rows[0].keys())
 
     with self._get_file_lock(path):
       file_already_exists = os.path.exists(path)
+
+      # attempt to preserve the header order if the file already exists
+      if file_already_exists:
+        with open(path, encoding='utf-8-sig') as csvfile:
+          keys = list(csv.DictReader(csvfile).fieldnames or keys)
+
       with open(path, 'a', encoding='utf-8-sig') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=keys)
         if not file_already_exists:
