@@ -6,7 +6,7 @@ This plugin returns basic page information.
 import urllib.parse
 from typing import Any
 
-from config import Config
+from config import Config, SiteData
 from src.browser import Browser
 
 # Audit classes for use with AuditManager
@@ -32,7 +32,7 @@ class DefaultAudit:
     self.config = config
     self.browser = browser
     self.url = kwargs['url']
-    self.site_data = kwargs['site_data']
+    self.site_data: SiteData = kwargs['site_data']
     self.audit_id = kwargs['audit_id']
     self.page_id = kwargs['page_id']
 
@@ -48,8 +48,7 @@ class DefaultAudit:
       base_url = parsed_url.scheme + '://' + parsed_url.netloc
 
     return {
-      'organisation': self.site_data['organisation'],
-      'sector': self.site_data['sector'],
+      **self.site_data['columns'],
       'page_title': self.browser.driver.title,
       'base_url': base_url,
       'url': self.url,

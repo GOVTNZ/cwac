@@ -9,15 +9,14 @@ cd "${PROJECT_ROOT}"
 
 # create a url file
 cat <<URLS > base_urls/visit/e2e.csv
-organisation,url,sector
-e2e,https://example.com,e2e
+url,sector
+https://example.com,e2e
 URLS
 
 # create a config file
 cat config/config_default.json | jq '
   .audit_name = "e2e" |
   .max_links_per_domain = 3 |
-  .filter_to_organisations = ["e2e"] |
   .filter_to_urls = ["example.com"] |
   .audit_plugins |= map_values(.enabled = true)
 ' > config/config_e2e.json

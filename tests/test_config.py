@@ -2,12 +2,13 @@
 
 import json
 import platform
+import textwrap
 
 import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
 
-from config import Config
+from config import Config, SiteData
 
 
 @pytest.fixture(autouse=True)
@@ -139,3 +140,479 @@ class TestChromeLocationsAutoResolution:
 
     assert config.chrome_binary_location == '/home/user/.cache/selenium/chrome/linux64/139.0.7258.68'
     assert config.chrome_driver_location == '/home/user/.cache/selenium/chromedriver/linux64/139.0.7258.68'
+
+
+class TestUrlLoading:
+  """Tests the loading of urls from csv files."""
+
+  @pytest.fixture(autouse=True)
+  def setup_base_urls_csvs(self, fs: FakeFilesystem) -> None:
+    """Set up some csvs with urls and various columns."""
+    fs.create_file(
+      'base_urls/visit/my urls.csv',
+      contents=textwrap.dedent("""
+        organisation,url,sector,region,priority
+        ACME,https://acme.com/finance,Finance,Wellington,High
+        ACME,https://acme.com/hr,Human Resources,Wellington,Medium
+        ACME,https://acme.com/legal,Legal,Auckland,Low
+        Stark Industries,https://stark.com/rd,R&D,Auckland,High
+        Stark Industries,https://stark.com/finance,Finance,Overseas,Medium
+      """).strip(),
+    )
+    fs.create_file(
+      'base_urls/visit/q3_2024_urls.csv',
+      contents=textwrap.dedent("""
+        organisation,url,sector,region,priority
+        Wayne Enterprises,https://wayne.com/security,Security,Wellington,High
+        Wayne Enterprises,https://wayne.com/finance,Finance,Auckland,Medium
+        Wayne Enterprises,https://wayne.com/legal,Legal,Wellington,Low
+        Cyberdyne Systems,https://cyberdyne.com/rd,R&D,Auckland,High
+        Cyberdyne Systems,https://cyberdyne.com/security,Security,Wellington,Medium
+      """).strip(),
+    )
+    fs.create_file(
+      'base_urls/visit/theirs_urls.csv',
+      contents=textwrap.dedent("""
+        organisation,url,sector,region,priority
+        Umbrella Corp,https://umbrella.com,R&D,Overseas,High
+        Buy 'n' Large,https://bnl.com/,Sales,Overseas,Medium
+        Umbrella Corp,https://umbrella.com/hr,Human Resources,Overseas,Low
+        Umbrella Corp,https://umbrella.com/legal,Legal,Wellington,Medium
+        Buy 'n' Large,https://bnl.com/finance,Finance,Auckland,High
+      """).strip(),
+    )
+
+  def test_urls_are_loaded(self, fs: FakeFilesystem) -> None:
+    """Loads urls from csv files."""
+    fs.add_real_file('config/config_default.json')
+
+    # remove a csv to reduce the amount of sites we have to list
+    fs.remove('base_urls/visit/my urls.csv')
+
+    config = Config('config_default.json')
+
+    expected: list[SiteData] = [
+      {
+        'url': 'https://bnl.com/',
+        'supports_head': True,
+        'columns': {
+          'organisation': "Buy 'n' Large",
+          'url': 'https://bnl.com/',
+          'sector': 'Sales',
+          'region': 'Overseas',
+          'priority': 'Medium',
+        },
+      },
+      {
+        'url': 'https://bnl.com/finance',
+        'supports_head': True,
+        'columns': {
+          'organisation': "Buy 'n' Large",
+          'url': 'https://bnl.com/finance',
+          'sector': 'Finance',
+          'region': 'Auckland',
+          'priority': 'High',
+        },
+      },
+      {
+        'url': 'https://cyberdyne.com/rd',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Cyberdyne Systems',
+          'url': 'https://cyberdyne.com/rd',
+          'sector': 'R&D',
+          'region': 'Auckland',
+          'priority': 'High',
+        },
+      },
+      {
+        'url': 'https://cyberdyne.com/security',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Cyberdyne Systems',
+          'url': 'https://cyberdyne.com/security',
+          'sector': 'Security',
+          'region': 'Wellington',
+          'priority': 'Medium',
+        },
+      },
+      {
+        'url': 'https://umbrella.com',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Umbrella Corp',
+          'url': 'https://umbrella.com',
+          'sector': 'R&D',
+          'region': 'Overseas',
+          'priority': 'High',
+        },
+      },
+      {
+        'url': 'https://umbrella.com/hr',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Umbrella Corp',
+          'url': 'https://umbrella.com/hr',
+          'sector': 'Human Resources',
+          'region': 'Overseas',
+          'priority': 'Low',
+        },
+      },
+      {
+        'url': 'https://umbrella.com/legal',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Umbrella Corp',
+          'url': 'https://umbrella.com/legal',
+          'sector': 'Legal',
+          'region': 'Wellington',
+          'priority': 'Medium',
+        },
+      },
+      {
+        'url': 'https://wayne.com/finance',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Wayne Enterprises',
+          'url': 'https://wayne.com/finance',
+          'sector': 'Finance',
+          'region': 'Auckland',
+          'priority': 'Medium',
+        },
+      },
+      {
+        'url': 'https://wayne.com/legal',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Wayne Enterprises',
+          'url': 'https://wayne.com/legal',
+          'sector': 'Legal',
+          'region': 'Wellington',
+          'priority': 'Low',
+        },
+      },
+      {
+        'url': 'https://wayne.com/security',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Wayne Enterprises',
+          'url': 'https://wayne.com/security',
+          'sector': 'Security',
+          'region': 'Wellington',
+          'priority': 'High',
+        },
+      },
+    ]
+
+    assert sorted(config.audit_subjects, key=lambda site: site['url']) == expected
+
+  def test_urls_are_loaded_from_set_path(self, fs: FakeFilesystem) -> None:
+    """Loads urls from csv files within a directory pointed to by config."""
+    fs.add_real_file('config/config_default.json', read_only=False)
+
+    with open('config/config_default.json', 'r+', encoding='utf-8') as f:
+      c = {**json.load(f), 'base_urls_visit_path': './base_urls/alternative/'}
+      f.seek(0)
+      json.dump(c, f)
+      f.truncate()
+
+    fs.makedirs('base_urls/alternative')
+    fs.rename('base_urls/visit/my urls.csv', 'base_urls/alternative/my urls.csv')
+
+    config = Config('config_default.json')
+
+    assert sorted([site['url'] for site in config.audit_subjects]) == [
+      'https://acme.com/finance',
+      'https://acme.com/hr',
+      'https://acme.com/legal',
+      'https://stark.com/finance',
+      'https://stark.com/rd',
+    ]
+
+  def test_urls_have_the_same_columns(self, fs: FakeFilesystem) -> None:
+    """Adds the same columns to all urls, to avoid csv writer errors."""
+    fs.add_real_file('config/config_default.json')
+
+    with open('base_urls/visit/my urls.csv', 'w', encoding='utf-8') as f:
+      f.write(
+        textwrap.dedent("""
+          organisation,url,sector,priority
+          ACME,https://acme.com/finance,Finance,High
+          ACME,https://acme.com/hr,Human Resources,Medium
+          ACME,https://acme.com/legal,Legal,Low
+          Stark Industries,https://stark.com/rd,R&D,High
+          Stark Industries,https://stark.com/finance,Finance,Medium
+        """).strip(),
+      )
+    with open('base_urls/visit/q3_2024_urls.csv', 'w', encoding='utf-8') as f:
+      f.write(
+        textwrap.dedent("""
+          url,sector,region,priority
+          https://wayne.com/security,Security,Wellington,High
+          https://wayne.com/finance,Finance,Auckland,Medium
+          https://wayne.com/legal,Legal,Wellington,Low
+          https://cyberdyne.com/rd,R&D,Auckland,High
+          https://cyberdyne.com/security,Security,Wellington,Medium
+        """).strip(),
+      )
+    with open('base_urls/visit/theirs_urls.csv', 'w', encoding='utf-8') as f:
+      f.write(
+        textwrap.dedent("""
+          url
+          https://umbrella.com
+          https://bnl.com/
+          https://umbrella.com/hr
+          https://umbrella.com/legal
+          https://bnl.com/finance
+        """).strip(),
+      )
+
+    config = Config('config_default.json')
+
+    expected: list[SiteData] = [
+      {
+        'url': 'https://acme.com/finance',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'ACME',
+          'url': 'https://acme.com/finance',
+          'sector': 'Finance',
+          'priority': 'High',
+          'region': '',
+        },
+      },
+      {
+        'url': 'https://acme.com/hr',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'ACME',
+          'url': 'https://acme.com/hr',
+          'sector': 'Human Resources',
+          'priority': 'Medium',
+          'region': '',
+        },
+      },
+      {
+        'url': 'https://acme.com/legal',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'ACME',
+          'url': 'https://acme.com/legal',
+          'sector': 'Legal',
+          'priority': 'Low',
+          'region': '',
+        },
+      },
+      {
+        'url': 'https://bnl.com/',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://bnl.com/',
+          'organisation': '',
+          'priority': '',
+          'region': '',
+          'sector': '',
+        },
+      },
+      {
+        'url': 'https://bnl.com/finance',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://bnl.com/finance',
+          'organisation': '',
+          'priority': '',
+          'region': '',
+          'sector': '',
+        },
+      },
+      {
+        'url': 'https://cyberdyne.com/rd',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://cyberdyne.com/rd',
+          'sector': 'R&D',
+          'region': 'Auckland',
+          'priority': 'High',
+          'organisation': '',
+        },
+      },
+      {
+        'url': 'https://cyberdyne.com/security',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://cyberdyne.com/security',
+          'sector': 'Security',
+          'region': 'Wellington',
+          'priority': 'Medium',
+          'organisation': '',
+        },
+      },
+      {
+        'url': 'https://stark.com/finance',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Stark Industries',
+          'url': 'https://stark.com/finance',
+          'sector': 'Finance',
+          'priority': 'Medium',
+          'region': '',
+        },
+      },
+      {
+        'url': 'https://stark.com/rd',
+        'supports_head': True,
+        'columns': {
+          'organisation': 'Stark Industries',
+          'url': 'https://stark.com/rd',
+          'sector': 'R&D',
+          'priority': 'High',
+          'region': '',
+        },
+      },
+      {
+        'url': 'https://umbrella.com',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://umbrella.com',
+          'organisation': '',
+          'priority': '',
+          'region': '',
+          'sector': '',
+        },
+      },
+      {
+        'url': 'https://umbrella.com/hr',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://umbrella.com/hr',
+          'organisation': '',
+          'priority': '',
+          'region': '',
+          'sector': '',
+        },
+      },
+      {
+        'url': 'https://umbrella.com/legal',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://umbrella.com/legal',
+          'organisation': '',
+          'priority': '',
+          'region': '',
+          'sector': '',
+        },
+      },
+      {
+        'url': 'https://wayne.com/finance',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://wayne.com/finance',
+          'sector': 'Finance',
+          'region': 'Auckland',
+          'priority': 'Medium',
+          'organisation': '',
+        },
+      },
+      {
+        'url': 'https://wayne.com/legal',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://wayne.com/legal',
+          'sector': 'Legal',
+          'region': 'Wellington',
+          'priority': 'Low',
+          'organisation': '',
+        },
+      },
+      {
+        'url': 'https://wayne.com/security',
+        'supports_head': True,
+        'columns': {
+          'url': 'https://wayne.com/security',
+          'sector': 'Security',
+          'region': 'Wellington',
+          'priority': 'High',
+          'organisation': '',
+        },
+      },
+    ]
+
+    assert sorted(config.audit_subjects, key=lambda site: site['url']) == expected
+
+  def test_raises_on_csv_missing_url_header(self, fs: FakeFilesystem) -> None:
+    """Raises a helpful error when a csv does not have the required "url" header."""
+    fs.add_real_file('config/config_default.json')
+
+    fs.create_file(
+      'base_urls/visit/bad.csv',
+      contents=textwrap.dedent("""
+        organisation,sector,region,priority
+        ACME,Human Resources,Wellington,High
+        ACME,Legal,Auckland,Low
+      """).strip(),
+    )
+
+    with pytest.raises(ValueError) as err:
+      Config('config_default.json')
+
+    assert str(err.value) == 'bad.csv does not have the required "url" header'
+
+  def test_raises_on_csv_blank_url_column(self, fs: FakeFilesystem) -> None:
+    """Raises a helpful error when a csv has a row whose "url" column is blank."""
+    fs.add_real_file('config/config_default.json')
+
+    fs.create_file(
+      'base_urls/visit/bad.csv',
+      contents=textwrap.dedent("""
+        organisation,url,sector,region,priority
+        ACME,https://acme.com/humans,Human Resources,Wellington,High
+        ACME,,Legal,Auckland,Low
+      """).strip(),
+    )
+
+    with pytest.raises(ValueError) as err:
+      Config('config_default.json')
+
+    assert str(err.value) == "bad.csv has a row whose \"url\" column is blank: ['ACME', '', 'Legal', 'Auckland', 'Low']"
+
+  def test_raises_on_csv_missing_columns(self, fs: FakeFilesystem) -> None:
+    """Raises a helpful error when a csv has a row with missing columns."""
+    fs.add_real_file('config/config_default.json')
+
+    fs.create_file(
+      'base_urls/visit/bad.csv',
+      contents=textwrap.dedent("""
+        organisation,url,sector,region,priority
+        ACME,https://acme.com/humans,Human Resources,Wellington,High
+        ACME,https://acme.com/consult,Legal,Auckland
+      """).strip(),
+    )
+
+    with pytest.raises(ValueError) as err:
+      Config('config_default.json')
+
+    assert (
+      str(err.value)
+      == "bad.csv has a row whose columns don't match the headers: ['ACME', 'https://acme.com/consult', 'Legal', 'Auckland']"  # noqa: E501 RUF100
+    )
+
+  def test_raises_on_csv_extra_columns(self, fs: FakeFilesystem) -> None:
+    """Raises a helpful error when a csv has a row with extra columns."""
+    fs.add_real_file('config/config_default.json')
+
+    fs.create_file(
+      'base_urls/visit/bad.csv',
+      contents=textwrap.dedent("""
+        organisation,url,sector,region,priority
+        ACME,https://acme.com/humans,Human Resources,Wellington,High
+        ACME,https://acme.com/consult,Legal,Auckland,Low,External
+      """).strip(),
+    )
+
+    with pytest.raises(ValueError) as err:
+      Config('config_default.json')
+
+    assert (
+      str(err.value)
+      == "bad.csv has a row whose columns don't match the headers: ['ACME', 'https://acme.com/consult', 'Legal', 'Auckland', 'Low', 'External']"  # noqa: E501 RUF100
+    )

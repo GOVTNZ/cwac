@@ -21,10 +21,9 @@ getLogger('usp').parent = logger
 class SiteData(TypedDict):
   """Holds data for a site that should be crawled and audited."""
 
-  organisation: str
   url: str
-  sector: str
   supports_head: bool
+  columns: dict[str, str]
 
 
 class Config:
@@ -104,7 +103,8 @@ class Config:
 
     self.audit_subjects: list[SiteData] = self.__import_base_urls()
 
-    self.url_lookup = self.__map_base_urls_by_domain()
+    # store a set of normalized domains
+    self.url_lookup = {parse.urlparse(subject['url']).netloc.lower().strip() for subject in self.audit_subjects}
 
     # global variable to store robots.txt data
     # the Crawler queries this and populates it
@@ -199,7 +199,7 @@ class Config:
     found_org = False
     if self.filter_to_organisations:
       for org in self.filter_to_organisations:
-        if org in row['organisation']:
+        if org in row['columns'].get('organisation', ''):
           found_org = True
           break
 
@@ -235,15 +235,24 @@ class Config:
         ) as file:
           reader = csv.reader(file)
           header = next(reader)
-          for row in reader:
-            if len(row) != 3:
-              raise ValueError(
-                'CSV files must have 3 columns',
-                row,
-                filename,
-              )
 
-            subject = cast(SiteData, dict(zip(header, row, strict=True)))
+          if 'url' not in header:
+            raise ValueError(f'{filename} does not have the required "url" header')
+
+          for row in reader:
+            try:
+              columns = dict(zip(header, row, strict=True))
+            except ValueError as e:
+              raise ValueError(f"{filename} has a row whose columns don't match the headers: {row}") from e
+
+            subject = SiteData(
+              url=columns['url'],
+              supports_head=True,
+              columns=columns,
+            )
+
+            if not subject['url']:
+              raise ValueError(f'{filename} has a row whose "url" column is blank: {row}')
 
             # Parse the URL to get just the domain
             parsed_url = parse.urlparse(subject['url'])
@@ -265,10 +274,19 @@ class Config:
               continue
 
             subject['url'] = self.__normalize_url(subject['url'])
+            subject['columns']['url'] = subject['url']
 
             subject['supports_head'] = subject['url'] not in headless_base_urls
 
             subjects.append(subject)
+
+    all_columns = sorted(set().union(*[subject['columns'].keys() for subject in subjects]))
+
+    # ensure each site has the same columns, otherwise
+    # we'll get errors when trying to write our csvs
+    for subject in subjects:
+      for column in all_columns:
+        subject['columns'].setdefault(column, '')
 
     return subjects
 
@@ -362,58 +380,6 @@ class Config:
     with open('./config/' + config_filename, encoding='utf-8-sig') as file:
       # Write the config file to the results folder
       return json.load(file)
-
-  def lookup_organisation(self, url: str) -> dict[str, str]:
-    """Lookup the agency details from a URL.
-
-    Args:
-        url (str): the URL to lookup
-
-    Returns:
-        dict[str, str]: a dictionary with "organisation" and
-        "sector" as the keys, and the agency name and sector as
-        the values.
-    """
-    # Parse the URL to get just the domain
-    parsed_url = parse.urlparse(url)
-    domain = parsed_url.netloc.lower()
-
-    if domain not in self.url_lookup:
-      logger.warning('Agency data missing for: %s', url)
-      return {'organisation': 'Unknown', 'sector': 'Unknown'}
-    return {
-      'organisation': self.url_lookup[domain]['organisation'],
-      'sector': self.url_lookup[domain]['sector'],
-    }
-
-  def __map_base_urls_by_domain(self) -> dict[str, dict[str, str]]:
-    """Build a dictionary mapping base url information to their domain.
-
-    This data is primarily used for looking up the agency details
-    given a URL by using the lookup_organisation() method.
-
-    Returns:
-        dict[str, dict[str, str]]: a dictionary with the URL as the key,
-        and a list that contains the agency name, and the sector
-        as the value.
-    """
-    base_urls: dict[str, dict[str, str]] = {}
-
-    for subject in self.audit_subjects:
-      # Parse the URL to get just the domain
-      parsed_url = parse.urlparse(subject['url'])
-
-      # Cast to lowercase
-      domain = parsed_url.netloc.lower()
-
-      # Strip whitespace
-      domain = domain.strip()
-
-      base_urls[domain] = {
-        'organisation': subject['organisation'],
-        'sector': subject['sector'],
-      }
-    return base_urls
 
   def is_path_subdir(self, path: str, parent_path: str) -> bool:
     """Check if a path is a subdirectory of another path.

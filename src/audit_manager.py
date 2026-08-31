@@ -4,13 +4,13 @@ import logging
 import os
 import time
 import urllib.parse
-from typing import Any
+from typing import Any, TypedDict
 
 import selenium
 from selenium.webdriver.common.by import By
 
 import src.filters
-from config import Config
+from config import Config, SiteData
 from src.analytics import Analytics
 from src.browser import Browser
 from src.output import CSVWriter
@@ -18,6 +18,14 @@ from src.output import CSVWriter
 # pylint: disable=too-many-statements
 
 logger = logging.getLogger('cwac')
+
+
+class AuditData(TypedDict):
+  """Data for running an audit."""
+
+  audit_class: type[Any]
+  site_data: SiteData
+  kwargs: dict[str, Any]
 
 
 class AuditManager:
@@ -31,7 +39,7 @@ class AuditManager:
     self.config = config
     self.browser = browser
     self.analytics = analytics
-    self.audits: dict[Any, dict[Any, Any]] = {}
+    self.audits: dict[str, AuditData] = {}
     self.filter = src.filters.URLFilter(self.config)
 
     # Stores URLs discarded as a key-value pair
@@ -39,7 +47,7 @@ class AuditManager:
     # if they are blocked by anti-bot measures.
     self.discarded_urls: dict[str, str] = {}
 
-  def register_audit(self, audit_name: str, audit_class: type[Any], **kwargs: Any) -> None:
+  def register_audit(self, audit_name: str, audit_class: type[Any], site_data: SiteData, **kwargs: Any) -> None:
     """Register audits to be run by run_audits().
 
     This can also be used to re-run a test with updated kwargs.
@@ -47,15 +55,17 @@ class AuditManager:
     Args:
         audit_name (str): Human-readable name for audit
         audit_class (Type[Any]): Reference to a class that runs the audit
+        site_data (SiteData): Data about the site being audited
         kwargs (Any): Arbitrary args to be passed to audit_class
     """
     # Register the audit (or update its kwargs)
     self.audits[audit_name] = {
       'audit_class': audit_class,
-      'kwargs': kwargs,
+      'site_data': site_data,
+      'kwargs': {**kwargs, 'site_data': site_data},
     }
 
-  def test_for_anti_bot(self) -> str:
+  def test_for_anti_bot(self, site_data: SiteData) -> str:
     """Inspect the currently loaded page for anti-bot blocking.
 
     If bot blocking services such as Cloudflare, Incapsula, Azure Front Door,
@@ -121,9 +131,6 @@ class AuditManager:
       status = 'Azure Front Door'
 
     if status != 'Pass':
-      # Get the URL's organisation
-      org = self.config.lookup_organisation(url)
-
       # Get URL's netloc
       netloc = urllib.parse.urlparse(url).netloc
 
@@ -140,9 +147,9 @@ class AuditManager:
       csv_writer.append_rows(
         f'./results/{self.config.audit_name}/anti_bot.csv',
         {
-          'organisation': org['organisation'],
-          'domain': netloc,
+          **site_data['columns'],
           'url': url,
+          'domain': netloc,
           'anti_bot_check': status,
           'viewport_size': self.browser.viewport_size,
         },
@@ -251,7 +258,7 @@ class AuditManager:
         browser_status = self.browser.get(audit['kwargs']['url'])
 
         # Test for anti-bot measures
-        if self.test_for_anti_bot() != 'Pass':
+        if self.test_for_anti_bot(audit['site_data']) != 'Pass':
           # If URL is blocked, skip this URL
           logger.warning(
             'Skipping test %s on %s due to anti-bot',
