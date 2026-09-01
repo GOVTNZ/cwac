@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -e
+
+# make sure script runs from project root directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"
+cd "${PROJECT_ROOT}"
+
+bin/build
+
+docker run --rm \
+  --mount 'type=bind,src=./config,dst=/cwac/config' \
+  --mount 'type=bind,src=./base_urls,dst=/cwac/base_urls' \
+  --mount 'type=bind,src=./results,dst=/cwac/results' \
+  --env CHROME_DEVEL_SANDBOX=/usr/local/sbin/chrome-devel-sandbox \
+  cwac .venv/bin/python -u cwac.py "${@}"
