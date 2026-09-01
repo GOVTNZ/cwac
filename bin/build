@@ -7,8 +7,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"
 cd "${PROJECT_ROOT}"
 
+# default to the current user and group
+: "${IMAGE_USER_ID:=$(id -u)}"
+: "${IMAGE_GROUP_ID:=$(id -g)}"
+
 docker build \
   -t cwac \
-  --build-arg USER_ID=$(id -u) \
-  --build-arg GROUP_ID=$(id -g) \
+  --build-arg USER_ID="$IMAGE_USER_ID" \
+  --build-arg GROUP_ID="$IMAGE_GROUP_ID" \
   .
