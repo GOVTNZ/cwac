@@ -4,8 +4,8 @@ requests==2.34.2
 selenium==4.48.0
 lxml==6.1.2
 bandit==1.9.4
-mypy==2.3.0
-pylint==4.0.6
+mypy==2.3.1
+pylint==4.0.7
 flake8==7.3.0
 flake8-simplify==0.30.0
 opencv-python-headless==5.0.0.93
@@ -16,5 +16,5 @@ nltk==3.10.3
 pyfakefs==6.2.0
 pytest==9.1.1
 pytest-mock==3.15.1
-ruff==0.16.1
+ruff==0.16.5
 ultimate-sitemap-parser==1.8.1
