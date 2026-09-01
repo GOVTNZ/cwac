@@ -24,15 +24,4 @@ cat config/config_default.json | jq '
 # make sure the "results" directory exists
 mkdir -p results
 
-docker build \
-  --iidfile /tmp/cwac_image_id \
-  -t cwac-e2e-test-script:latest \
-  --build-arg USER_ID=$(id -u) \
-  --build-arg GROUP_ID=$(id -g) \
-  .
-docker run --rm \
-  --mount "type=bind,src=./config,dst=/cwac/config" \
-  --mount "type=bind,src=./base_urls,dst=/cwac/base_urls" \
-  --mount "type=bind,src=./results,dst=/cwac/results" \
-  -e CHROME_EXTRA_ARGS='--no-sandbox,--disable-dev-shm-usage' \
-  $(cat /tmp/cwac_image_id) .venv/bin/python -u cwac.py config_e2e.json
+bin/run config_e2e.json
