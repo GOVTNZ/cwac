@@ -13,5 +13,5 @@ docker run --rm \
   --mount 'type=bind,src=./config,dst=/cwac/config' \
   --mount 'type=bind,src=./base_urls,dst=/cwac/base_urls' \
   --mount 'type=bind,src=./results,dst=/cwac/results' \
-  --env CHROME_DEVEL_SANDBOX=/usr/local/sbin/chrome-devel-sandbox \
+  --env CHROME_EXTRA_ARGS='--no-sandbox,--disable-dev-shm-usage' \
   cwac .venv/bin/python -u cwac.py "${@}"
