@@ -1,24 +1,29 @@
 # Running CWAC
 
-1. Ensure you have completed the setup instructions in
-   [Installing CWAC](./install.md).
-2. Review [Configuring CWAC](./audit-config.md) to create your desired scan
-   configuration (or just use the defaults).
+We recommend using CWAC with [Docker](https://www.docker.com/).
 
-Once the configuration files are set up, CWAC can be run by executing:
+> [!WARNING]
+>
+> While you can run the tool without Docker and on OSs other than Linux, there
+> are edge cases that can prevent some of the audits from running correctly.
+>
+> For example, the current version of Chrome for Testing used by the tool has a
+> hard-coded minimum screen width of 500 px when on macOS. This means that the
+> [Reflow audit](https://github.com/GOVTNZ/cwac/blob/main/doc/audits/reflow-audit.md)
+> cannot run on that OS.
 
-```bash
-# You need to have the Python venv set up in your shell. If you have not already
-# done this then run
-source .venv/bin/activate
+Once you have the codebase cloned locally and Docker set up, you can use the
+`bin/run` script to run the tool.
 
-# uses ./config/config_default.json as its configuration source.
-python cwac.py
+This will automatically build the image and run the tool with any arguments you
+provide:
 
-# To specify a config file for CWAC:
-# This will cause CWAC to load `./config/config_custom.json` instead of
-# `config_default.json`.
-python cwac.py config_custom.json
+```shell
+# run the tool with the default configuration
+bin/run
+
+# run the tool with a custom configuration
+bin/run my_custom_config.json
 ```
 
 > [!WARNING]
