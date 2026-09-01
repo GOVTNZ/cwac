@@ -12,7 +12,7 @@ opencv-python-headless==5.0.0.93
 numpy==2.5.1
 pandas==3.0.5
 pandas-stubs==3.0.5.260730
-nltk==3.10.2
+nltk==3.10.3
 pyfakefs==6.2.0
 pytest==9.1.1
 pytest-mock==3.15.1
