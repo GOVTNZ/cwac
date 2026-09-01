@@ -9,6 +9,9 @@ cd "${PROJECT_ROOT}"
 
 bin/build
 
+# make sure the "results" directory exists
+mkdir -p results
+
 docker run --rm \
   --mount 'type=bind,src=./config,dst=/cwac/config' \
   --mount 'type=bind,src=./base_urls,dst=/cwac/base_urls' \

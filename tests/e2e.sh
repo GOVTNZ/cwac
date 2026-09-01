@@ -21,7 +21,4 @@ cat config/config_default.json | jq '
   .audit_plugins |= map_values(.enabled = true)
 ' > config/config_e2e.json
 
-# make sure the "results" directory exists
-mkdir -p results
-
 bin/run config_e2e.json
