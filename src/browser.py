@@ -6,6 +6,7 @@ Contains useful functions for managing browsers.
 import logging
 import os
 import platform
+import subprocess
 import time
 import traceback
 from typing import Any, cast
@@ -176,13 +177,46 @@ class Browser:
     """
     try:
       self.viewport_size = {'width': width, 'height': height}
-      self.driver.set_window_size(width, height)
+      
+      # On macOS, use AppleScript to resize the window since Selenium's set_window_size
+      # is limited to a minimum of ~500px by Chrome's internal constraints
+      if platform.system() == 'Darwin':
+        self._resize_window_macos(width, height)
+      else:
+        self.driver.set_window_size(width, height)
     except selenium.common.exceptions.TimeoutException:
       logger.exception('TimeoutException')
       self.safe_restart()
     except selenium.common.exceptions.WebDriverException:
       logger.exception('WebDriverException')
       self.safe_restart()
+
+  def _resize_window_macos(self, width: int, height: int) -> None:
+    """Resize Chrome window on macOS using AppleScript.
+    
+    Args:
+        width (int): target width in pixels
+        height (int): target height in pixels
+    """
+    try:
+      # AppleScript to resize the front Chrome window to specific dimensions
+      applescript = f'''
+      tell application "Google Chrome"
+        set bounds of window 1 to {{0, 0, {width}, {height}}}
+      end tell
+      '''
+      
+      subprocess.run(
+        ['osascript', '-e', applescript],
+        check=False,
+        capture_output=True,
+        timeout=5
+      )
+      logger.info('Resized Chrome window to %dx%d using AppleScript', width, height)
+    except Exception as e:
+      logger.warning('Failed to resize window via AppleScript: %s. Falling back to set_window_size', str(e))
+      # Fallback to regular Selenium method
+      self.driver.set_window_size(width, height)
 
   def get_window_size(self) -> dict[str, int]:
     """Get browser size.
