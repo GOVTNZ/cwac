@@ -191,32 +191,76 @@ class Browser:
       logger.exception('WebDriverException')
       self.safe_restart()
 
-  def _resize_window_macos(self, width: int, height: int) -> None:
-    """Resize Chrome window on macOS using AppleScript.
+  def _resize_window_macos(self, target_width: int, target_height: int) -> None:
+    """Resize Chrome window on macOS using AppleScript to achieve desired viewport.
+    
+    On macOS, the window bounds include browser chrome (scrollbars, etc.), so we need
+    to compensate by making the window slightly larger than the target viewport size.
+    This method iteratively adjusts the window size until the actual viewport matches
+    the requested width/height.
     
     Args:
-        width (int): target width in pixels
-        height (int): target height in pixels
+        target_width (int): target viewport width in pixels
+        target_height (int): target viewport height in pixels
     """
-    try:
-      # AppleScript to resize the front Chrome window to specific dimensions
-      applescript = f'''
-      tell application "Google Chrome"
-        set bounds of window 1 to {{0, 0, {width}, {height}}}
-      end tell
-      '''
-      
-      subprocess.run(
-        ['osascript', '-e', applescript],
-        check=False,
-        capture_output=True,
-        timeout=5
-      )
-      logger.info('Resized Chrome window to %dx%d using AppleScript', width, height)
-    except Exception as e:
-      logger.warning('Failed to resize window via AppleScript: %s. Falling back to set_window_size', str(e))
-      # Fallback to regular Selenium method
-      self.driver.set_window_size(width, height)
+    max_attempts = 3
+    current_attempt = 0
+    window_width = target_width + 15  # Initial estimate for browser chrome
+    window_height = target_height + 70  # Account for title bar and address bar
+    
+    while current_attempt < max_attempts:
+      try:
+        # AppleScript to resize the front Chrome window to specific dimensions
+        applescript = f'''
+        tell application "Google Chrome"
+          set bounds of window 1 to {{0, 0, {window_width}, {window_height}}}
+        end tell
+        '''
+        
+        subprocess.run(
+          ['osascript', '-e', applescript],
+          check=False,
+          capture_output=True,
+          timeout=5
+        )
+        
+        # Small delay to allow window to resize
+        time.sleep(0.2)
+        
+        # Check actual viewport width using JavaScript
+        try:
+          actual_viewport_width = self.driver.execute_script('return window.innerWidth;')
+          
+          if actual_viewport_width == target_width:
+            # Exact match achieved
+            logger.info('Achieved target viewport %dx%d on macOS', target_width, target_height)
+            return
+          elif actual_viewport_width < target_width:
+            # Viewport too small, increase window size
+            diff = target_width - actual_viewport_width
+            window_width += diff
+            logger.debug('Viewport too small (%d), adjusting window to %d', actual_viewport_width, window_width)
+          else:
+            # Viewport too large, decrease window size
+            diff = actual_viewport_width - target_width
+            window_width -= diff
+            logger.debug('Viewport too large (%d), adjusting window to %d', actual_viewport_width, window_width)
+          
+          current_attempt += 1
+        except Exception as e:
+          logger.warning('Could not query viewport width: %s', str(e))
+          return
+        
+      except subprocess.TimeoutExpired:
+        logger.warning('AppleScript timeout on attempt %d', current_attempt)
+        current_attempt += 1
+      except Exception as e:
+        logger.warning('Failed to resize window via AppleScript: %s. Falling back to set_window_size', str(e))
+        # Fallback to regular Selenium method
+        self.driver.set_window_size(target_width, target_height)
+        return
+    
+    logger.warning('Could not achieve exact viewport size after %d attempts. Final viewport may differ from target.', max_attempts)
 
   def get_window_size(self) -> dict[str, int]:
     """Get browser size.
