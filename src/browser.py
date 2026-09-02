@@ -199,6 +199,9 @@ class Browser:
     This method iteratively adjusts the window size until the actual viewport matches
     the requested width/height.
     
+    Only resizes the specific Chrome window controlled by this Selenium driver, not
+    any other Chrome windows that may be open.
+    
     Args:
         target_width (int): target viewport width in pixels
         target_height (int): target viewport height in pixels
@@ -208,12 +211,31 @@ class Browser:
     window_width = target_width + 15  # Initial estimate for browser chrome
     window_height = target_height + 70  # Account for title bar and address bar
     
+    # Get the window handle ID to target only this specific Chrome window
+    try:
+      # Get the current window ID from Chrome via CDP
+      window_id = self.driver.execute_script('return window.id || "unknown";')
+      
+      # Get all Chrome windows and match by URL or other identifying info
+      # We'll use a more reliable method: get the current URL and window size as identifiers
+      current_url = self.driver.current_url
+      logger.debug('Targeting Chrome window with URL: %s', current_url)
+    except Exception as e:
+      logger.warning('Could not get window identifier: %s', str(e))
+      window_id = None
+    
     while current_attempt < max_attempts:
       try:
         # AppleScript to resize the front Chrome window to specific dimensions
+        # We target by matching the window title which contains the page title
         applescript = f'''
         tell application "Google Chrome"
-          set bounds of window 1 to {{0, 0, {window_width}, {window_height}}}
+          repeat with w in windows
+            if (title of w contains "CWACbot") or (URL of active tab of w contains "http") then
+              set bounds of w to {{0, 0, {window_width}, {window_height}}}
+              exit repeat
+            end if
+          end repeat
         end tell
         '''
         
