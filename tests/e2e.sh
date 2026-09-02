@@ -24,9 +24,6 @@ cat config/config_default.json | jq '
 # make sure the "results" directory exists
 mkdir -p results
 
-# make sure the package-lock.json exists
-npm i --package-lock-only -y
-
 docker build \
   --iidfile /tmp/cwac_image_id \
   -t cwac-e2e-test-script:latest \
