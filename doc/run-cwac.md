@@ -1,6 +1,6 @@
 # Running CWAC
 
-We recommend using CWAC with [Docker](https://www.docker.com/).
+We recommend using CWAC with [Docker](https://www.docker.com/get-started/).
 
 > [!WARNING]
 >
