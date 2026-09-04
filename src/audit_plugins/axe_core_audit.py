@@ -62,6 +62,7 @@ class AxeCoreAudit(DefaultAudit):
         # that we cannot recover from, so exit the program.
         sys.exit(1)
       run_axe = (
+        'document.getAnimations().forEach(animation => animation.cancel());'
         'var callback = arguments[arguments.length - 1];'
         'axe.run({xpath: true, '
         "resultTypes:['violations']"
