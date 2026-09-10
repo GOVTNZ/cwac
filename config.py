@@ -129,7 +129,7 @@ class Config:
 
     # create a new formatter with our desired format
     formatter = Formatter(
-      '%(asctime)s %(levelname)s %(threadName)s %(name)s %(filename)s:%(lineno)s %(message)s',
+      '%(asctime)s %(levelname)-7s %(threadName)-22s %(name)s %(filename)s:%(lineno)s %(funcName)s %(message)s',
       # Log timestamp format (ISO 8601)
       '%Y-%m-%dT%H:%M:%S%z',
     )
