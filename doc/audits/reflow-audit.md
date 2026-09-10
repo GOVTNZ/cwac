@@ -90,7 +90,7 @@ reflow-specific result fields:
   - `0` means no horizontal overflow was detected.
   - `1` means horizontal overflow was detected for this row.
 - `overflows` (boolean true/false)
-  - Indicates whether there an overflow issue with this URL
+  - Indicates whether there is an overflow issue with this URL
   - Issue exists if value is `TRUE`
 - `overflow_amount_px`
   - How wide the hidden part of the page is at a 320px viewport size.

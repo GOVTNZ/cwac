@@ -36,13 +36,13 @@ which includes
 Level AA conformance. CWAC enables the partial fulfillment of
 [Article 9 of the United Nations Convention on the Rights of Persons with Disabilities (CRPD)](https://www.un.org/development/desa/disabilities/convention-on-the-rights-of-persons-with-disabilities/article-9-accessibility.html).
 
-Provided a list of URLS to visit, CWAC will check each page for
+Provided a list of URLs to visit, CWAC will check each page for
 automatically-identifiable accessibility issues and store the results in an
 easy-to-read CSV file.
 
 CWAC can also crawl each page as it goes to determine additional pages to check
 (up to a set max number per URL), respecting `robots.txt` and server signals
-when doing so. This makes it easy to check entire sites without knowing the all
+when doing so. This makes it easy to check entire sites without knowing all the
 paths beforehand.
 
 CWAC is designed to be extensible, so new forms of web testing can be added over
@@ -53,13 +53,15 @@ performance, or the existence of a privacy or copyright statement.
 
 ## Using CWAC
 
-- [Installing CWAC](./doc/install.md)
 - [Understanding audits](./doc/audits.md)
 - [Configuring audits](./doc/audit-config.md)
 - [Running CWAC CLI](./doc/run-cwac.md)
 - [Working with audit results](./doc/audit-results.md)
 
 ## Developing CWAC
+
+Get started by reading the
+[local dev environment setup guide](./doc/local-dev-setup.md).
 
 ### Core technologies
 
@@ -213,7 +215,7 @@ The steps to upgrade are:
 
 1. Run the command above (or manually visit site) to get latest stable _Chrome
    for Testing_.
-2. Update `pacakge.json` with the new version.
+2. Update `package.json` with the new version.
 3. Run `npm install` to download _Chrome for Testing_ and _Chromedriver_
    binaries corresponding to the new version from `package.json`. The binaries
    are downloaded to `chrome/` and `chromedriver/` respectively.
@@ -234,14 +236,14 @@ Crown copyright (c) 2024, Department of Internal Affairs on behalf of the New
 Zealand Government.
 
 This copyright, along with CWAC's GPL-3.0 license, does not extend to the
-third-party chromedriver binaries located in the `/drivers/` folder. Permission
-to re-use third party copyright material cannot be given by the Department of
-Internal Affairs.
+third-party chromedriver binaries located in the `chromedriver/` folder.
+Permission to re-use third party copyright material cannot be given by the
+Department of Internal Affairs.
 
 ### chromedriver binaries copyright and license
 
-CWAC includes chromedriver binaries at `/drivers/`. chromedriver licenses can be
-found in the `/drivers/` folder.
+CWAC includes chromedriver binaries at `chromedriver/`. chromedriver licenses
+can be found in the `chromedriver/` folder.
 
 ```plain
 // Copyright 2015 The Chromium Authors

@@ -5,7 +5,6 @@ nltk_data/
 chrome/
 chromedriver/
 .pytest_cache/
-package-lock.json
 htmlcov/
 .DS_Store
 __pycache__/

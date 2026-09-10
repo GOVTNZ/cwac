@@ -1,5 +1,12 @@
 #!/bin/bash
 
+set -e
+
+# make sure script runs from project root directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"
+cd "${PROJECT_ROOT}"
+
 # This script (attempts) to set up CWAC automatically.
 # Ensure Python 3.12+ is 'python'.
 

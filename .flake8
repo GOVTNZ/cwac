@@ -4,6 +4,7 @@ extend-ignore=
   E203
   E114
   E111
+  E501
 max-line-length = 120
 exclude =
     __pycache__

@@ -2,7 +2,6 @@
 
 import csv
 import logging
-import os
 import threading
 import time
 from typing import Any, ClassVar
@@ -10,8 +9,6 @@ from typing import Any, ClassVar
 import pandas as pd
 
 from config import Config
-
-# pylint: disable=too-many-locals
 
 logger = logging.getLogger('cwac')
 
@@ -26,11 +23,7 @@ class CSVWriter:
   # A lock to prevent multiple threads writing to file_locks dict
   lock_for_file_locks = threading.Lock()
 
-  def __init__(self) -> None:
-    """Init variables."""
-    self.rows: list[dict[Any, Any]] = []
-
-  def get_file_lock(self, path: str) -> threading.Lock:
+  def _get_file_lock(self, path: str) -> threading.Lock:
     """Get a lock for a file.
 
     Args:
@@ -44,64 +37,36 @@ class CSVWriter:
         CSVWriter.file_locks[path] = threading.Lock()
       return CSVWriter.file_locks[path]
 
-  def read_csv(self, path: str) -> list[dict[Any, Any]]:
-    """Read a CSV file as a list of dictionaries.
+  def append_rows(self, path: str, *rows: dict[Any, Any]) -> None:
+    """Append one or more rows to a CSV file.
 
     Args:
-        path (str): path to CSV file
-
-    Returns:
-        list[dict[Any, Any]]: list of dictionaries
+        path (str): path to file
+        *rows (dict[str, Any]): one or more rows of data
     """
-    with self.get_file_lock(path), open(path, encoding='utf-8-sig') as csvfile:
-      reader = csv.DictReader(csvfile)
-      rows = list(reader)
-    return rows
+    if not rows:
+      return
 
-  def add_row(self, row: dict[Any, Any]) -> None:
-    """Add a row to the CSV row buffer.
+    keys = None
+    write_header = False
 
-    Args:
-        row (dict[Any, Any]): A dictionary of row contents
-    """
-    self.rows.append(row)
+    with self._get_file_lock(path):
+      try:
+        # attempt to preserve the header order if the file already exists
+        with open(path, encoding='utf-8-sig', newline='') as csvfile:
+          keys = csv.DictReader(csvfile).fieldnames
+      except FileNotFoundError:
+        write_header = True
 
-  def add_rows(self, rows: list[dict[Any, Any]]) -> None:
-    """Add a list of rows to the CSV row buffer.
+      if keys is None:
+        keys = list(rows[0].keys())
+        write_header = True
 
-    Args:
-        rows (list[dict[Any, Any]]): list of rows of data
-    """
-    for row in rows:
-      self.rows.append(row)
-
-  def write_csv_file(self, path: str, overwrite: bool = False) -> bool:
-    """Write data to a CSV file.
-
-    Args:
-        path (str): path to write data
-        overwrite (bool): overwrite existing file
-
-    Returns:
-        bool: True if write successful, else False
-    """
-    if not self.rows:
-      return False
-
-    keys = self.rows[0].keys()
-
-    with self.get_file_lock(path):
-      file_exists = False if overwrite else os.path.exists(path)
-      file_mode = 'w' if overwrite else 'a'
-      with open(path, file_mode, encoding='utf-8-sig') as csvfile:
+      with open(path, 'a', encoding='utf-8-sig', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=keys)
-        if not file_exists:
+        if write_header:
           writer.writeheader()
-        writer.writerows(self.rows)
-
-    self.rows = []
-
-    return True
+        writer.writerows(rows)
 
 
 def output_init_message(config: Config) -> None:
@@ -212,20 +177,18 @@ def print_progress_bar(
 
   # Write progress data to CSV file
   csv_writer = CSVWriter()
-
-  output_row = {
-    'time': time.time(),
-    'iteration': iteration,
-    'total': total,
-    'speed': f'{speed:.2f}',
-    'percent': percent,
-    'elapsed': f'{elapsed}',
-    'remaining': f'{time_est}',
-  }
-
-  csv_writer.add_row(output_row)
-
-  csv_writer.write_csv_file(f'./results/{config.audit_name}/progress.csv')
+  csv_writer.append_rows(
+    f'./results/{config.audit_name}/progress.csv',
+    {
+      'time': time.time(),
+      'iteration': iteration,
+      'total': total,
+      'speed': f'{speed:.2f}',
+      'percent': percent,
+      'elapsed': f'{elapsed}',
+      'remaining': f'{time_est}',
+    },
+  )
 
   # Print New Line on Complete
   if iteration == total:
@@ -280,8 +243,8 @@ def generate_axe_core_template_aware_results(audit_name: str) -> None:
   # We want to present the most repeated (and therefore likely template-wide)
   # issues first, as these are the most critical to address.
   data_frame = data_frame.sort_values(
-    by=['num_issues', 'organisation', 'base_url', 'url'],
-    ascending=[False, True, True, True],
+    by=['num_issues', 'base_url', 'url'],
+    ascending=[False, True, True],
   )
 
   # Write the aggregated results to CSV file, preserving the prepared column order
