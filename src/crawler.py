@@ -83,6 +83,9 @@ class Crawler:
 
     Returns:
         str: resolved URL
+
+    Performance:
+        1 HTTP request.
     """
     # Get the final URL after redirects
     try:
@@ -393,6 +396,9 @@ class Crawler:
 
     Returns:
         str: robots.txt file
+
+    Performance:
+        1 HTTP request.
     """
     # Fetch the robots.txt file
     try:
@@ -430,6 +436,9 @@ class Crawler:
 
     Returns:
         bool: True if URL is allowed by robots.txt, else False (True if config disables robots.txt checks)
+
+    Performance:
+        1 HTTP request if robots.txt not yet cached for the domain.
     """
     if not self.config.follow_robots_txt:
       return True
@@ -537,6 +546,20 @@ class Crawler:
       except ValueError:
         continue
 
+      if not self.url_filter.run_url_filters(url):
+        continue
+
+      # Confines to URLs that are within the scope of the base_url
+      # and prevents URLs that intersect with another base_url
+      # (useful for multiple websites on the same domain)
+      if not self.url_filter_prevent_intersections(base_url, url):
+        continue
+
+      # Check that page has not been scanned before
+      if self.analytics.is_url_in_pages_scanned(base_url, url):
+        logger.info('URL has been scanned before %s for %s', url, base_url)
+        continue
+
       # Check if URL is allowed by robots.txt
       if not self.is_url_allowed_by_robots_txt(url):
         logger.info('URL disallowed by robots.txt %s', url)
@@ -554,20 +577,6 @@ class Crawler:
         url = url_data['final_url']
         if not self.are_url_headers_acceptable(base_url=base_url, parent_url=parent_url, url_data=url_data):
           continue
-
-      if not self.url_filter.run_url_filters(url):
-        continue
-
-      # Confines to URLs that are within the scope of the base_url
-      # and prevents URLs that intersect with another base_url
-      # (useful for multiple websites on the same domain)
-      if not self.url_filter_prevent_intersections(base_url, url):
-        continue
-
-      # Check that page has not been scanned before
-      if self.analytics.is_url_in_pages_scanned(base_url, url):
-        logger.info('URL has been scanned before %s for %s', url, base_url)
-        continue
 
       # Write to audit_log.csv
       csv_writer = CSVWriter()
@@ -625,7 +634,11 @@ class Crawler:
       logger.info('Crawl exhausted all links %s', base_url)
 
   def __crawl_sitemap(self, url: str) -> list[tuple[str, str]]:
-    """Crawls the urls sitemap, if there is one."""
+    """Crawls the urls sitemap, if there is one.
+
+    Performance:
+        1+ HTTP requests depending on the sitemap structure and discovery path.
+    """
     logger.info('Fetching sitemap for %s', url)
 
     try:
