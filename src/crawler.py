@@ -85,7 +85,7 @@ class Crawler:
         str: resolved URL
 
     Performance:
-        1 HTTP request.
+        One initial HTTP request, plus any requests caused by redirects.
     """
     # Get the final URL after redirects
     try:
