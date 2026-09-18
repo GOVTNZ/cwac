@@ -174,8 +174,8 @@ def test_robots_txt_is_cached_and_reused(
   config.follow_robots_txt = True
   fetch = mocker.patch.object(validator, '_fetch_robots_txt', return_value='User-agent: *\nAllow: /')
 
-  assert validator._is_url_allowed_by_robots_txt('https://example.com/page') is True # pylint: disable=protected-access
-  assert validator._is_url_allowed_by_robots_txt('https://example.com/other') is True # pylint: disable=protected-access
+  assert validator._is_url_allowed_by_robots_txt('https://example.com/page') is True  # pylint: disable=protected-access
+  assert validator._is_url_allowed_by_robots_txt('https://example.com/other') is True  # pylint: disable=protected-access
 
   fetch.assert_called_once_with('https://example.com/robots.txt')
   assert 'example.com' in config.robots_txt_cache
@@ -190,4 +190,4 @@ def test_robots_txt_disallows_matching_url(
   config.follow_robots_txt = True
   mocker.patch.object(validator, '_fetch_robots_txt', return_value='User-agent: *\nDisallow: /private')
 
-  assert validator._is_url_allowed_by_robots_txt('https://example.com/private/page') is False # pylint: disable=protected-access
+  assert validator._is_url_allowed_by_robots_txt('https://example.com/private/page') is False  # pylint: disable=protected-access
