@@ -1,16 +1,19 @@
 """Tests for crawlable page validation."""
 
 from types import SimpleNamespace
+from typing import cast
 from unittest.mock import Mock
 
 import pytest
 from pytest_mock import MockerFixture
 
+from config import Config, SiteData
+from src.analytics import Analytics
 from src.crawlable_page_validator import CrawlablePageValidator
 
 BASE_URL = 'https://example.com/'
 PARENT_URL = 'https://example.com/parent/'
-SITE_DATA = {'url': BASE_URL, 'supports_head': True, 'columns': {}}
+SITE_DATA: SiteData = {'url': BASE_URL, 'supports_head': True, 'columns': {}}
 
 
 @pytest.fixture
@@ -41,7 +44,7 @@ def analytics() -> SimpleNamespace:
 @pytest.fixture
 def validator(config: SimpleNamespace, analytics: SimpleNamespace) -> CrawlablePageValidator:
   """Build a validator with lightweight collaborators."""
-  return CrawlablePageValidator(config, analytics)
+  return CrawlablePageValidator(cast(Config, config), cast(Analytics, analytics))
 
 
 def test_validate_returns_sanitised_url_without_header_check(validator: CrawlablePageValidator) -> None:
