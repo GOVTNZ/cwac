@@ -23,8 +23,8 @@ from config import SiteData as ConfigSiteData
 from src.analytics import Analytics
 from src.audit_manager import AuditManager
 from src.browser import Browser
+from src.crawlable_page_validator import CrawlablePageValidator
 from src.output import CSVWriter
-from src.url_validator import URLValidator
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-locals
 
@@ -50,7 +50,7 @@ class Crawler:
     self.url_queue = url_queue
     self.analytics = analytics
     self.url_filter = src.filters.URLFilter(self.config)
-    self.url_validator = URLValidator(config=self.config, analytics=self.analytics)
+    self.crawl_validator = CrawlablePageValidator(config=self.config, analytics=self.analytics)
 
   def iterate_through_base_urls(self) -> None:
     """Pick URLs from url_queue, and initiates a crawl on that URL.
@@ -293,11 +293,11 @@ class Crawler:
       # Delay
       time.sleep(self.config.delay_between_page_loads)
 
-      valid_url = self.url_validator.validate(site_data, base_url, parent_url, url)
-      if valid_url is None:
-        continue
-
-      url = valid_url
+      match self.crawl_validator.validate(site_data=site_data, base_url=base_url, parent_url=parent_url, url=url):
+        case None:
+          continue
+        case validated_url:
+          url = validated_url
 
       # Write to audit_log.csv
       csv_writer = CSVWriter()

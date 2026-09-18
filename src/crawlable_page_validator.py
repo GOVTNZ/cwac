@@ -1,4 +1,4 @@
-"""URL validation for the crawler."""
+"""Validator for crawlable pages."""
 
 import logging
 import posixpath
@@ -17,23 +17,32 @@ from src.analytics import Analytics
 logger = logging.getLogger('cwac')
 
 
-class URLValidator:
-  """Validates URLs before they are crawled."""
+class CrawlablePageValidator:
+  """Validator for crawlable pages."""
 
-  def __init__(self, config: Config, analytics: 'Analytics') -> None:
-    """Initialise the validator with the crawler services it delegates to."""
+  def __init__(self, config: Config, analytics: Analytics) -> None:
+    """Initialise the validator."""
     self.config = config
     self.analytics = analytics
     self.url_filter = src.filters.URLFilter(config)
 
   def validate(self, site_data: SiteData, base_url: str, parent_url: str, url: str) -> str | None:
-    """Validate a URL and return its final URL when it can be crawled."""
-    clean_url = self._crawlable_url(base_url, url)
+    """Validates that pages are crawlable.
 
-    if clean_url is None:
-      return None
+    A page is considered crawlable if all of the following conditions are met:
 
-    url = clean_url
+    1. It passes URL filters
+    2. Has not been scanned before
+    3. Is allowed by robots.txt
+
+    If `config.perform_header_check` is enabled, then the HTTP headers are fetched
+    and validated.
+    """
+    match self._crawlable_url(base_url, url):
+      case None:
+        return None
+      case clean_url:
+        url = clean_url
 
     # If header checks are disabled then we are done so just return the
     # validated URL.
@@ -48,25 +57,27 @@ class URLValidator:
     )
 
     # Now that we have the headers, verify that they are acceptable
-    if not self.are_url_headers_acceptable(base_url=base_url, parent_url=parent_url, url_data=url_data):
+    if not self._are_url_headers_acceptable(base_url=base_url, parent_url=parent_url, url_data=url_data):
       return None
 
-    # If the final URL after redirects is different from what we initially
-    # received, then we need to re-validate it
-    if url != url_data['final_url']:
-      new_clean_url = self._crawlable_url(base_url, url_data['final_url'])
+    # If the URL has not changed after fetching headers (i.e. no redirects) then
+    # we consider it valid and can return it as is.
+    if url == url_data['final_url']:
+      return url
 
-      if new_clean_url is None:
+    # Otherwise we need to re-validate the new (post redirects) URL
+    match self._crawlable_url(base_url, url_data['final_url']):
+      case None:
         return None
-
-      url = new_clean_url
+      case new_clean_url:
+        url = new_clean_url
 
     return url
 
   def _crawlable_url(self, base_url: str, url: str) -> str | None:
     """Return the crawlable version of the URL if it is eligible, otherwise None."""
     try:
-      clean_url = self.url_sanitise(url)
+      clean_url = self._url_sanitise(url)
     except ValueError:
       return None
 
@@ -76,7 +87,7 @@ class URLValidator:
     # Confines to URLs that are within the scope of the base_url
     # and prevents URLs that intersect with another base_url
     # (useful for multiple websites on the same domain)
-    if not self.url_filter_prevent_intersections(base_url, clean_url):
+    if not self._url_filter_prevent_intersections(base_url, clean_url):
       return None
 
     # Check if URL has been scanned before
@@ -85,13 +96,13 @@ class URLValidator:
       return None
 
     # Check if URL is allowed by robots.txt
-    if not self.is_url_allowed_by_robots_txt(clean_url):
+    if not self._is_url_allowed_by_robots_txt(clean_url):
       logger.info('URL disallowed by robots.txt %s', clean_url)
       return None
 
     return clean_url
 
-  def are_url_headers_acceptable(self, base_url: str, parent_url: str, url_data: src.filters.UrlData) -> bool:
+  def _are_url_headers_acceptable(self, base_url: str, parent_url: str, url_data: src.filters.UrlData) -> bool:
     """Check if the URL has acceptable headers.
 
     Args:
@@ -124,7 +135,7 @@ class URLValidator:
       return False
     return src.filters.url_filter_by_header_content_type(url_data['final_url'], url_data['headers'])
 
-  def fetch_robots_txt(self, robots_txt_url: str) -> str:
+  def _fetch_robots_txt(self, robots_txt_url: str) -> str:
     """Fetches a robots.txt file from a domain.
 
     This is a custom implementation as the standard library's
@@ -168,7 +179,7 @@ class URLValidator:
 
     return file
 
-  def is_url_allowed_by_robots_txt(self, url: str) -> bool:
+  def _is_url_allowed_by_robots_txt(self, url: str) -> bool:
     """Checks if a URL's robots.txt allows CWAC.
 
     Args:
@@ -199,7 +210,7 @@ class URLValidator:
 
     # Fetch the robots.txt file
     try:
-      robots_txt = self.fetch_robots_txt(f'{protocol}://{domain}/robots.txt')
+      robots_txt = self._fetch_robots_txt(f'{protocol}://{domain}/robots.txt')
       robot_parser.parse(robots_txt.splitlines())
     except (requests.exceptions.RequestException, ValueError):
       robot_parser.parse('')
@@ -218,7 +229,7 @@ class URLValidator:
 
     return result
 
-  def url_filter_prevent_intersections(self, current_base_url: str, current_url: str) -> bool:
+  def _url_filter_prevent_intersections(self, current_base_url: str, current_url: str) -> bool:
     """Filter out when a URL intersects with another base_url.
 
     Prevents, for instance, https://example.com/ from being scanned
@@ -301,7 +312,7 @@ class URLValidator:
         return False
     return True
 
-  def url_sanitise(self, url: str) -> str:
+  def _url_sanitise(self, url: str) -> str:
     """Sanitise URLs.
 
     Args:
