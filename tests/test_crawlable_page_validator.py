@@ -16,8 +16,8 @@ PARENT_URL = 'https://example.com/parent/'
 SITE_DATA: SiteData = {'url': BASE_URL, 'supports_head': True, 'columns': {}}
 
 
-@pytest.fixture
-def config() -> SimpleNamespace:
+@pytest.fixture(name='config')
+def fixture_config() -> SimpleNamespace:
   """Return the minimum configuration used by the validator."""
   return SimpleNamespace(
     audit_name='test-audit',
@@ -32,8 +32,8 @@ def config() -> SimpleNamespace:
   )
 
 
-@pytest.fixture
-def analytics() -> SimpleNamespace:
+@pytest.fixture(name='analytics')
+def fixture_analytics() -> SimpleNamespace:
   """Return analytics with no previously scanned URLs."""
   return SimpleNamespace(
     base_urls={BASE_URL},
@@ -41,8 +41,8 @@ def analytics() -> SimpleNamespace:
   )
 
 
-@pytest.fixture
-def validator(config: SimpleNamespace, analytics: SimpleNamespace) -> CrawlablePageValidator:
+@pytest.fixture(name='validator')
+def fixture_validator(config: SimpleNamespace, analytics: SimpleNamespace) -> CrawlablePageValidator:
   """Build a validator with lightweight collaborators."""
   return CrawlablePageValidator(cast(Config, config), cast(Analytics, analytics))
 
@@ -174,8 +174,8 @@ def test_robots_txt_is_cached_and_reused(
   config.follow_robots_txt = True
   fetch = mocker.patch.object(validator, '_fetch_robots_txt', return_value='User-agent: *\nAllow: /')
 
-  assert validator._is_url_allowed_by_robots_txt('https://example.com/page') is True
-  assert validator._is_url_allowed_by_robots_txt('https://example.com/other') is True
+  assert validator._is_url_allowed_by_robots_txt('https://example.com/page') is True # pylint: disable=protected-access
+  assert validator._is_url_allowed_by_robots_txt('https://example.com/other') is True # pylint: disable=protected-access
 
   fetch.assert_called_once_with('https://example.com/robots.txt')
   assert 'example.com' in config.robots_txt_cache
@@ -190,4 +190,4 @@ def test_robots_txt_disallows_matching_url(
   config.follow_robots_txt = True
   mocker.patch.object(validator, '_fetch_robots_txt', return_value='User-agent: *\nDisallow: /private')
 
-  assert validator._is_url_allowed_by_robots_txt('https://example.com/private/page') is False
+  assert validator._is_url_allowed_by_robots_txt('https://example.com/private/page') is False # pylint: disable=protected-access
