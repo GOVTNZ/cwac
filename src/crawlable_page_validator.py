@@ -246,43 +246,9 @@ class CrawlablePageValidator:
     Returns:
         bool: True if URL is valid, else False
     """
-
-    def normalize_url(url: str) -> str:
-      """Normalize the URL for comparing.
-
-      This includes:
-        - making the url protocol and domain lowercase
-        - removing files from the path
-        - removing trailing slashes
-
-      E.g. HTTPS://MyCoolSite.com/abc/def.html -> https://mycoolsite.com/abc
-
-      Args:
-          url (str): URL to normalize
-
-      Returns:
-          str: normalized URL
-      """
-      parsed_url = urllib.parse.urlparse(url)
-
-      # lowercase the protocol and domain
-      scheme = parsed_url.scheme.lower()
-      netloc = parsed_url.netloc.lower()
-
-      path = parsed_url.path
-
-      # if the path ends with a file, remove it
-      if '.' in path:
-        path = path[: path.rfind('/') + 1]
-
-      # remove trailing slash
-      path = path.rstrip('/')
-
-      return f'{scheme}://{netloc}{path}'
-
     # Prepares the base_url and url for the matching algorithm
-    current_base_url = normalize_url(current_base_url)
-    current_url = normalize_url(current_url)
+    current_base_url = self._normalize_url(current_base_url)
+    current_url = self._normalize_url(current_url)
 
     # If the current_url does not start with the current_base_url,
     # then the url should not be scanned as it is not within the
@@ -301,7 +267,7 @@ class CrawlablePageValidator:
     # base_url
 
     for base_url in self.analytics.base_urls:
-      base_url = normalize_url(base_url)  # noqa: PLW2901
+      base_url = self._normalize_url(base_url)  # noqa: PLW2901
       if current_url.startswith(base_url) and len(base_url) > len(current_base_url):
         # If the current_url starts with a base_url that is longer
         # this means that the current_url is within the scope of
@@ -314,6 +280,39 @@ class CrawlablePageValidator:
         )
         return False
     return True
+
+  def _normalize_url(self, url: str) -> str:
+    """Normalize a URL for comparison.
+
+    This includes:
+      - making the url protocol and domain lowercase
+      - removing files from the path
+      - removing trailing slashes
+
+    E.g. HTTPS://MyCoolSite.com/abc/def.html -> https://mycoolsite.com/abc
+
+    Args:
+        url (str): URL to normalize
+
+    Returns:
+        str: normalized URL
+    """
+    parsed_url = urllib.parse.urlparse(url)
+
+    # lowercase the protocol and domain
+    scheme = parsed_url.scheme.lower()
+    netloc = parsed_url.netloc.lower()
+
+    path = parsed_url.path
+
+    # if the path ends with a file, remove it
+    if '.' in path:
+      path = path[: path.rfind('/') + 1]
+
+    # remove trailing slash
+    path = path.rstrip('/')
+
+    return f'{scheme}://{netloc}{path}'
 
   def _url_sanitise(self, url: str) -> str:
     """Sanitise URLs.
