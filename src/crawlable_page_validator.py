@@ -38,7 +38,7 @@ class CrawlablePageValidator:
     If `config.perform_header_check` is enabled, then the HTTP headers are fetched
     and validated.
     """
-    match self._crawlable_url(base_url, url):
+    match self._fast_validations(base_url, url):
       case None:
         return None
       case clean_url:
@@ -66,7 +66,7 @@ class CrawlablePageValidator:
       return url
 
     # Otherwise we need to re-validate the new (post redirects) URL
-    match self._crawlable_url(base_url, url_data['final_url']):
+    match self._fast_validations(base_url, url_data['final_url']):
       case None:
         return None
       case new_clean_url:
@@ -74,8 +74,11 @@ class CrawlablePageValidator:
 
     return url
 
-  def _crawlable_url(self, base_url: str, url: str) -> str | None:
-    """Return the crawlable version of the URL if it is eligible, otherwise None."""
+  def _fast_validations(self, base_url: str, url: str) -> str | None:
+    """Run all the validations that do not require HTTP requests.
+
+    Return the crawlable version of the URL if it is eligible, otherwise None.
+    """
     try:
       clean_url = self._url_sanitise(url)
     except ValueError:
