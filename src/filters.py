@@ -220,7 +220,7 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
       UrlData: A dict of status_code, final_url, and headers from the final request
 
   Performance:
-      Up to 3 HTTP requests in the worst case (HEAD, fallback GET, and retry attempts).
+      Up to 3 request attempts; each attempt may follow redirects.
   """
   timeout = (10, 10)
   final_url = url
