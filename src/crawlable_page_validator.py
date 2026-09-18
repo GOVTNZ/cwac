@@ -37,6 +37,9 @@ class CrawlablePageValidator:
 
     If `config.perform_header_check` is enabled, then the HTTP headers are fetched
     and validated.
+
+    If a redirect is encountered during header validation, the new (final) URL
+    will be re-checked..
     """
     match self._fast_validations(base_url, url):
       case None:
