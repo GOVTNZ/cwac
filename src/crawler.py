@@ -179,6 +179,15 @@ class Crawler:
 
       return f'{scheme}://{netloc}{path}'
 
+    def is_within_scope(url: str, base: str) -> bool:
+      """True if url is base itself or a real child path of base.
+
+      A raw startswith() wrongly matches sibling directories
+      (/abcd/ vs base /abc/) and lookalike hosts
+      (example.com.evil.com vs example.com).
+      """
+      return url == base or url.startswith(base + '/')
+
     # Prepares the base_url and url for the matching algorithm
     current_base_url = normalize_url(current_base_url)
     current_url = normalize_url(current_url)
@@ -186,7 +195,7 @@ class Crawler:
     # If the current_url does not start with the current_base_url,
     # then the url should not be scanned as it is not within the
     # scope of the current_base_url
-    if not current_url.startswith(current_base_url):
+    if not is_within_scope(current_url, current_base_url):
       logger.info(
         'URL filtered out due to not starting with base_url %s %s',
         current_base_url,
@@ -201,7 +210,7 @@ class Crawler:
 
     for base_url in self.analytics.base_urls:
       base_url = normalize_url(base_url)  # noqa: PLW2901
-      if current_url.startswith(base_url) and len(base_url) > len(current_base_url):
+      if is_within_scope(current_url, base_url) and len(base_url) > len(current_base_url):
         # If the current_url starts with a base_url that is longer
         # this means that the current_url is within the scope of
         # another base_url that is more specific than current_base_url
