@@ -1,11 +1,14 @@
 """Tests for crawlable page validation."""
 
+from collections.abc import Iterator
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import Mock
 
 import pytest
-from pytest_mock import MockerFixture
+import requests
+import responses
+from responses import matchers
 
 from config import Config, SiteData
 from src.analytics import Analytics
@@ -47,6 +50,13 @@ def fixture_validator(config: SimpleNamespace, analytics: SimpleNamespace) -> Cr
   return CrawlablePageValidator(cast(Config, config), cast(Analytics, analytics))
 
 
+@pytest.fixture(name='mocked_responses', autouse=True)
+def fixture_mocked_responses() -> Iterator[responses.RequestsMock]:
+  """Intercept HTTP requests, failing on any that have not been registered."""
+  with responses.RequestsMock() as rsps:
+    yield rsps
+
+
 def test_validate_returns_sanitised_url_without_header_check(validator: CrawlablePageValidator) -> None:
   """Returns a crawlable URL when header checks are disabled."""
   assert (
@@ -76,53 +86,80 @@ def test_validate_rejects_previously_scanned_url(
 
 def test_validate_skips_header_processing_when_disabled(
   validator: CrawlablePageValidator,
-  mocker: MockerFixture,
+  mocked_responses: responses.RequestsMock,
 ) -> None:
   """Does not fetch headers when header checks are disabled."""
-  process_headers = mocker.patch('src.crawlable_page_validator.src.filters.process_url_headers')
-
   validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page')
 
-  process_headers.assert_not_called()
+  assert len(mocked_responses.calls) == 0
 
 
 def test_validate_returns_url_with_acceptable_headers(
   validator: CrawlablePageValidator,
   config: SimpleNamespace,
-  mocker: MockerFixture,
+  mocked_responses: responses.RequestsMock,
 ) -> None:
   """Returns the URL when the response status and content type are acceptable."""
   config.perform_header_check = True
-  process_headers = mocker.patch(
-    'src.crawlable_page_validator.src.filters.process_url_headers',
-    return_value={
-      'status_code': 200,
-      'final_url': 'https://example.com/page',
-      'headers': {'Content-Type': 'text/html'},
-    },
+  mocked_responses.head(
+    'https://example.com/page',
+    content_type='text/html; charset=utf-8',
+    match=[matchers.header_matcher({'User-Agent': 'cwac-test'})],
   )
 
-  result = validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page')
-
-  assert result == 'https://example.com/page'
-  process_headers.assert_called_once_with(config, 'https://example.com/page', supports_head_requests=True)
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
+  assert len(mocked_responses.calls) == 1
 
 
-def test_validate_rejects_unacceptable_headers(
+def test_validate_uses_get_when_site_does_not_support_head(
   validator: CrawlablePageValidator,
   config: SimpleNamespace,
-  mocker: MockerFixture,
+  mocked_responses: responses.RequestsMock,
+) -> None:
+  """Fetches headers with a GET request when the site does not support HEAD."""
+  config.perform_header_check = True
+  mocked_responses.get('https://example.com/page', content_type='text/html')
+
+  result = validator.validate(
+    {**SITE_DATA, 'supports_head': False},
+    BASE_URL,
+    PARENT_URL,
+    'https://example.com/page',
+  )
+
+  assert result == 'https://example.com/page'
+
+
+@pytest.mark.parametrize('status', [404, 500])
+def test_validate_rejects_unacceptable_status_code(
+  validator: CrawlablePageValidator,
+  config: SimpleNamespace,
+  mocked_responses: responses.RequestsMock,
+  status: int,
 ) -> None:
   """Rejects a response with an unsupported status code."""
   config.perform_header_check = True
-  mocker.patch(
-    'src.crawlable_page_validator.src.filters.process_url_headers',
-    return_value={
-      'status_code': 404,
-      'final_url': 'https://example.com/page',
-      'headers': {'Content-Type': 'text/html'},
-    },
-  )
+  mocked_responses.head('https://example.com/page', status=status, content_type='text/html')
+
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') is None
+
+
+@pytest.mark.parametrize(
+  'content_type',
+  [
+    pytest.param('application/pdf', id='non-html'),
+    pytest.param(None, id='missing'),
+  ],
+)
+def test_validate_rejects_unacceptable_content_type(
+  validator: CrawlablePageValidator,
+  config: SimpleNamespace,
+  mocked_responses: responses.RequestsMock,
+  content_type: str | None,
+) -> None:
+  """Rejects a response that is not HTML."""
+  config.perform_header_check = True
+  mocked_responses.head('https://example.com/page', content_type=content_type)
 
   assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') is None
 
@@ -130,37 +167,40 @@ def test_validate_rejects_unacceptable_headers(
 def test_validate_revalidates_redirected_url(
   validator: CrawlablePageValidator,
   config: SimpleNamespace,
-  mocker: MockerFixture,
+  mocked_responses: responses.RequestsMock,
 ) -> None:
   """Revalidates the final URL after a redirect."""
   config.perform_header_check = True
-  mocker.patch(
-    'src.crawlable_page_validator.src.filters.process_url_headers',
-    return_value={
-      'status_code': 301,
-      'final_url': 'https://example.com/final',
-      'headers': {'Content-Type': 'text/html'},
-    },
-  )
+  mocked_responses.head('https://example.com/start', status=301, headers={'Location': '/final'})
+  mocked_responses.head('https://example.com/final', content_type='text/html')
 
   assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/start') == 'https://example.com/final'
+
+
+def test_validate_rejects_redirect_to_previously_scanned_url(
+  validator: CrawlablePageValidator,
+  config: SimpleNamespace,
+  analytics: SimpleNamespace,
+  mocked_responses: responses.RequestsMock,
+) -> None:
+  """Rejects a redirect whose final URL has already been scanned."""
+  config.perform_header_check = True
+  analytics.is_url_in_pages_scanned.side_effect = lambda _base_url, url: url == 'https://example.com/final'
+  mocked_responses.head('https://example.com/start', status=302, headers={'Location': '/final'})
+  mocked_responses.head('https://example.com/final', content_type='text/html')
+
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/start') is None
 
 
 def test_validate_rejects_redirect_outside_scope(
   validator: CrawlablePageValidator,
   config: SimpleNamespace,
-  mocker: MockerFixture,
+  mocked_responses: responses.RequestsMock,
 ) -> None:
   """Rejects a redirect whose final URL is outside the crawl scope."""
   config.perform_header_check = True
-  mocker.patch(
-    'src.crawlable_page_validator.src.filters.process_url_headers',
-    return_value={
-      'status_code': 302,
-      'final_url': 'https://other.example/final',
-      'headers': {'Content-Type': 'text/html'},
-    },
-  )
+  mocked_responses.head('https://example.com/start', status=302, headers={'Location': 'https://other.example/final'})
+  mocked_responses.head('https://other.example/final', content_type='text/html')
 
   assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/start') is None
 
@@ -168,26 +208,97 @@ def test_validate_rejects_redirect_outside_scope(
 def test_robots_txt_is_cached_and_reused(
   validator: CrawlablePageValidator,
   config: SimpleNamespace,
-  mocker: MockerFixture,
+  mocked_responses: responses.RequestsMock,
 ) -> None:
-  """Caches a parsed robots.txt response for subsequent checks."""
+  """Fetches robots.txt once per domain and reuses it for subsequent checks."""
   config.follow_robots_txt = True
-  fetch = mocker.patch.object(validator, '_fetch_robots_txt', return_value='User-agent: *\nAllow: /')
+  robots_txt = mocked_responses.get(
+    'https://example.com/robots.txt',
+    body='User-agent: *\nDisallow: /private',
+    content_type='text/plain',
+    match=[matchers.header_matcher({'User-Agent': 'cwac-test'})],
+  )
 
-  assert validator._is_url_allowed_by_robots_txt('https://example.com/page') is True  # pylint: disable=protected-access
-  assert validator._is_url_allowed_by_robots_txt('https://example.com/other') is True  # pylint: disable=protected-access
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/private/page') is None
 
-  fetch.assert_called_once_with('https://example.com/robots.txt')
-  assert 'example.com' in config.robots_txt_cache
+  assert robots_txt.call_count == 1
 
 
+@pytest.mark.parametrize(
+  'content_type',
+  [
+    pytest.param(None, id='missing'),
+    pytest.param('text/plain', id='plain'),
+    pytest.param('TEXT/PLAIN; charset=utf-8', id='with-charset'),
+  ],
+)
 def test_robots_txt_disallows_matching_url(
   validator: CrawlablePageValidator,
   config: SimpleNamespace,
-  mocker: MockerFixture,
+  mocked_responses: responses.RequestsMock,
+  content_type: str | None,
 ) -> None:
-  """Honors a robots.txt disallow rule."""
+  """Honors a robots.txt disallow rule when the Content-Type is plain text or not set."""
   config.follow_robots_txt = True
-  mocker.patch.object(validator, '_fetch_robots_txt', return_value='User-agent: *\nDisallow: /private')
+  mocked_responses.get(
+    'https://example.com/robots.txt',
+    body='User-agent: *\nDisallow: /private',
+    content_type=content_type,
+  )
 
-  assert validator._is_url_allowed_by_robots_txt('https://example.com/private/page') is False  # pylint: disable=protected-access
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/private/page') is None
+
+
+@pytest.mark.parametrize(
+  ('content_type', 'status', 'padding'),
+  [
+    pytest.param('text/html', 200, 0, id='invalid-content-type'),
+    pytest.param('text/plainish', 200, 0, id='similar-content-type'),
+    pytest.param('text/plain', 500, 0, id='http-error'),
+    pytest.param('text/plain', 200, 1024 * 500, id='too-large'),
+  ],
+)
+# pylint: disable-next=too-many-arguments,too-many-positional-arguments
+def test_robots_txt_defaults_to_allow_when_unusable(  # noqa: PLR0913, PLR0917
+  validator: CrawlablePageValidator,
+  config: SimpleNamespace,
+  mocked_responses: responses.RequestsMock,
+  content_type: str,
+  status: int,
+  padding: int,
+) -> None:
+  """Allows all URLs, and caches that result, when robots.txt cannot be used."""
+  config.follow_robots_txt = True
+  robots_txt = mocked_responses.get(
+    'https://example.com/robots.txt',
+    body='User-agent: *\nDisallow: /private\n' + '#' * padding,
+    content_type=content_type,
+    status=status,
+  )
+
+  assert (
+    validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/private/page')
+    == 'https://example.com/private/page'
+  )
+  assert (
+    validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/private/other')
+    == 'https://example.com/private/other'
+  )
+
+  assert robots_txt.call_count == 1
+
+
+def test_robots_txt_defaults_to_allow_when_request_fails(
+  validator: CrawlablePageValidator,
+  config: SimpleNamespace,
+  mocked_responses: responses.RequestsMock,
+) -> None:
+  """Allows URLs when robots.txt cannot be fetched."""
+  config.follow_robots_txt = True
+  mocked_responses.get(
+    'https://example.com/robots.txt',
+    body=requests.exceptions.ConnectionError('connection refused'),
+  )
+
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
