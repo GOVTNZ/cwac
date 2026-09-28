@@ -218,6 +218,9 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
 
   Returns:
       UrlData: A dict of status_code, final_url, and headers from the final request
+
+  Performance:
+      Up to 3 request attempts; each attempt may follow redirects.
   """
   timeout = (10, 10)
   final_url = url
