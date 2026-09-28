@@ -50,7 +50,7 @@ class Crawler:
     self.url_queue = url_queue
     self.analytics = analytics
     self.url_filter = src.filters.URLFilter(self.config)
-    self.crawl_validator = CrawlablePageValidator(config=self.config, analytics=self.analytics)
+    self.page_validator = CrawlablePageValidator(config=self.config, analytics=self.analytics)
 
   def iterate_through_base_urls(self) -> None:
     """Pick URLs from url_queue, and initiates a crawl on that URL.
@@ -293,7 +293,7 @@ class Crawler:
       # Delay
       time.sleep(self.config.delay_between_page_loads)
 
-      match self.crawl_validator.validate(site_data=site_data, base_url=base_url, parent_url=parent_url, url=url):
+      match self.page_validator.validate(site_data=site_data, base_url=base_url, parent_url=parent_url, url=url):
         case None:
           continue
         case validated_url:
