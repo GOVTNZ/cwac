@@ -78,7 +78,10 @@ class CrawlablePageValidator:
     return url
 
   def _clean_and_fast_validate_url(self, base_url: str, url: str) -> str | None:
-    """Cleans the URL and then run all the validations that do not require HTTP requests.
+    """Cleans the URL and then runs all the validations that happen before fetching headers.
+
+    These are cheap checks, except for the robots.txt check which makes an HTTP
+    request the first time a domain is checked (after which it is cached).
 
     Return the cleaned version of the URL if it is eligible to be crawled, otherwise None.
     """
