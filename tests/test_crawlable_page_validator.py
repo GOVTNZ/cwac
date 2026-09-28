@@ -64,24 +64,48 @@ def test_validate_returns_sanitised_url_without_header_check(validator: Crawlabl
   )
 
 
-def test_validate_rejects_invalid_url(validator: CrawlablePageValidator) -> None:
-  """Rejects URLs with an unsupported scheme."""
+@pytest.mark.parametrize('perform_header_check', [False, True])
+def test_validate_rejects_invalid_url(
+  validator: CrawlablePageValidator,
+  config: SimpleNamespace,
+  mocked_responses: responses.RequestsMock,
+  perform_header_check: bool,
+) -> None:
+  """Rejects URLs with an unsupported scheme without making any requests."""
+  config.perform_header_check = perform_header_check
+
   assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'ftp://example.com/file') is None
+  assert len(mocked_responses.calls) == 0
 
 
-def test_validate_rejects_url_outside_base_url(validator: CrawlablePageValidator) -> None:
-  """Rejects URLs outside the configured crawl scope."""
+@pytest.mark.parametrize('perform_header_check', [False, True])
+def test_validate_rejects_url_outside_base_url(
+  validator: CrawlablePageValidator,
+  config: SimpleNamespace,
+  mocked_responses: responses.RequestsMock,
+  perform_header_check: bool,
+) -> None:
+  """Rejects URLs outside the configured crawl scope without making any requests."""
+  config.perform_header_check = perform_header_check
+
   assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://other.example/page') is None
+  assert len(mocked_responses.calls) == 0
 
 
+@pytest.mark.parametrize('perform_header_check', [False, True])
 def test_validate_rejects_previously_scanned_url(
   validator: CrawlablePageValidator,
+  config: SimpleNamespace,
   analytics: SimpleNamespace,
+  mocked_responses: responses.RequestsMock,
+  perform_header_check: bool,
 ) -> None:
-  """Rejects URLs already recorded as scanned."""
+  """Rejects URLs already recorded as scanned without making any requests."""
+  config.perform_header_check = perform_header_check
   analytics.is_url_in_pages_scanned.return_value = True
 
   assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') is None
+  assert len(mocked_responses.calls) == 0
 
 
 def test_validate_skips_header_processing_when_disabled(
