@@ -41,7 +41,7 @@ class CrawlablePageValidator:
     If a redirect is encountered during header validation, the new (final) URL
     will be re-checked.
     """
-    match self._fast_validations(base_url, url):
+    match self._clean_and_fast_validate_url(base_url, url):
       case None:
         return None
       case clean_url:
@@ -69,7 +69,7 @@ class CrawlablePageValidator:
       return url
 
     # Otherwise we need to re-validate the new (post redirects) URL
-    match self._fast_validations(base_url, url_data['final_url']):
+    match self._clean_and_fast_validate_url(base_url, url_data['final_url']):
       case None:
         return None
       case new_clean_url:
@@ -77,10 +77,10 @@ class CrawlablePageValidator:
 
     return url
 
-  def _fast_validations(self, base_url: str, url: str) -> str | None:
-    """Run all the validations that do not require HTTP requests.
+  def _clean_and_fast_validate_url(self, base_url: str, url: str) -> str | None:
+    """Cleans the URL and then run all the validations that do not require HTTP requests.
 
-    Return the crawlable version of the URL if it is eligible, otherwise None.
+    Return the cleaned version of the URL if it is eligible to be crawled, otherwise None.
     """
     try:
       clean_url = self._url_sanitise(url)
