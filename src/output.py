@@ -2,6 +2,7 @@
 
 import csv
 import logging
+import os
 import threading
 import time
 from typing import Any, ClassVar
@@ -173,7 +174,9 @@ def print_progress_bar(
   elapsed = generate_time_str_from_mins((time.time() - start_time) / 60)
   time_est = generate_time_str_from_mins((total - iteration) / speed / 60)
   output = f'|{progress_bar}| {percent}% p:{iteration}/{total} v:{speed:.2f}p/s t:{elapsed}  t-:{time_est}'
-  print(output + '      ')
+
+  if os.environ.get('PRINT_PROGRESS', '') != 'false':
+    print(output + '      ')
 
   # Write progress data to CSV file
   csv_writer = CSVWriter()
