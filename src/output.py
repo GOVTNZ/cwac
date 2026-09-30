@@ -197,7 +197,7 @@ def print_progress_bar(
     print()
 
 
-def generate_axe_core_template_aware_results(audit_name: str) -> None:
+def generate_axe_core_template_aware_results(results_path: str) -> None:
   """Derive new CSV from axe-core results with added frequency stats.
 
   Process axe-core audit results, attempting to identify issues with a common
@@ -219,13 +219,11 @@ def generate_axe_core_template_aware_results(audit_name: str) -> None:
   `axe_core_audit_template_aware.csv` for easier analysis.
 
   Args:
-      audit_name (str): Name of axe-core audit. `results/{audit_name}/axe_core_audit.csv` must exist.
+      results_path (str): Path to the results directory. `{results_path}/axe_core_audit.csv` must exist.
 
   Returns:
-      None. Writes results to results/{audit_name}/axe_core_audit_template_aware.csv
+      None. Writes results to {results_path}/axe_core_audit_template_aware.csv
   """
-  results_path = f'./results/{audit_name}'
-
   # Read the raw axe-core audit results into a DataFrame
   data_frame = pd.read_csv(f'{results_path}/axe_core_audit.csv')
 
