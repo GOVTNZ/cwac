@@ -222,16 +222,8 @@ class Browser:
       chrome_options.add_argument('--headless')
     chrome_options.add_argument(f'--window-size={window_size["width"]},{window_size["height"]}')
     chrome_options.add_argument('--log-level=3')
-    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging', 'disable-popup-blocking'])
     chrome_options.add_argument('--disable-notifications')
-    chrome_options.add_argument('--disable-popup-blocking')
-    chrome_options.add_experimental_option(
-      'prefs',
-      {
-        'profile.default_content_setting_values.notifications': 1,
-        'profile.default_content_setting_values.javascript': 2,
-      },
-    )
 
     for arg in os.environ.get('CHROME_EXTRA_ARGS', '').split(','):
       if arg.strip():
@@ -243,16 +235,13 @@ class Browser:
     chrome_options.unhandled_prompt_behavior = 'dismiss'
 
     # Disable downloads
-
-    prefs = {
-      'profile.default_content_settings_values\
-                    .automatic_downloads': 2,
-      'download.default_directory': null_path,
-      'download.prompt_for_download': False,
-      'download.directory_upgrade': True,
-    }
-
-    chrome_options.add_experimental_option('prefs', prefs)
+    chrome_options.add_experimental_option(
+      'prefs',
+      {
+        'download.default_directory': null_path,
+        'download.prompt_for_download': False,
+      },
+    )
 
     chrome_service = Service(
       self.config.chrome_driver_location,
