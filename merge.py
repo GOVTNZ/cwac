@@ -133,11 +133,11 @@ def merge_results(merged_dir: str, inputs: list[str]) -> None:
   # result in an empty basename when suffixing copied files
   inputs = [os.path.normpath(result_dir) for result_dir in inputs]
 
-  # error if the directory already exists, to avoid mixing in files from a previous merge
-  os.mkdir(merged_dir)
-
   offsets = calculate_offsets(inputs)
   csv_filenames = {f.name for d in inputs for f in os.scandir(d) if f.is_file() and f.name.endswith('.csv')}
+
+  # error if the directory already exists, to avoid mixing in files from a previous merge
+  os.mkdir(merged_dir)
 
   for filename in sorted(csv_filenames.difference(SKIPPED_CSV_FILENAMES)):
     print(f'merging {filename}')
