@@ -10,6 +10,11 @@ import pandas as pd
 # columns whose values are prefixed with the page id, i.e. "<page id>_<viewport name>"
 PREFIXED_ID_COLUMNS = ('audit_id', 'screenshot')
 
+SKIPPED_CSV_FILENAMES = (
+  # progress is specific to each scan, so doesn't make sense to merge
+  'progress.csv'
+)
+
 
 def read_csv(path: str, **kwargs: typing.Any) -> pd.DataFrame:
   """Read a results csv file, keeping all values as they are written."""
@@ -117,7 +122,7 @@ def merge_results(merged_dir: str, inputs: list[str]) -> None:
   offsets = calculate_offsets(inputs)
   csv_filenames = {f.name for d in inputs for f in os.scandir(d) if f.is_file() and f.name.endswith('.csv')}
 
-  for filename in sorted(csv_filenames):
+  for filename in sorted(csv_filenames.difference(SKIPPED_CSV_FILENAMES)):
     print(f'merging {filename}')
     merge_csv_file(merged_dir, inputs, offsets, filename)
 
