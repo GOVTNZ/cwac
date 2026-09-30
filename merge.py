@@ -132,12 +132,13 @@ def merge_results(merged_dir: str, inputs: list[str]) -> None:
     copy_screenshots(merged_dir, result_dir, offsets[result_dir])
 
 
-if len(sys.argv) < 3:
-  raise ValueError('must provide two or more results to be merged')
+if __name__ == '__main__':
+  if len(sys.argv) < 3:
+    sys.exit(f'usage: {sys.argv[0]} <result dir> <result dir> [<result dir>...]')
 
-src = os.path.normpath(sys.argv[1])
+  src = os.path.normpath(sys.argv[1])
 
-merge_results(
-  os.path.join(os.path.dirname(src), os.path.basename(src) + '-merged'),
-  sys.argv[1:],
-)
+  merge_results(
+    os.path.join(os.path.dirname(src), os.path.basename(src) + '-merged'),
+    sys.argv[1:],
+  )
