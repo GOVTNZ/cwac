@@ -11,7 +11,6 @@ import urllib
 import urllib.parse
 from queue import SimpleQueue
 
-import requests
 import selenium.common.exceptions
 from bs4 import BeautifulSoup
 from usp.tree import sitemap_tree_for_homepage
@@ -73,29 +72,6 @@ class Crawler:
 
       # Restart the browser between each website
       self.browser.safe_restart()
-
-  def resolve_final_url(self, url: str) -> str:
-    """Resolve the final URL after redirects.
-
-    Args:
-        url (str): URL to resolve
-
-    Returns:
-        str: resolved URL
-
-    Performance:
-        One initial HTTP request, plus any requests caused by redirects.
-    """
-    # Get the final URL after redirects
-    try:
-      ua_string = {'User-Agent': self.config.user_agent}
-      response = requests.get(url, headers=ua_string, timeout=(10, 10))
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Failed to get final URL %s', url)
-
-    if response.url != url:
-      logger.info('URL %s resolved to %s', url, response.url)
-    return str(response.url)
 
   def handle_base_element(self, url: str) -> str:
     """Compare given URL and `<base>` URL, returning the most suitable one for resolving relative URLs.
