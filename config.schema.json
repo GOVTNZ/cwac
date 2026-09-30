@@ -66,11 +66,6 @@
       "type": "number",
       "minimum": 0
     },
-    "delay_between_viewports": {
-      "description": "Seconds to wait after resizing the browser to a new viewport before running audits",
-      "type": "number",
-      "minimum": 0
-    },
     "delay_after_page_load": {
       "description": "Seconds to wait after a page load completes before running audits",
       "type": "number",
@@ -322,7 +317,6 @@
     "script_timeout",
     "page_load_timeout",
     "delay_between_page_loads",
-    "delay_between_viewports",
     "delay_after_page_load",
     "only_allow_https",
     "perform_header_check",

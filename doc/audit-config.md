@@ -66,10 +66,6 @@ The available configuration options are described below. See the
   - delay amount (in seconds) that is used between visiting pages for each
     browser instance
   - if a Chrome instance hangs on a webpage, try increasing this value
-- `delay_between_viewports`
-  - if multiple viewport resolutions are specified in `viewport_sizes`, this is
-    a delay (in seconds) between testing each viewport. It's useful to ensure
-    the browser has re-rendered the content at the new viewport size
 - `delay_after_page_load`
   - once the browser has loaded the page, this is a delay (in seconds) before
     running tests. This is helpful to allow any animations of JavaScript-based
