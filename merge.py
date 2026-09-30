@@ -7,12 +7,17 @@ import typing
 
 import pandas as pd
 
+from src.output import generate_axe_core_template_aware_results
+
 # columns whose values are prefixed with the page id, i.e. "<page id>_<viewport name>"
 PREFIXED_ID_COLUMNS = ('audit_id', 'screenshot')
 
 SKIPPED_CSV_FILENAMES = (
   # progress is specific to each scan, so doesn't make sense to merge
-  'progress.csv'
+  'progress.csv',
+  # this is regenerated from the merged axe-core results instead, so
+  # that issues are grouped across all the results
+  'axe_core_audit_template_aware.csv',
 )
 
 
@@ -125,6 +130,10 @@ def merge_results(merged_dir: str, inputs: list[str]) -> None:
   for filename in sorted(csv_filenames.difference(SKIPPED_CSV_FILENAMES)):
     print(f'merging {filename}')
     merge_csv_file(merged_dir, inputs, offsets, filename)
+
+  if os.path.isfile(f'{merged_dir}/axe_core_audit.csv'):
+    print('generating axe_core_audit_template_aware.csv')
+    generate_axe_core_template_aware_results(merged_dir)
 
   for result_dir in inputs:
     print(f'copying files from {result_dir}')
