@@ -116,15 +116,30 @@ def copy_screenshots(merged_dir: str, result_dir: str, offset: int) -> None:
 
 
 def copy_other_files(merged_dir: str, result_dir: str) -> None:
-  """Copy the non-csv files of the result, suffixing them with the result name."""
-  for filestat in os.scandir(result_dir):
-    # directories are skipped, except for screenshots which are copied separately
-    if not filestat.is_file() or filestat.name.endswith('.csv'):
-      continue
+  """Copy the non-csv files of the result, suffixing them with the result name.
 
-    fname, fext = os.path.splitext(filestat.name)
+  Files in subdirectories are copied into the same subdirectory of the merged
+  result, except for screenshots which are copied separately.
+  """
+  for dirpath, dirnames, filenames in os.walk(result_dir):
+    reldir = os.path.relpath(dirpath, result_dir)
 
-    shutil.copy(filestat.path, f'{merged_dir}/{fname}.{os.path.basename(result_dir)}{fext}')
+    if reldir == '.' and 'screenshots' in dirnames:
+      dirnames.remove('screenshots')
+
+    os.makedirs(os.path.normpath(f'{merged_dir}/{reldir}'), exist_ok=True)
+
+    for filename in filenames:
+      # csv files at the top level are merged separately
+      if reldir == '.' and filename.endswith('.csv'):
+        continue
+
+      fname, fext = os.path.splitext(filename)
+
+      shutil.copy(
+        f'{dirpath}/{filename}',
+        os.path.normpath(f'{merged_dir}/{reldir}/{fname}.{os.path.basename(result_dir)}{fext}'),
+      )
 
 
 def merge_results(merged_dir: str, inputs: list[str]) -> None:
