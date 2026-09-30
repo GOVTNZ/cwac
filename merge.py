@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+"""Merge multiple CWAC results into a single result directory.
+
+The merged results are written next to the first result, as "<first result>-merged".
+
+usage: merge.py <result dir> <result dir> [<result dir>...]
+"""
 
 import os
 import shutil
@@ -59,6 +65,10 @@ def calculate_offsets(inputs: list[str]) -> dict[str, int]:
 
   Page ids start from 1 in every result, so each result is offset by
   the number of pages in the results before it to keep them unique.
+
+  The same url appearing in multiple results is kept as separate pages,
+  rather than given the same page id, to match how CWAC handles the same
+  url being crawled from multiple base urls within a single result.
   """
   offsets: dict[str, int] = {}
   total = 0
@@ -123,6 +133,7 @@ def merge_results(merged_dir: str, inputs: list[str]) -> None:
   # result in an empty basename when suffixing copied files
   inputs = [os.path.normpath(result_dir) for result_dir in inputs]
 
+  # error if the directory already exists, to avoid mixing in files from a previous merge
   os.mkdir(merged_dir)
 
   offsets = calculate_offsets(inputs)
