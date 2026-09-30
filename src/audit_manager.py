@@ -15,8 +15,6 @@ from src.analytics import Analytics
 from src.browser import Browser
 from src.output import CSVWriter
 
-# pylint: disable=too-many-statements
-
 logger = logging.getLogger('cwac')
 
 
@@ -191,7 +189,7 @@ class AuditManager:
           logger.warning("Could not open <details> element titled '%s'", detail.text)
           continue
 
-  def run_audits(self) -> bool:  # noqa: PLR0915
+  def run_audits(self) -> bool:
     """Iterate through registered audits and runs them.
 
     Main entry point for running audits. Iterates through all registered audits
