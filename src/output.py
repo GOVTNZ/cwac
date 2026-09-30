@@ -103,7 +103,6 @@ def output_init_message(config: Config) -> None:
       print_log(f'    {setting_key}: {setting_value}')
   print_log(f'Headless: {config.headless}')
   print_log(f'Thread count: {config.thread_count}')
-  print_log(f'Browser: {config.browser}')
   print_log(f'Filter to orgs: {config.filter_to_organisations}')
   print_log(f'Filter to urls: {config.filter_to_urls}')
   print_log(f'Max links per domain: {config.max_links_per_domain}')

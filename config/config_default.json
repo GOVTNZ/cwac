@@ -4,7 +4,6 @@
   "headless": true,
   "max_links_per_domain": 50,
   "thread_count": 8,
-  "browser": "chrome",
   "chrome_binary_location": "auto",
   "chrome_driver_location": "auto",
   "user_agent": "Mozilla/5.0 (compatible; CWACbot/1.0; +https://www.digital.govt.nz/centralised-web-accessibility-checker/)",
