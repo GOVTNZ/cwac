@@ -62,10 +62,6 @@ The available configuration options are described below. See the
   - the number of seconds before JavaScript execution will timeout
 - `page_load_timeout`
   - the number of seconds before a page load will timeout
-- `delay_between_page_loads`
-  - delay amount (in seconds) that is used between visiting pages for each
-    browser instance
-  - if a Chrome instance hangs on a webpage, try increasing this value
 - `delay_after_page_load`
   - once the browser has loaded the page, this is a delay (in seconds) before
     running tests. This is helpful to allow any animations of JavaScript-based
