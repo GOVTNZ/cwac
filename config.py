@@ -45,7 +45,6 @@ class Config:
   script_timeout: int
   page_load_timeout: int
   delay_between_page_loads: int
-  delay_between_viewports: int
   delay_after_page_load: int
   only_allow_https: bool
   perform_header_check: bool

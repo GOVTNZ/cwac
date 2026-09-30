@@ -39,7 +39,6 @@ def make_audit_manager(mocker: MockerFixture) -> AuditManager:
   config.viewport_sizes = {'small': {'width': 320, 'height': 640}}
   config.audit_plugins = {'first': {}, 'second': {}}
   config.audit_name = 'test-audit'
-  config.delay_between_viewports = 0
   config.get_unique_id.return_value = 'page-id'
 
   browser = MagicMock()

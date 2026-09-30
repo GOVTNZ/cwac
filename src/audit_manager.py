@@ -375,8 +375,6 @@ class AuditManager:
         # Refresh the page
         try:
           self.browser.driver.refresh()
-          # Give browser time to adjust to viewport size
-          time.sleep(self.config.delay_between_viewports)
         except Exception:  # pylint: disable=broad-exception-caught
           logger.exception('Failed to refresh page')
           self.browser.safe_restart()
