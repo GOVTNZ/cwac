@@ -6,7 +6,6 @@ Crawls specified websites and tests them using AuditManager
 import importlib
 import logging
 import random
-import time
 import urllib
 import urllib.parse
 from queue import SimpleQueue
