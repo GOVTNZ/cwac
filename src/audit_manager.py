@@ -370,14 +370,4 @@ class AuditManager:
         # At least one audit successfully produced results
         any_audit_succeeded = True
 
-      # If we're not on the last viewport size
-      if index < len(self.config.viewport_sizes) - 1:
-        # Refresh the page
-        try:
-          self.browser.driver.refresh()
-        except Exception:  # pylint: disable=broad-exception-caught
-          logger.exception('Failed to refresh page')
-          self.browser.safe_restart()
-          break
-
     return any_audit_succeeded
