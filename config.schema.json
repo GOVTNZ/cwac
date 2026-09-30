@@ -29,7 +29,7 @@
     "browser": {
       "description": "The browser to use for auditing",
       "type": "string",
-      "enum": ["chrome", "firefox"]
+      "enum": ["chrome"]
     },
     "chrome_binary_location": {
       "description": "Path to the Chrome binary. Set to 'auto' to resolve automatically based on the OS and the chromeVersion in package.json",

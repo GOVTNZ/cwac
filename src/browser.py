@@ -14,13 +14,10 @@ import selenium
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebDriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebDriver
 
 from config import Config
 
-WebDriverType = FirefoxWebDriver | ChromeWebDriver
+WebDriverType = ChromeWebDriver
 
 logger = logging.getLogger('cwac')
 
@@ -215,86 +212,60 @@ class Browser:
     Returns:
         WebDriverType: a webdriver object.
     """
-    driver: WebDriverType
-
     # Get appropriate null path for OS
     null_path = '/dev/null'
     if platform.system() == 'Windows':
       null_path = 'NUL'
 
-    # Sets up a Chrome instance
-    if self.config.browser == 'chrome':
-      chrome_options = webdriver.ChromeOptions()
-      if self.config.headless or headless_override:
-        chrome_options.add_argument('--headless')
-      chrome_options.add_argument(f'--window-size={window_size["width"]},{window_size["height"]}')
-      chrome_options.add_argument('--log-level=3')
-      chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
-      chrome_options.add_argument('--disable-notifications')
-      chrome_options.add_argument('--disable-popup-blocking')
-      chrome_options.add_experimental_option(
-        'prefs',
-        {
-          'profile.default_content_setting_values.notifications': 1,
-          'profile.default_content_setting_values.javascript': 2,
-        },
-      )
+    chrome_options = webdriver.ChromeOptions()
+    if self.config.headless or headless_override:
+      chrome_options.add_argument('--headless')
+    chrome_options.add_argument(f'--window-size={window_size["width"]},{window_size["height"]}')
+    chrome_options.add_argument('--log-level=3')
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    chrome_options.add_argument('--disable-notifications')
+    chrome_options.add_argument('--disable-popup-blocking')
+    chrome_options.add_experimental_option(
+      'prefs',
+      {
+        'profile.default_content_setting_values.notifications': 1,
+        'profile.default_content_setting_values.javascript': 2,
+      },
+    )
 
-      for arg in os.environ.get('CHROME_EXTRA_ARGS', '').split(','):
-        if arg.strip():
-          chrome_options.add_argument(arg.strip())
+    for arg in os.environ.get('CHROME_EXTRA_ARGS', '').split(','):
+      if arg.strip():
+        chrome_options.add_argument(arg.strip())
 
-      # Set fake user agent
-      chrome_options.add_argument(f'user-agent={self.config.user_agent}')
+    # Set fake user agent
+    chrome_options.add_argument(f'user-agent={self.config.user_agent}')
 
-      chrome_options.unhandled_prompt_behavior = 'dismiss'
+    chrome_options.unhandled_prompt_behavior = 'dismiss'
 
-      # Disable downloads
+    # Disable downloads
 
-      prefs = {
-        'profile.default_content_settings_values\
+    prefs = {
+      'profile.default_content_settings_values\
                     .automatic_downloads': 2,
-        'download.default_directory': null_path,
-        'download.prompt_for_download': False,
-        'download.directory_upgrade': True,
-      }
+      'download.default_directory': null_path,
+      'download.prompt_for_download': False,
+      'download.directory_upgrade': True,
+    }
 
-      chrome_options.add_experimental_option('prefs', prefs)
+    chrome_options.add_experimental_option('prefs', prefs)
 
-      chrome_service = Service(
-        self.config.chrome_driver_location,
-        service_args=[
-          '--verbose',
-          '--log-path=./results/' + self.config.audit_name + '/chromedriver.log',
-        ],
-      )
+    chrome_service = Service(
+      self.config.chrome_driver_location,
+      service_args=[
+        '--verbose',
+        '--log-path=./results/' + self.config.audit_name + '/chromedriver.log',
+      ],
+    )
 
-      # Set binary path
-      chrome_options.binary_location = self.config.chrome_binary_location
+    # Set binary path
+    chrome_options.binary_location = self.config.chrome_binary_location
 
-      driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
-
-    # Sets up a Firefox instance
-    if self.config.browser == 'firefox':
-      firefox_options = FirefoxOptions()
-      firefox_options.headless = self.config.headless  # type: ignore
-      if headless_override:
-        firefox_options.headless = True  # type: ignore
-      firefox_options.add_argument(f'--width={window_size["width"]}')
-      firefox_options.add_argument(f'--height={window_size["height"]}')
-
-      # Set fake user agent
-      firefox_options.set_preference('general.useragent.override', self.config.user_agent)
-
-      # Disable file downloads
-      firefox_options.set_preference('browser.download.dir', null_path)
-      firefox_options.set_preference('browser.download.folderList', 2)
-
-      firefox_options.unhandled_prompt_behavior = 'dismiss'
-      firefox_service = FirefoxService(
-        log_path='./results/' + self.config.audit_name + '/geckodriver.log',
-      )
-      driver = webdriver.Firefox(service=firefox_service, options=firefox_options)
+    driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
 
     driver.set_script_timeout(self.config.script_timeout)
     driver.set_page_load_timeout(self.config.page_load_timeout)
