@@ -133,6 +133,11 @@ def merge_results(merged_dir: str, inputs: list[str]) -> None:
   # result in an empty basename when suffixing copied files
   inputs = [os.path.normpath(result_dir) for result_dir in inputs]
 
+  # the basename is used to make copied files unique, so it must be unique too;
+  # this also catches the same result being given more than once
+  if len({os.path.basename(result_dir) for result_dir in inputs}) != len(inputs):
+    raise ValueError('cannot merge results that have the same directory name')
+
   offsets = calculate_offsets(inputs)
   csv_filenames = {f.name for d in inputs for f in os.scandir(d) if f.is_file() and f.name.endswith('.csv')}
 
