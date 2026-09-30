@@ -33,6 +33,25 @@ def update_id_columns(row: dict[str, typing.Any]) -> dict[str, typing.Any]:
   return row
 
 
+def copy_screenshot(merged_dir: str, result_dir: str, row: dict[str, typing.Any]) -> dict[str, typing.Any]:
+  """Copy the screenshot of the csv row, renaming it to match the updated audit_id."""
+  if not row.get('screenshot') or not row.get('audit_id'):
+    return row
+
+  screenshot = f'{result_dir}/screenshots/{row["screenshot"]}'
+
+  if not os.path.isfile(screenshot):
+    return row
+
+  # screenshots are named after their audit_id, which has been updated
+  row['screenshot'] = f'{row["audit_id"]}{os.path.splitext(row["screenshot"])[1]}'
+
+  os.makedirs(f'{merged_dir}/screenshots', exist_ok=True)
+  shutil.copy(screenshot, f'{merged_dir}/screenshots/{row["screenshot"]}')
+
+  return row
+
+
 def merge_csv_file(merged_dir: str, incoming_file: str) -> None:
   """Merge the given csv file into the merged csv file.
 
@@ -40,9 +59,10 @@ def merge_csv_file(merged_dir: str, incoming_file: str) -> None:
   and all subsequent merges will drop any extra columns.
 
   The audit_id and page_id columns will be updated if present so that
-  they are consistent across files.
+  they are consistent across files, and any screenshots will be copied.
   """
   filename = os.path.basename(incoming_file)
+  result_dir = os.path.dirname(incoming_file)
 
   with open(incoming_file, encoding='utf-8-sig') as f:
     csv_reader = csv.DictReader(f)
@@ -56,7 +76,10 @@ def merge_csv_file(merged_dir: str, incoming_file: str) -> None:
 
     csv_writer.append_rows(
       f'{merged_dir}/{filename}',
-      *[update_id_columns({k: row.get(k, '') for k in headers}) for row in csv_reader],
+      *[
+        copy_screenshot(merged_dir, result_dir, update_id_columns({k: row.get(k, '') for k in headers}))
+        for row in csv_reader
+      ],
     )
 
 
@@ -69,7 +92,8 @@ def merge_results(merged_dir: str, inputs: list[str]) -> None:
     result_dir = os.path.normpath(input_dir)
 
     for filestat in os.scandir(result_dir):
-      # just skip directories entirely
+      # just skip directories entirely, as screenshots are copied
+      # when merging the csv rows that reference them
       if filestat.is_dir():
         continue
 
