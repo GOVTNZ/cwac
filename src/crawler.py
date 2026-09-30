@@ -290,9 +290,6 @@ class Crawler:
         logger.info('Max pages scanned reached %s', base_url)
         break
 
-      # Delay
-      time.sleep(self.config.delay_between_page_loads)
-
       match self.page_validator.validate(site_data=site_data, base_url=base_url, parent_url=parent_url, url=url):
         case None:
           continue

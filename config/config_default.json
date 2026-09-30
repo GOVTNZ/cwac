@@ -11,7 +11,6 @@
   "follow_robots_txt": true,
   "script_timeout": 15,
   "page_load_timeout": 10,
-  "delay_between_page_loads": 0.2,
   "delay_after_page_load": 0.1,
   "only_allow_https": true,
   "perform_header_check": true,
