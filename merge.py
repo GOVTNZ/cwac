@@ -44,11 +44,12 @@ def max_page_id(result_dir: str) -> int:
     if not filestat.is_file() or not filestat.name.endswith('.csv'):
       continue
 
-    if 'page_id' not in read_csv(filestat.path, nrows=0).columns:
+    df = read_csv(filestat.path, usecols=lambda column: column == 'page_id')
+
+    if 'page_id' not in df:
       continue
 
-    page_ids = read_csv(filestat.path, usecols=['page_id'])['page_id']
-    highest = max(highest, max((int(page_id) for page_id in page_ids if page_id), default=0))
+    highest = max(highest, max((int(page_id) for page_id in df['page_id'] if page_id), default=0))
 
   return highest
 
