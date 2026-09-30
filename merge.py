@@ -1,112 +1,130 @@
 #!/usr/bin/env python
 
-import csv
 import os
 import shutil
 import sys
 import typing
-from collections.abc import Sequence
 
-from src.output import CSVWriter
+import pandas as pd
 
-page_identifiers: dict[str, int] = {}
-csv_headers: dict[str, Sequence[str]] = {}
-csv_writer = CSVWriter()
+# columns whose values are prefixed with the page id, i.e. "<page id>_<viewport name>"
+PREFIXED_ID_COLUMNS = ('audit_id', 'screenshot')
 
 
-def update_id_columns(row: dict[str, typing.Any]) -> dict[str, typing.Any]:
-  """Update the id columns of the csv row."""
-  if not row.get('page_id'):
-    return row
-
-  if 'url' not in row:
-    raise ValueError('cannot determine page id without url column')
-
-  page_id = page_identifiers.setdefault(row['url'], len(page_identifiers) + 1)
-
-  # the audit_id will be "<page id>_<viewport name>"
-  if 'audit_id' in row:
-    row['audit_id'] = f'{page_id}{row["audit_id"].removeprefix(row["page_id"])}'
-
-  row['page_id'] = page_id
-
-  return row
+def read_csv(path: str, **kwargs: typing.Any) -> pd.DataFrame:
+  """Read a results csv file, keeping all values as they are written."""
+  return pd.read_csv(path, dtype=str, keep_default_na=False, encoding='utf-8-sig', **kwargs)
 
 
-def copy_screenshot(merged_dir: str, result_dir: str, row: dict[str, typing.Any]) -> dict[str, typing.Any]:
-  """Copy the screenshot of the csv row, renaming it to match the updated audit_id."""
-  if not row.get('screenshot') or not row.get('audit_id'):
-    return row
+def shift_page_id(value: str, offset: int) -> str:
+  """Shift the page id at the start of the value by the given offset."""
+  if not value:
+    return value
 
-  screenshot = f'{result_dir}/screenshots/{row["screenshot"]}'
+  page_id, sep, rest = value.partition('_')
 
-  if not os.path.isfile(screenshot):
-    return row
+  return f'{int(page_id) + offset}{sep}{rest}'
 
-  # screenshots are named after their audit_id, which has been updated
-  row['screenshot'] = f'{row["audit_id"]}{os.path.splitext(row["screenshot"])[1]}'
+
+def max_page_id(result_dir: str) -> int:
+  """Find the highest page id used across the csv files of the result."""
+  highest = 0
+
+  for filestat in os.scandir(result_dir):
+    if not filestat.is_file() or not filestat.name.endswith('.csv'):
+      continue
+
+    if 'page_id' not in read_csv(filestat.path, nrows=0).columns:
+      continue
+
+    page_ids = read_csv(filestat.path, usecols=['page_id'])['page_id']
+    highest = max(highest, max((int(page_id) for page_id in page_ids if page_id), default=0))
+
+  return highest
+
+
+def calculate_offsets(inputs: list[str]) -> dict[str, int]:
+  """Calculate how much to shift the page ids of each result by.
+
+  Page ids start from 1 in every result, so each result is offset by
+  the number of pages in the results before it to keep them unique.
+  """
+  offsets: dict[str, int] = {}
+  total = 0
+
+  for result_dir in inputs:
+    offsets[result_dir] = total
+    total += max_page_id(result_dir)
+
+  return offsets
+
+
+def merge_csv_file(merged_dir: str, inputs: list[str], offsets: dict[str, int], filename: str) -> None:
+  """Merge the csv file of the given name from each of the results.
+
+  The merged file will include every column seen across the results,
+  with columns missing from a result being left empty, and the page id
+  columns will be shifted so that they are unique across the results.
+  """
+  frames = []
+
+  for result_dir in inputs:
+    if not os.path.isfile(f'{result_dir}/{filename}'):
+      continue
+
+    df = read_csv(f'{result_dir}/{filename}')
+
+    for column in ('page_id', *PREFIXED_ID_COLUMNS):
+      if column in df:
+        df[column] = df[column].map(lambda value, offset=offsets[result_dir]: shift_page_id(value, offset))
+
+    frames.append(df)
+
+  pd.concat(frames).fillna('').to_csv(f'{merged_dir}/{filename}', index=False, encoding='utf-8-sig')
+
+
+def copy_screenshots(merged_dir: str, result_dir: str, offset: int) -> None:
+  """Copy the screenshots of the result, shifting the page id they're named after."""
+  if not os.path.isdir(f'{result_dir}/screenshots'):
+    return
 
   os.makedirs(f'{merged_dir}/screenshots', exist_ok=True)
-  shutil.copy(screenshot, f'{merged_dir}/screenshots/{row["screenshot"]}')
 
-  return row
+  for filestat in os.scandir(f'{result_dir}/screenshots'):
+    shutil.copy(filestat.path, f'{merged_dir}/screenshots/{shift_page_id(filestat.name, offset)}')
 
 
-def merge_csv_file(merged_dir: str, incoming_file: str) -> None:
-  """Merge the given csv file into the merged csv file.
+def copy_other_files(merged_dir: str, result_dir: str) -> None:
+  """Copy the non-csv files of the result, suffixing them with the result name."""
+  for filestat in os.scandir(result_dir):
+    # directories are skipped, except for screenshots which are copied separately
+    if not filestat.is_file() or filestat.name.endswith('.csv'):
+      continue
 
-  The first "merge" of a file will define which headers are included,
-  and all subsequent merges will drop any extra columns.
+    fname, fext = os.path.splitext(filestat.name)
 
-  The audit_id and page_id columns will be updated if present so that
-  they are consistent across files, and any screenshots will be copied.
-  """
-  filename = os.path.basename(incoming_file)
-  result_dir = os.path.dirname(incoming_file)
-
-  with open(incoming_file, encoding='utf-8-sig') as f:
-    csv_reader = csv.DictReader(f)
-
-    if csv_reader.fieldnames is None:
-      raise ValueError(f'{incoming_file} cannot be merged without a header')
-
-    # fetch the headers that are allowed for this file, setting them
-    # if this is the first time we've seen this type of csv file
-    headers = csv_headers.setdefault(filename, csv_reader.fieldnames)
-
-    csv_writer.append_rows(
-      f'{merged_dir}/{filename}',
-      *[
-        copy_screenshot(merged_dir, result_dir, update_id_columns({k: row.get(k, '') for k in headers}))
-        for row in csv_reader
-      ],
-    )
+    shutil.copy(filestat.path, f'{merged_dir}/{fname}.{os.path.basename(result_dir)}{fext}')
 
 
 def merge_results(merged_dir: str, inputs: list[str]) -> None:
   """Merge multiple results into a single result directory."""
+  # normalize to remove any trailing slashes, which would otherwise
+  # result in an empty basename when suffixing copied files
+  inputs = [os.path.normpath(result_dir) for result_dir in inputs]
+
   os.mkdir(merged_dir)
 
-  for input_dir in inputs:
-    # normalize to remove any trailing slashes
-    result_dir = os.path.normpath(input_dir)
+  offsets = calculate_offsets(inputs)
+  csv_filenames = {f.name for d in inputs for f in os.scandir(d) if f.is_file() and f.name.endswith('.csv')}
 
-    for filestat in os.scandir(result_dir):
-      # just skip directories entirely, as screenshots are copied
-      # when merging the csv rows that reference them
-      if filestat.is_dir():
-        continue
+  for filename in sorted(csv_filenames):
+    print(f'merging {filename}')
+    merge_csv_file(merged_dir, inputs, offsets, filename)
 
-      print(f'merging {result_dir}/{filestat.name}')
-
-      if filestat.name.endswith('.csv'):
-        merge_csv_file(merged_dir, f'{result_dir}/{filestat.name}')
-        continue
-
-      fname, fext = os.path.splitext(filestat.name)
-      unique_name = f'{fname}.{os.path.basename(result_dir)}{fext}'
-
-      shutil.copy(f'{result_dir}/{filestat.name}', f'{merged_dir}/{unique_name}')
+  for result_dir in inputs:
+    print(f'copying files from {result_dir}')
+    copy_other_files(merged_dir, result_dir)
+    copy_screenshots(merged_dir, result_dir, offsets[result_dir])
 
 
 if len(sys.argv) < 3:
