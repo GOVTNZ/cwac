@@ -9,7 +9,7 @@ usage: merge.py <result dir> <result dir> [<result dir>...]
 import os
 import shutil
 import sys
-import typing
+from collections.abc import Callable
 
 import pandas as pd
 
@@ -27,9 +27,9 @@ SKIPPED_CSV_FILENAMES = (
 )
 
 
-def read_csv(path: str, **kwargs: typing.Any) -> pd.DataFrame:
+def read_csv(path: str, usecols: Callable[[str], bool] | None = None) -> pd.DataFrame:
   """Read a results csv file, keeping all values as they are written."""
-  return pd.read_csv(path, dtype=str, keep_default_na=False, encoding='utf-8-sig', **kwargs)
+  return pd.read_csv(path, dtype=str, keep_default_na=False, encoding='utf-8-sig', usecols=usecols)
 
 
 def shift_page_id(value: str, offset: int) -> str:
