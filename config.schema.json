@@ -26,11 +26,6 @@
       "type": "integer",
       "minimum": 1
     },
-    "browser": {
-      "description": "The browser to use for auditing",
-      "type": "string",
-      "enum": ["chrome"]
-    },
     "chrome_binary_location": {
       "description": "Path to the Chrome binary. Set to 'auto' to resolve automatically based on the OS and the chromeVersion in package.json",
       "type": "string",
@@ -319,7 +314,6 @@
     "headless",
     "max_links_per_domain",
     "thread_count",
-    "browser",
     "chrome_binary_location",
     "chrome_driver_location",
     "user_agent",

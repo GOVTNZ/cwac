@@ -42,9 +42,6 @@ The available configuration options are described below. See the
 - `thread_count`
   - the number of browsers, and threads CWAC will use
   - a number equal to the number of CPU cores is most efficient
-- `browser`
-  - specifies what web browser is used for tests
-  - must be "chrome"
 - `chrome_binary_location`
   - a valid path to a Chrome for Testing executable
   - if set to `auto`, CWAC will attempt to determine the path based on your OS

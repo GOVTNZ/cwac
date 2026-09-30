@@ -37,7 +37,6 @@ class Config:
   headless: bool
   max_links_per_domain: int
   thread_count: int
-  browser: str
   chrome_binary_location: str
   chrome_driver_location: str
   user_agent: str
