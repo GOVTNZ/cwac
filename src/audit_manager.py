@@ -224,7 +224,7 @@ class AuditManager:
     any_audit_succeeded = False
 
     # Re-run tests for each viewport size in config.json
-    for index, viewport in enumerate(self.config.viewport_sizes):
+    for viewport in self.config.viewport_sizes:
       # Generate a unique audit ID
       audit_id = page_id + '_' + viewport
 
