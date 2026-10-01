@@ -204,7 +204,6 @@ class Crawler:
         audit_class=audit_class,
         url=new_link,
         site_data=site_data,
-        viewport_size=self.browser.get_window_size(),
       )
 
   def crawl(self, site_data: SiteData, base_url: str) -> None:  # noqa: PLR0912, PLR0915
