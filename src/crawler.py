@@ -33,6 +33,9 @@ logger = logging.getLogger('cwac')
 
 type SiteData = ConfigSiteData
 
+# the most urls to take from a site's sitemaps, as a multiple of max_links_per_domain
+SITEMAP_URLS_PER_MAX_LINK = 10
+
 
 class Crawler:
   """Crawls URLs and initiates tests on the pages."""
@@ -344,15 +347,34 @@ class Crawler:
       logger.exception('Failed to get sitemap')
       return []
 
-    parents_and_urls: list[tuple[str, str]] = []
+    # cap how many urls we take from the sitemap, as some sites have millions of
+    # them, which makes the crawl queue very slow and memory hungry
+    limit = self.config.max_links_per_domain * SITEMAP_URLS_PER_MAX_LINK
 
+    parents_and_urls: list[tuple[str, str]] = []
+    num_found = 0
+
+    # use reservoir sampling so that if there are more urls than the limit, we
+    # keep a uniformly random selection of them rather than whichever come first
     for sitemap in tree.all_sitemaps():
       # skip index sitemaps since they yield the pages of their sub-sitemaps,
       # which are already included as part of "all sitemaps"
       if isinstance(sitemap, AbstractIndexSitemap):
         continue
 
-      parents_and_urls.extend((sitemap.url, page.url) for page in sitemap.all_pages())
+      for page in sitemap.all_pages():
+        num_found += 1
+        if len(parents_and_urls) < limit:
+          parents_and_urls.append((sitemap.url, page.url))
+        else:
+          # these random numbers are not used for security or cryptographic
+          # purposes so it is safe to use and 'nosec' suppresses bandit
+          index = random.randrange(num_found)  # nosec # noqa: S311
+          if index < limit:
+            parents_and_urls[index] = (sitemap.url, page.url)
+
+    if num_found > limit:
+      logger.info('Found %i urls from sitemaps for %s, randomly selected %i of them', num_found, url, limit)
 
     return parents_and_urls
 
