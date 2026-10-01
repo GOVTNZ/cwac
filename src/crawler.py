@@ -13,6 +13,7 @@ from queue import SimpleQueue
 
 import selenium.common.exceptions
 from bs4 import BeautifulSoup
+from usp.objects.sitemap import AbstractIndexSitemap
 from usp.tree import sitemap_tree_for_homepage
 
 import src.filters
@@ -347,6 +348,11 @@ class Crawler:
     parents_and_urls: list[tuple[str, str]] = []
 
     for sitemap in tree.all_sitemaps():
+      # skip index sitemaps since they yield the pages of their sub-sitemaps,
+      # which are already included as part of "all sitemaps"
+      if isinstance(sitemap, AbstractIndexSitemap):
+        continue
+
       parents_and_urls.extend((sitemap.url, page.url) for page in sitemap.all_pages())
 
     return parents_and_urls
