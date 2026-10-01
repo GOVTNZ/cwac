@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 """Merge multiple CWAC results into a single result directory.
 
-The merged results are written next to the first result, as "<first result>-merged".
-
-usage: merge.py <result dir> <result dir> [<result dir>...]
+By default the merged results are written next to the first result, as
+"<first result>-merged", unless an output directory is given with -o/--output-dir.
 """
 
+import argparse
 import os
 import shutil
-import sys
 from collections.abc import Callable
 
 import pandas as pd
@@ -153,11 +152,16 @@ def merge_results(merged_dir: str, inputs: list[str]) -> None:
   if len({os.path.basename(result_dir) for result_dir in inputs}) != len(inputs):
     raise ValueError('cannot merge results that have the same directory name')
 
+  # otherwise the merged result would end up being copied into itself
+  for result_dir in inputs:
+    if os.path.commonpath([os.path.abspath(merged_dir), os.path.abspath(result_dir)]) == os.path.abspath(result_dir):
+      raise ValueError(f'cannot write the merged results inside of {result_dir}')
+
   offsets = calculate_offsets(inputs)
   csv_filenames = {f.name for d in inputs for f in os.scandir(d) if f.is_file() and f.name.endswith('.csv')}
 
   # error if the directory already exists, to avoid mixing in files from a previous merge
-  os.mkdir(merged_dir)
+  os.makedirs(merged_dir)
 
   for filename in sorted(csv_filenames.difference(SKIPPED_CSV_FILENAMES)):
     print(f'merging {filename}')
@@ -174,12 +178,22 @@ def merge_results(merged_dir: str, inputs: list[str]) -> None:
 
 
 if __name__ == '__main__':
-  if len(sys.argv) < 3:
-    sys.exit(f'usage: {sys.argv[0]} <result dir> <result dir> [<result dir>...]')
-
-  src = os.path.normpath(sys.argv[1])
-
-  merge_results(
-    os.path.join(os.path.dirname(src), os.path.basename(src) + '-merged'),
-    sys.argv[1:],
+  parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+  parser.add_argument('results', nargs='+', help='the result directories to merge')
+  parser.add_argument(
+    '-o',
+    '--output-dir',
+    help='the directory to write the merged results to (default: "<first result>-merged")',
   )
+  args = parser.parse_args()
+
+  if len(args.results) < 2:
+    parser.error('must provide two or more results to merge')
+
+  output_dir = args.output_dir
+
+  if output_dir is None:
+    src = os.path.normpath(args.results[0])
+    output_dir = os.path.join(os.path.dirname(src), os.path.basename(src) + '-merged')
+
+  merge_results(output_dir, args.results)
