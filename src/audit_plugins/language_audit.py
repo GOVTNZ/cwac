@@ -55,16 +55,22 @@ class LanguageAudit(DefaultAudit):
     # Scrape main content
     content = self.scrape_main_content()
 
+    # Split the text into sentences
+    sentences: list[str] = nltk.sent_tokenize(content)
+
+    # Split the text into words
+    words: list[str] = nltk.word_tokenize(content)
+
     # Check if test is not applicable (i.e. not enough text)
-    if self.is_test_not_applicable(content):
+    if self.is_test_not_applicable(sentences, words):
       logger.warning('Test is not applicable: %s', self.url)
       return True
 
     # Calculate Flesch-Kincaid Grade Level
-    fkgl = self.flesch_kincaid_grade_level(content)
+    fkgl = self.flesch_kincaid_grade_level(sentences, words)
 
     # Calculate SMOG Grade Level
-    smog = self.simple_measure_of_gobbledygook(content)
+    smog = self.simple_measure_of_gobbledygook(sentences)
 
     # Create output rows
     output_rows = [{**fkgl, 'smog_gl': smog}]
@@ -232,24 +238,19 @@ class LanguageAudit(DefaultAudit):
     except KeyError:
       return 1
 
-  def is_test_not_applicable(self, text: str) -> bool:
+  def is_test_not_applicable(self, sentences: list[str], words: list[str]) -> bool:
     """Return True if the test is unlikely to produce good results.
 
     Some webpages have insufficient text data to perform analysis.
     This function checks if the text is likely to produce good results.
 
     Args:
-        text (str): the text to check
+        sentences (list[str]): the sentences to check
+        words (list[str]): the words to check
 
     Returns:
         bool: True if the test is unlikely to produce good results
     """
-    # Split the text into sentences
-    sentences = nltk.sent_tokenize(text)
-
-    # Split the text into words
-    words = nltk.word_tokenize(text)
-
     # If there are less than 10 sentences, the test is not applicable
     if len(sentences) < 10:
       return True
@@ -260,24 +261,19 @@ class LanguageAudit(DefaultAudit):
 
     return False
 
-  def flesch_kincaid_grade_level(self, text: str) -> dict[Any, Any]:
+  def flesch_kincaid_grade_level(self, sentences: list[str], words: list[str]) -> dict[Any, Any]:
     """Calculate the Flesch-Kincaid Grade Level.
 
     The Flesch-Kincaid Grade Level is a readability test that estimates
     the years of education needed to understand a text.
 
     Args:
-        text (str): the text to calculate the Flesch-Kincaid Grade Level
+        sentences (list[str]): the sentences to calculate the Flesch-Kincaid Grade Level
+        words (list[str]): the words to calculate the Flesch-Kincaid Grade Level
 
     Returns:
         float: the Flesch-Kincaid Grade Level
     """
-    # Split the text into sentences
-    sentences = nltk.sent_tokenize(text)
-
-    # Split the text into words
-    words = nltk.word_tokenize(text)
-
     # Calculate the average number of words per sentence
     words_per_sentence = len(words) / len(sentences)
 
@@ -320,21 +316,18 @@ class LanguageAudit(DefaultAudit):
     scores = {f'sentiment_{k}': v for k, v in scores.items()}
     return scores
 
-  def simple_measure_of_gobbledygook(self, text: str) -> str:
+  def simple_measure_of_gobbledygook(self, sentences: list[str]) -> str:
     """Calculate the simple measure of gobbledygook (SMOG).
 
     SMOG is a readability test that estimates the years of education
     needed to understand a text.
 
     Args:
-        text (str): the text to calculate the SMOG
+        sentences (list[str]): the sentences to calculate the SMOG
 
     Returns:
         str: the SMOG score as a .3f str
     """
-    # Split the text into sentences
-    sentences = nltk.sent_tokenize(text)
-
     # Calculate the number of sentences with 3 or more syllables
     polysyllabic_words = 0
     for sentence in sentences:
