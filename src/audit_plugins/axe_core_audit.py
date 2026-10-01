@@ -11,7 +11,6 @@ from typing import Any
 import selenium
 
 from config import Config
-from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
@@ -22,6 +21,9 @@ class AxeCoreAudit(DefaultAudit):
   """axe-core audit."""
 
   audit_type = 'AxeCoreAudit'
+
+  # Stores axe.min.js to prevent re-reading the file
+  axe_core_js = ''
 
   def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
     """Init variables."""
@@ -48,7 +50,7 @@ class AxeCoreAudit(DefaultAudit):
 
   def load_axe_core(self) -> None:
     """Load axe.min.js into a string."""
-    if not AuditManager.axe_core_js:
+    if not AxeCoreAudit.axe_core_js:
       try:
         with open('./node_modules/axe-core/axe.min.js', encoding='utf-8-sig') as file:
           logger.info('Reading axe.min.js')
@@ -68,7 +70,7 @@ class AxeCoreAudit(DefaultAudit):
         "resultTypes:['violations']"
         '}).then((r)=> {callback(r)});'
       )
-      AuditManager.axe_core_js = f'{axe_min_js}{run_axe}'
+      AxeCoreAudit.axe_core_js = f'{axe_min_js}{run_axe}'
 
   def run_generate_expanded_results(self, axe_core_results: dict[Any, Any]) -> list[dict[Any, Any]]:
     """Generate an expanded list of axe-core violations.
@@ -141,7 +143,7 @@ class AxeCoreAudit(DefaultAudit):
 
     try:
       logger.info('Injecting axe %s', self.url)
-      axe_core_results = self.browser.driver.execute_async_script(AuditManager.axe_core_js)
+      axe_core_results = self.browser.driver.execute_async_script(AxeCoreAudit.axe_core_js)
       logger.info('axe-core has returned results %s', self.url)
     except selenium.common.exceptions.JavascriptException:
       logger.exception('JavaScript exception %s', self.url)

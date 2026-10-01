@@ -31,9 +31,6 @@ class AuditData(TypedDict):
 class AuditManager:
   """Runs tests on browsers."""
 
-  # Stores axe.min.js to prevent re-reading the file
-  axe_core_js = ''
-
   def __init__(self, config: Config, browser: Browser, analytics: Analytics) -> None:
     """Init variables."""
     self.config = config
