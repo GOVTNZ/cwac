@@ -26,7 +26,13 @@ nltk.download('punkt_tab', download_dir=nltk_dir, quiet=True)
 nltk.download('cmudict', download_dir=nltk_dir, quiet=True)
 nltk.download('vader_lexicon', download_dir=nltk_dir, quiet=True)
 nltk.data.path.append(nltk_dir)
-dictionary = cmudict.dict()
+
+# Map each word to the number of syllables in its first pronunciation; we only
+# need the counts, which take a fraction of the memory of the full dictionary
+syllables_by_word: dict[str, int] = {}
+for _word, _pronunciation in cmudict.entries():
+  if _word not in syllables_by_word:
+    syllables_by_word[_word] = sum(1 for phoneme in _pronunciation if phoneme[-1].isdigit())
 
 logger = logging.getLogger('cwac')
 
@@ -233,10 +239,7 @@ class LanguageAudit(DefaultAudit):
     Returns:
         int: the number of syllables in the word
     """
-    try:
-      return next(len([y for y in x if y[-1].isdigit()]) for x in dictionary[word.lower()])
-    except KeyError:
-      return 1
+    return syllables_by_word.get(word.lower(), 1)
 
   def is_test_not_applicable(self, sentences: list[str], words: list[str]) -> bool:
     """Return True if the test is unlikely to produce good results.
