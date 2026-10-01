@@ -36,6 +36,9 @@ class LanguageAudit(DefaultAudit):
 
   audit_type = 'LanguageAudit'
 
+  # Stores Readability.js and friends to prevent re-reading the files
+  readability_js = ''
+
   def run(self) -> list[dict[str, Any]] | bool:
     """Run the audit.
 
@@ -143,6 +146,28 @@ class LanguageAudit(DefaultAudit):
         pass
       img.decompose()
 
+  def _load_readability(self) -> None:
+    """Load Readability.js into a string."""
+    if not LanguageAudit.readability_js:
+      path_1 = './node_modules/@mozilla/readability/Readability.js'
+      with open(path_1, encoding='utf-8-sig') as file:
+        readability_js = file.read()
+
+      path_2 = './node_modules/@mozilla/readability/Readability-readerable.js'
+      with open(path_2, encoding='utf-8-sig') as file:
+        readability_js += file.read()
+
+      # JavaScript to execute Readability
+      LanguageAudit.readability_js = f"""
+        {readability_js}
+        const documentCopy = document.cloneNode(true);
+        if (isProbablyReaderable(documentCopy) === false) return false;
+        const reader = new Readability(documentCopy);
+        const article = reader.parse();
+        if (article === null) return false;
+        return [article.title, article.content];
+      """
+
   def scrape_main_content(self) -> str:
     """Scrapes the main content out of a webpage, v2.
 
@@ -151,29 +176,11 @@ class LanguageAudit(DefaultAudit):
     Returns:
         str: the main content of the page
     """
-    # Read Readability.js
-    path_1 = './node_modules/@mozilla/readability/Readability.js'
-    with open(path_1, encoding='utf-8-sig') as file:
-      readability_js = file.read()
-
-    path_2 = './node_modules/@mozilla/readability/Readability-readerable.js'
-    with open(path_2, encoding='utf-8-sig') as file:
-      readability_js += file.read()
-
-    # JavaScript to execute Readability
-    final_js = f"""
-        {readability_js}
-        const documentCopy = document.cloneNode(true);
-        if (isProbablyReaderable(documentCopy) === false) return false;
-        const reader = new Readability(documentCopy);
-        const article = reader.parse();
-        if (article === null) return false;
-        return [article.title, article.content];
-        """
+    self._load_readability()
 
     # Execute JavaScript
     try:
-      content = self.browser.driver.execute_script(final_js)
+      content = self.browser.driver.execute_script(LanguageAudit.readability_js)
     except Exception:  # pylint: disable=broad-exception-caught
       logger.exception('WebDriver exception for Readability')
       return ''
