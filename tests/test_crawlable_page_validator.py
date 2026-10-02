@@ -75,12 +75,26 @@ def test_validate_does_not_double_encode_url(validator: CrawlablePageValidator) 
 @pytest.mark.parametrize(
   ('url', 'expected'),
   [
+    ('https://example.com/caf%c3%a9', 'https://example.com/caf%C3%A9'),
+    ('https://example.com/caf%C3%A9', 'https://example.com/caf%C3%A9'),
+    ('https://example.com/100%', 'https://example.com/100%'),
+    ('https://example.com/a%zzb', 'https://example.com/a%zzb'),
+  ],
+)
+def test_validate_uppercases_percent_escapes(validator: CrawlablePageValidator, url: str, expected: str) -> None:
+  """Uppercases valid percent-escapes, leaving a standalone percent sign alone."""
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, url) == expected
+
+
+@pytest.mark.parametrize(
+  ('url', 'expected'),
+  [
     ('https://example.com/a/%2e%2e/b', 'https://example.com/b'),
     ('https://example.com/a/%2E%2E/b', 'https://example.com/b'),
     ('https://example.com/a/.%2e/b', 'https://example.com/b'),
     ('https://example.com/a/%2e./b', 'https://example.com/b'),
     ('https://example.com/a/%2e/b', 'https://example.com/a/b'),
-    ('https://example.com/a/file%2ehtml', 'https://example.com/a/file%2ehtml'),
+    ('https://example.com/a/file%2ehtml', 'https://example.com/a/file%2Ehtml'),
     ('https://example.com/a/b/%2e%2e', 'https://example.com/a/'),
     ('https://example.com/a/b/%2e', 'https://example.com/a/b/'),
     ('https://example.com/a/b/..', 'https://example.com/a/'),

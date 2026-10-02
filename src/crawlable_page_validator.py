@@ -345,6 +345,10 @@ class CrawlablePageValidator:
     # percent-encoding alone so it is not double-encoded
     parsed_url = parsed_url._replace(path=urllib.parse.quote(parsed_url.path, safe='/%'))
 
+    # Percent-escapes are case-insensitive, so normalise them to uppercase (as
+    # recommended by RFC 3986) so the same URL always sanitises to the same string
+    parsed_url = parsed_url._replace(path=re.sub(r'%[0-9a-fA-F]{2}', lambda m: m.group(0).upper(), parsed_url.path))
+
     # Treat percent-encoded dot segments (e.g. `%2e%2e`, `.%2e`) as dots, as
     # browsers do, so that they are normalised along with regular dot segments
     segments = parsed_url.path.split('/')
