@@ -64,6 +64,14 @@ def test_validate_returns_sanitised_url_without_header_check(validator: Crawlabl
   )
 
 
+def test_validate_does_not_double_encode_url(validator: CrawlablePageValidator) -> None:
+  """Leaves already percent-encoded characters alone while encoding the rest."""
+  assert (
+    validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/a%20b/café')
+    == 'https://example.com/a%20b/caf%C3%A9'
+  )
+
+
 @pytest.mark.parametrize('perform_header_check', [False, True])
 def test_validate_rejects_invalid_url(
   validator: CrawlablePageValidator,

@@ -341,8 +341,9 @@ class CrawlablePageValidator:
     # Save if it was trailing slash
     was_trailing_slash = url.endswith('/')
 
-    # Encode the URL path to handle special characters
-    parsed_url = parsed_url._replace(path=urllib.parse.quote(parsed_url.path, safe='/'))
+    # Encode the URL path to handle special characters, leaving existing
+    # percent-encoding alone so it is not double-encoded
+    parsed_url = parsed_url._replace(path=urllib.parse.quote(parsed_url.path, safe='/%'))
 
     # Prevent path traversal using posixpath.normpath
     parsed_url = parsed_url._replace(path=posixpath.normpath(parsed_url.path))
