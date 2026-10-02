@@ -83,7 +83,7 @@ class Browser:
   def safe_restart(self) -> None:
     """Restart the webdriver."""
     try:
-      self.driver.close()
+      self.driver.quit()
     except selenium.common.exceptions.InvalidSessionIdException:
       logger.exception('InvalidSessionIdException, browser probably crashed')
     except selenium.common.exceptions.WebDriverException as error:
@@ -153,7 +153,7 @@ class Browser:
   def close(self) -> None:
     """Close the browser."""
     logger.info('Quitting browser')
-    self.driver.close()
+    self.driver.quit()
     self.last_url_req = ''
 
   def refresh(self) -> None:
