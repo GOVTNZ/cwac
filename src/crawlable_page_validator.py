@@ -345,6 +345,21 @@ class CrawlablePageValidator:
     # percent-encoding alone so it is not double-encoded
     parsed_url = parsed_url._replace(path=urllib.parse.quote(parsed_url.path, safe='/%'))
 
+    # Treat percent-encoded dot segments (e.g. `%2e%2e`, `.%2e`) as dots, as
+    # browsers do, so that they are normalised along with regular dot segments
+    segments = parsed_url.path.split('/')
+    for i, segment in enumerate(segments):
+      if segment.lower() == '%2e':
+        segments[i] = '.'
+      elif segment.lower() in {'%2e%2e', '.%2e', '%2e.'}:
+        segments[i] = '..'
+    parsed_url = parsed_url._replace(path='/'.join(segments))
+
+    # A dot segment at the end of the path resolves to a directory, so it keeps
+    # a trailing slash once normalised, as it does in browsers
+    if segments[-1] in {'.', '..'}:
+      was_trailing_slash = True
+
     # Prevent path traversal using posixpath.normpath
     parsed_url = parsed_url._replace(path=posixpath.normpath(parsed_url.path))
 

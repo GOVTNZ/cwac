@@ -72,6 +72,32 @@ def test_validate_does_not_double_encode_url(validator: CrawlablePageValidator) 
   )
 
 
+@pytest.mark.parametrize(
+  ('url', 'expected'),
+  [
+    ('https://example.com/a/%2e%2e/b', 'https://example.com/b'),
+    ('https://example.com/a/%2E%2E/b', 'https://example.com/b'),
+    ('https://example.com/a/.%2e/b', 'https://example.com/b'),
+    ('https://example.com/a/%2e./b', 'https://example.com/b'),
+    ('https://example.com/a/%2e/b', 'https://example.com/a/b'),
+    ('https://example.com/a/file%2ehtml', 'https://example.com/a/file%2ehtml'),
+    ('https://example.com/a/b/%2e%2e', 'https://example.com/a/'),
+    ('https://example.com/a/b/%2e', 'https://example.com/a/b/'),
+    ('https://example.com/a/b/..', 'https://example.com/a/'),
+  ],
+)
+def test_validate_normalises_encoded_dot_segments(validator: CrawlablePageValidator, url: str, expected: str) -> None:
+  """Treats percent-encoded dot segments as dots, leaving other escapes alone."""
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, url) == expected
+
+
+def test_validate_rejects_encoded_traversal_outside_base_url(validator: CrawlablePageValidator) -> None:
+  """Rejects URLs that use percent-encoded dot segments to leave the base URL."""
+  base_url = 'https://example.com/allowed/'
+
+  assert validator.validate(SITE_DATA, base_url, PARENT_URL, 'https://example.com/allowed/%2e%2e/private') is None
+
+
 @pytest.mark.parametrize('perform_header_check', [False, True])
 def test_validate_rejects_invalid_url(
   validator: CrawlablePageValidator,
