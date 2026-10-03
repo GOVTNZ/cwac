@@ -25,7 +25,7 @@ logger = logging.getLogger('cwac')
 
 
 class FocusIndicatorAudit(DefaultAudit):
-  """Focus indiactor audit."""
+  """Focus indicator audit."""
 
   audit_type = 'FocusIndicatorAudit'
 

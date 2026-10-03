@@ -38,7 +38,7 @@ The steps to upgrade are:
 
 1. Run the command above (or manually visit site) to get latest stable _Chrome
    for Testing_.
-2. Update `pacakge.json` with the new version.
+2. Update `package.json` with the new version.
 3. Run `npm install` to download _Chrome for Testing_ and _Chromedriver_
    binaries corresponding to the new version from `package.json`. The binaries
    are downloaded to `chrome/` and `chromedriver/` respectively.

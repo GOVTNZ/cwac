@@ -282,7 +282,7 @@ def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) ->
         these column names are put in the same group.
 
   Returns:
-      pd.DataFrame: Includes all columns from `input_df` as well as the mertrics columns:
+      pd.DataFrame: Includes all columns from `input_df` as well as the metrics columns:
         1. -num_issues (WARNING: this function changes column meaning)
           - Count of all issues with identical values for all columns in `groupby_cols`
         2. num_pages
