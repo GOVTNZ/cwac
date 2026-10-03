@@ -8,8 +8,6 @@ import logging
 import sys
 from typing import Any
 
-import selenium
-
 from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
@@ -149,50 +147,43 @@ class AxeCoreAudit(DefaultAudit):
     """
     self.load_axe_core()
 
-    try:
-      logger.info('Injecting axe %s', self.url)
+    logger.info('Injecting axe %s', self.url)
 
-      frame_id = self.browser.driver.execute_cdp_cmd(
-        'Page.getFrameTree',
-        {},
-      )['frameTree']['frame']['id']
+    frame_id = self.browser.driver.execute_cdp_cmd(
+      'Page.getFrameTree',
+      {},
+    )['frameTree']['frame']['id']
 
-      # use an isolated world in the case the page patches global apis
-      isolated_world_context_id = self.browser.driver.execute_cdp_cmd(
-        'Page.createIsolatedWorld',
-        {'frameId': frame_id, 'worldName': 'CWAC'},
-      )['executionContextId']
+    # use an isolated world in the case the page patches global apis
+    isolated_world_context_id = self.browser.driver.execute_cdp_cmd(
+      'Page.createIsolatedWorld',
+      {'frameId': frame_id, 'worldName': 'CWAC'},
+    )['executionContextId']
 
-      response = self.browser.driver.execute_cdp_cmd(
-        'Runtime.evaluate',
-        {
-          'contextId': isolated_world_context_id,
-          'expression': AxeCoreAudit.axe_core_js,
-          'returnByValue': True,
-          'awaitPromise': True,
-        },
+    response = self.browser.driver.execute_cdp_cmd(
+      'Runtime.evaluate',
+      {
+        'contextId': isolated_world_context_id,
+        'expression': AxeCoreAudit.axe_core_js,
+        'returnByValue': True,
+        'awaitPromise': True,
+      },
+    )
+
+    if 'exceptionDetails' in response:
+      details = response['exceptionDetails']
+      exception = details.get('exception', {})
+      logger.error(
+        'JavaScript exception %s: %s (line %i, column %i)',
+        self.url,
+        exception.get('description', exception.get('value', details['text'])),
+        details['lineNumber'] + 1,
+        details['columnNumber'] + 1,
       )
-
-      if 'exceptionDetails' in response:
-        details = response['exceptionDetails']
-        exception = details.get('exception', {})
-        logger.error(
-          'JavaScript exception %s: %s (line %i, column %i)',
-          self.url,
-          exception.get('description', exception.get('value', details['text'])),
-          details['lineNumber'] + 1,
-          details['columnNumber'] + 1,
-        )
-        return False
-
-      axe_core_results = response['result']['value']
-      logger.info('axe-core has returned results %s', self.url)
-    except selenium.common.exceptions.JavascriptException:
-      logger.exception('JavaScript exception %s', self.url)
       return False
-    except selenium.common.exceptions.TimeoutException:
-      logger.exception('Timeout exception %s', self.url)
-      return False
+
+    axe_core_results = response['result']['value']
+    logger.info('axe-core has returned results %s', self.url)
 
     # Get page information from DefaultAudit
     default_audit_row = self._default_audit_row
