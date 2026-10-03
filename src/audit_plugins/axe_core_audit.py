@@ -63,14 +63,11 @@ class AxeCoreAudit(DefaultAudit):
         # Being unable to load axe.min.js indicates a misconfigured environment
         # that we cannot recover from, so exit the program.
         sys.exit(1)
-      run_axe = (
-        'document.getAnimations().forEach(animation => animation.cancel());'
-        'var callback = arguments[arguments.length - 1];'
-        'axe.run({xpath: true, '
-        "resultTypes:['violations']"
-        '}).then((r)=> {callback(r)});'
-      )
-      AxeCoreAudit.axe_core_js = f'{axe_min_js}{run_axe}'
+      AxeCoreAudit.axe_core_js = f"""
+        {axe_min_js}
+        document.getAnimations().forEach(animation => animation.cancel());
+        axe.run({{ xpath: true, resultTypes: ['violations'] }});
+      """
 
   def run_generate_expanded_results(self, axe_core_results: dict[Any, Any]) -> list[dict[Any, Any]]:
     """Generate an expanded list of axe-core violations.
@@ -143,7 +140,30 @@ class AxeCoreAudit(DefaultAudit):
 
     try:
       logger.info('Injecting axe %s', self.url)
-      axe_core_results = self.browser.driver.execute_async_script(AxeCoreAudit.axe_core_js)
+
+      # TODO: need to implement timeout?
+      response = self.browser.driver.execute_cdp_cmd(
+        'Runtime.evaluate',
+        {
+          'expression': AxeCoreAudit.axe_core_js,
+          'returnByValue': True,
+          'awaitPromise': True,
+        },
+      )
+
+      if 'exceptionDetails' in response:
+        details = response['exceptionDetails']
+        exception = details.get('exception', {})
+        logger.error(
+          'JavaScript exception %s: %s (line %i, column %i)',
+          self.url,
+          exception.get('description', exception.get('value', details['text'])),
+          details['lineNumber'] + 1,
+          details['columnNumber'] + 1,
+        )
+        return False
+
+      axe_core_results = response['result']['value']
       logger.info('axe-core has returned results %s', self.url)
     except selenium.common.exceptions.JavascriptException:
       logger.exception('JavaScript exception %s', self.url)
