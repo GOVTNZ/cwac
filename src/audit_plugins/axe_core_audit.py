@@ -63,10 +63,21 @@ class AxeCoreAudit(DefaultAudit):
         # Being unable to load axe.min.js indicates a misconfigured environment
         # that we cannot recover from, so exit the program.
         sys.exit(1)
+
+      # set_script_timeout doesn't apply to CDP commands, and Runtime.evaluate has no async timeout, so we race explicitly
       AxeCoreAudit.axe_core_js = f"""
         {axe_min_js}
         document.getAnimations().forEach(animation => animation.cancel());
-        axe.run({{ xpath: true, resultTypes: ['violations'] }});
+        Promise.race([
+          axe.run({{ xpath: true, resultTypes: ['violations'] }}),
+          new Promise((_, reject) => {{
+            const timeout = {self.config.script_timeout};
+            setTimeout(
+              () => {{ reject(new Error(`script timed out after ${{timeout}} seconds`)); }},
+              timeout * 1000
+            );
+          }})
+        ]);
       """
 
   def run_generate_expanded_results(self, axe_core_results: dict[Any, Any]) -> list[dict[Any, Any]]:
@@ -152,7 +163,6 @@ class AxeCoreAudit(DefaultAudit):
         {'frameId': frame_id, 'worldName': 'CWAC'},
       )['executionContextId']
 
-      # TODO: need to implement timeout?
       response = self.browser.driver.execute_cdp_cmd(
         'Runtime.evaluate',
         {
