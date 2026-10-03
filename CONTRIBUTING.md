@@ -9,8 +9,7 @@ royalty-free. You or your licensors retain any copyright in your contributions
 while allowing others to re-use the source code in any way they like as long as
 they meet the requirements of the licence.
 
-Please refer to
-[LICENSE.md](https://github.com/GOVTNZ/cwac/blob/main/LICENSE.md)
+Please refer to [LICENSE](https://github.com/GOVTNZ/cwac/blob/main/LICENSE)
 
 ## Security issues
 
