@@ -167,6 +167,10 @@ class AxeCoreAudit(DefaultAudit):
         'expression': AxeCoreAudit.axe_core_js,
         'returnByValue': True,
         'awaitPromise': True,
+        # this only applies to synchronous executions, and will surface as a generic
+        # WebDriverException that will cause the audit manager to restart the browser,
+        # but there's not really more we can do for synchronous code
+        'timeout': self.config.script_timeout * 1000,
       },
     )
 
