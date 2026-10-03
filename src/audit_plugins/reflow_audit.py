@@ -2,7 +2,7 @@
 
 Tests WCAG 1.4.10 Reflow by resizing the browser window to 320px
 
-Unforuntately there's no API to set the zoom level in Selenium,
+Unfortunately there's no API to set the zoom level in Selenium,
 so we have to restart the browser in headless mode to test it.
 If the browser's already headless, we just resize the window.
 
@@ -69,7 +69,7 @@ class ReflowAudit(DefaultAudit):
       print(msg)
       return False
 
-    # Determine if there is a horisontal overflow
+    # Determine if there is a horizontal overflow
     try:
       self.browser.driver.execute_script('window.scrollTo(100, 0);')
       overflow_amount = self.browser.driver.execute_script('return window.scrollX;')
