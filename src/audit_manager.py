@@ -266,8 +266,6 @@ class AuditManager:
           )
           continue
 
-        self._check_for_closed_details_elements()
-
         # Inject the audit ID
         audit['kwargs']['audit_id'] = audit_id
 
@@ -283,6 +281,8 @@ class AuditManager:
         test_instance = audit['audit_class'](config=self.config, browser=self.browser, **audit['kwargs'])
 
         try:
+          self._check_for_closed_details_elements()
+
           audit_result: list[dict[str, Any]] | bool = test_instance.run()
         except selenium.common.exceptions.WebDriverException:
           logger.exception(
