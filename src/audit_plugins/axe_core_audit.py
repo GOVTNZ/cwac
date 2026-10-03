@@ -141,10 +141,22 @@ class AxeCoreAudit(DefaultAudit):
     try:
       logger.info('Injecting axe %s', self.url)
 
+      frame_id = self.browser.driver.execute_cdp_cmd(
+        'Page.getFrameTree',
+        {},
+      )['frameTree']['frame']['id']
+
+      # use an isolated world in the case the page patches global apis
+      isolated_world_context_id = self.browser.driver.execute_cdp_cmd(
+        'Page.createIsolatedWorld',
+        {'frameId': frame_id, 'worldName': 'CWAC'},
+      )['executionContextId']
+
       # TODO: need to implement timeout?
       response = self.browser.driver.execute_cdp_cmd(
         'Runtime.evaluate',
         {
+          'contextId': isolated_world_context_id,
           'expression': AxeCoreAudit.axe_core_js,
           'returnByValue': True,
           'awaitPromise': True,
