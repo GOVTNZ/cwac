@@ -7,6 +7,7 @@ import urllib.parse
 from typing import Any, TypedDict
 
 import selenium
+import urllib3
 
 import src.filters
 from config import Config, SiteData
@@ -61,7 +62,7 @@ class AuditManager:
       'kwargs': {**kwargs, 'site_data': site_data},
     }
 
-  def test_for_anti_bot(self, site_data: SiteData) -> str:
+  def test_for_anti_bot(self, site_data: SiteData) -> str:  # noqa: PLR0911, PLR0912 # pylint: disable=# pylint: disable=too-many-return-statements,too-many-branches
     """Inspect the currently loaded page for anti-bot blocking.
 
     If bot blocking services such as Cloudflare, Incapsula, Azure Front Door,
@@ -83,6 +84,9 @@ class AuditManager:
     except selenium.common.exceptions.WebDriverException:
       logger.error('WebDriverException when getting current URL')
       return 'Pass'
+    except urllib3.exceptions.HTTPError:
+      logger.error('urllib3 HTTPError when getting current URL')
+      return 'Pass'
 
     # If the URL is already discarded return its result
     if url in self.discarded_urls:
@@ -96,6 +100,9 @@ class AuditManager:
       return 'Pass'
     except selenium.common.exceptions.WebDriverException:
       logger.error('WebDriverException when getting page source')
+      return 'Pass'
+    except urllib3.exceptions.HTTPError:
+      logger.error('urllib3 HTTPError when getting page source')
       return 'Pass'
 
     status = 'Pass'
@@ -136,7 +143,10 @@ class AuditManager:
         f'./results/{self.config.audit_name}/anti_bot_ss',
         exist_ok=True,
       )
-      self.browser.driver.save_screenshot(f'./results/{self.config.audit_name}/anti_bot_ss/{netloc}.png')
+      try:
+        self.browser.driver.save_screenshot(f'./results/{self.config.audit_name}/anti_bot_ss/{netloc}.png')
+      except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
+        logger.exception('Failed to save anti-bot screenshot %s', url)
 
       # Write to anti-bot.csv
       csv_writer = CSVWriter()
@@ -284,7 +294,7 @@ class AuditManager:
           self._check_for_closed_details_elements()
 
           audit_result: list[dict[str, Any]] | bool = test_instance.run()
-        except selenium.common.exceptions.WebDriverException:
+        except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
           logger.exception(
             'Due to WebDriverException, test %s skipped on viewport %s for website %s',
             audit_name,
