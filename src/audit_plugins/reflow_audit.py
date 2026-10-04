@@ -92,15 +92,6 @@ class ReflowAudit(DefaultAudit):
       )
       screenshot_audit.run()
 
-    # Reset scroll position
-    try:
-      self.browser.driver.execute_script('window.scrollTo(0, 0);')
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception(
-        'Failed to reset scroll position after test %s',
-        self.url,
-      )
-
     return [
       {
         **self._default_audit_row,
