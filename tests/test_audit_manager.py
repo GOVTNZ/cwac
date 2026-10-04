@@ -47,7 +47,7 @@ def make_audit_manager(mocker: MockerFixture) -> AuditManager:
   browser.driver = MagicMock()
 
   manager = AuditManager(config, browser, MagicMock())
-  mocker.patch.object(manager, 'check_for_details_elements')
+  mocker.patch.object(manager, '_check_for_closed_details_elements')
   mocker.patch('src.audit_manager.CSVWriter')
 
   return manager

@@ -7,7 +7,6 @@ import urllib.parse
 from typing import Any, TypedDict
 
 import selenium
-from selenium.webdriver.common.by import By
 
 import src.filters
 from config import Config, SiteData
@@ -156,37 +155,31 @@ class AuditManager:
 
     return status
 
-  def check_for_details_elements(self) -> None:
-    """Open <details> elements on current page if force_open_details_elements is True.
+  def _check_for_closed_details_elements(self) -> None:
+    """Check for closed <details> elements on current page, and open them if force_open_details_elements is True."""
+    num_of_details = self.browser.driver.execute_script(
+      """
+      const details = document.querySelectorAll('details:not([open])');
+      if(arguments[0]) {
+        details.forEach(d => d.open = true);
+      }
+      return details.length;
+    """,
+      self.config.force_open_details_elements,
+    )
 
-    Find all <details> elements on the page. If any are found, and if the config
-    option force_open_details_elements is True, open them by setting their
-    'open' attribute to an empty string. This ensures that the contents of the
-    <details> elements are visible and can be audited.
-    """
-    details = self.browser.driver.find_elements(By.TAG_NAME, 'details')
-
-    if len(details) == 0:
+    if num_of_details == 0:
       return
 
     plural = ''
-    if len(details) != 1:
+    if num_of_details != 1:
       plural = 's'
 
     if not self.config.force_open_details_elements:
-      logger.info('ignoring %i <details> element%s', len(details), plural)
+      logger.info('ignored %i closed <details> element%s', num_of_details, plural)
       return
 
-    logger.info('opening %i <details> element%s', len(details), plural)
-
-    # Open all <details> elements
-    for detail in details:
-      if not detail.get_attribute('open'):
-        try:
-          self.browser.driver.execute_script("arguments[0].setAttribute('open', '')", detail)
-        except Exception:  # noqa: BLE001 # pylint: disable=broad-exception-caught
-          logger.warning("Could not open <details> element titled '%s'", detail.text)
-          continue
+    logger.info('opened %i <details> element%s', num_of_details, plural)
 
   def run_audits(self) -> bool:  # noqa: PLR0915
     """Iterate through registered audits and runs them.
@@ -200,7 +193,7 @@ class AuditManager:
     2. For each audit configured to run at the current viewport size:
       1. The page is loaded
       2. The antibot check is run. If the page is blocked, the audit is skipped.
-      3. Any details elements on the page are opened if force_open_details_elements is True.
+      3. if force_open_details_elements is True, any closed <details> elements on the page are opened.
       4. The audit is run and the results are written to a CSV file.
     3. The browser is refreshed. If the refresh fails, the browser is restarted.
 
@@ -273,8 +266,6 @@ class AuditManager:
           )
           continue
 
-        self.check_for_details_elements()
-
         # Inject the audit ID
         audit['kwargs']['audit_id'] = audit_id
 
@@ -290,6 +281,8 @@ class AuditManager:
         test_instance = audit['audit_class'](config=self.config, browser=self.browser, **audit['kwargs'])
 
         try:
+          self._check_for_closed_details_elements()
+
           audit_result: list[dict[str, Any]] | bool = test_instance.run()
         except selenium.common.exceptions.WebDriverException:
           logger.exception(
