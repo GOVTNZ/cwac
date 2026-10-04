@@ -12,6 +12,7 @@ import urllib.parse
 from queue import SimpleQueue
 
 import selenium.common.exceptions
+import urllib3
 from bs4 import BeautifulSoup
 from usp.objects.sitemap import AbstractIndexSitemap
 from usp.tree import sitemap_tree_for_homepage
@@ -135,6 +136,12 @@ class Crawler:
       soup = BeautifulSoup(self.browser.driver.page_source, 'lxml')
     except selenium.common.exceptions.TimeoutException:
       logger.exception('Failed to get page source, TimeoutException%s', url)
+      return []
+    except selenium.common.exceptions.WebDriverException:
+      logger.exception('Failed to get page source, WebDriverException %s', url)
+      return []
+    except urllib3.exceptions.HTTPError:
+      logger.exception('Failed to get page source, urllib3 HTTPError %s', url)
       return []
     links = []
 

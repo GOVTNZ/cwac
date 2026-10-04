@@ -11,6 +11,7 @@ import traceback
 from typing import Any, cast
 
 import selenium
+import urllib3
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebDriver
@@ -93,6 +94,8 @@ class Browser:
           'WebDriverException, browser probably crashed %s',
           self.last_url_req,
         )
+    except urllib3.exceptions.HTTPError:
+      logger.exception('urllib3 HTTPError, browser probably hung %s', self.last_url_req)
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.last_url_req = ''
 
@@ -153,7 +156,10 @@ class Browser:
   def close(self) -> None:
     """Close the browser."""
     logger.info('Quitting browser')
-    self.driver.quit()
+    try:
+      self.driver.quit()
+    except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
+      logger.exception('Failed to quit browser')
     self.last_url_req = ''
 
   def refresh(self) -> None:
@@ -179,6 +185,9 @@ class Browser:
       self.safe_restart()
     except selenium.common.exceptions.WebDriverException:
       logger.exception('WebDriverException')
+      self.safe_restart()
+    except urllib3.exceptions.HTTPError:
+      logger.exception('urllib3 HTTPError')
       self.safe_restart()
 
   def get_window_size(self) -> dict[str, int]:
