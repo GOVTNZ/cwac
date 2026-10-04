@@ -64,6 +64,54 @@ def test_validate_returns_sanitised_url_without_header_check(validator: Crawlabl
   )
 
 
+def test_validate_does_not_double_encode_url(validator: CrawlablePageValidator) -> None:
+  """Leaves already percent-encoded characters alone while encoding the rest."""
+  assert (
+    validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/a%20b/café')
+    == 'https://example.com/a%20b/caf%C3%A9'
+  )
+
+
+@pytest.mark.parametrize(
+  ('url', 'expected'),
+  [
+    ('https://example.com/caf%c3%a9', 'https://example.com/caf%C3%A9'),
+    ('https://example.com/caf%C3%A9', 'https://example.com/caf%C3%A9'),
+    ('https://example.com/100%', 'https://example.com/100%'),
+    ('https://example.com/a%zzb', 'https://example.com/a%zzb'),
+  ],
+)
+def test_validate_uppercases_percent_escapes(validator: CrawlablePageValidator, url: str, expected: str) -> None:
+  """Uppercases valid percent-escapes, leaving a standalone percent sign alone."""
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, url) == expected
+
+
+@pytest.mark.parametrize(
+  ('url', 'expected'),
+  [
+    ('https://example.com/a/%2e%2e/b', 'https://example.com/b'),
+    ('https://example.com/a/%2E%2E/b', 'https://example.com/b'),
+    ('https://example.com/a/.%2e/b', 'https://example.com/b'),
+    ('https://example.com/a/%2e./b', 'https://example.com/b'),
+    ('https://example.com/a/%2e/b', 'https://example.com/a/b'),
+    ('https://example.com/a/file%2ehtml', 'https://example.com/a/file%2Ehtml'),
+    ('https://example.com/a/b/%2e%2e', 'https://example.com/a/'),
+    ('https://example.com/a/b/%2e', 'https://example.com/a/b/'),
+    ('https://example.com/a/b/..', 'https://example.com/a/'),
+  ],
+)
+def test_validate_normalises_encoded_dot_segments(validator: CrawlablePageValidator, url: str, expected: str) -> None:
+  """Treats percent-encoded dot segments as dots, leaving other escapes alone."""
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, url) == expected
+
+
+def test_validate_rejects_encoded_traversal_outside_base_url(validator: CrawlablePageValidator) -> None:
+  """Rejects URLs that use percent-encoded dot segments to leave the base URL."""
+  base_url = 'https://example.com/allowed/'
+
+  assert validator.validate(SITE_DATA, base_url, PARENT_URL, 'https://example.com/allowed/%2e%2e/private') is None
+
+
 @pytest.mark.parametrize('perform_header_check', [False, True])
 def test_validate_rejects_invalid_url(
   validator: CrawlablePageValidator,
