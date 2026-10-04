@@ -8,8 +8,6 @@ import logging
 import sys
 from typing import Any
 
-import selenium
-
 from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
@@ -63,14 +61,22 @@ class AxeCoreAudit(DefaultAudit):
         # Being unable to load axe.min.js indicates a misconfigured environment
         # that we cannot recover from, so exit the program.
         sys.exit(1)
-      run_axe = (
-        'document.getAnimations().forEach(animation => animation.cancel());'
-        'var callback = arguments[arguments.length - 1];'
-        'axe.run({xpath: true, '
-        "resultTypes:['violations']"
-        '}).then((r)=> {callback(r)});'
-      )
-      AxeCoreAudit.axe_core_js = f'{axe_min_js}{run_axe}'
+
+      # set_script_timeout doesn't apply to CDP commands, and Runtime.evaluate has no async timeout, so we race explicitly
+      AxeCoreAudit.axe_core_js = f"""
+        {axe_min_js}
+        document.getAnimations().forEach(animation => animation.cancel());
+        Promise.race([
+          axe.run({{ xpath: true, resultTypes: ['violations'] }}),
+          new Promise((_, reject) => {{
+            const timeout = {self.config.script_timeout};
+            setTimeout(
+              () => {{ reject(new Error(`script timed out after ${{timeout}} seconds`)); }},
+              timeout * 1000
+            );
+          }})
+        ]);
+      """
 
   def run_generate_expanded_results(self, axe_core_results: dict[Any, Any]) -> list[dict[Any, Any]]:
     """Generate an expanded list of axe-core violations.
@@ -141,16 +147,47 @@ class AxeCoreAudit(DefaultAudit):
     """
     self.load_axe_core()
 
-    try:
-      logger.info('Injecting axe %s', self.url)
-      axe_core_results = self.browser.driver.execute_async_script(AxeCoreAudit.axe_core_js)
-      logger.info('axe-core has returned results %s', self.url)
-    except selenium.common.exceptions.JavascriptException:
-      logger.exception('JavaScript exception %s', self.url)
+    logger.info('Injecting axe %s', self.url)
+
+    frame_id = self.browser.driver.execute_cdp_cmd(
+      'Page.getFrameTree',
+      {},
+    )['frameTree']['frame']['id']
+
+    # use an isolated world in the case the page patches global apis
+    isolated_world_context_id = self.browser.driver.execute_cdp_cmd(
+      'Page.createIsolatedWorld',
+      {'frameId': frame_id, 'worldName': 'CWAC'},
+    )['executionContextId']
+
+    response = self.browser.driver.execute_cdp_cmd(
+      'Runtime.evaluate',
+      {
+        'contextId': isolated_world_context_id,
+        'expression': AxeCoreAudit.axe_core_js,
+        'returnByValue': True,
+        'awaitPromise': True,
+        # this only applies to synchronous executions, and will surface as a generic
+        # WebDriverException that will cause the audit manager to restart the browser,
+        # but there's not really more we can do for synchronous code
+        'timeout': self.config.script_timeout * 1000,
+      },
+    )
+
+    if 'exceptionDetails' in response:
+      details = response['exceptionDetails']
+      exception = details.get('exception', {})
+      logger.error(
+        'JavaScript exception %s: %s (line %i, column %i)',
+        self.url,
+        exception.get('description', exception.get('value', details['text'])),
+        details['lineNumber'] + 1,
+        details['columnNumber'] + 1,
+      )
       return False
-    except selenium.common.exceptions.TimeoutException:
-      logger.exception('Timeout exception %s', self.url)
-      return False
+
+    axe_core_results = response['result']['value']
+    logger.info('axe-core has returned results %s', self.url)
 
     # Get page information from DefaultAudit
     default_audit_row = self._default_audit_row
