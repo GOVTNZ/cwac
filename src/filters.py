@@ -143,7 +143,7 @@ def url_filter_filetype(_config: Config, url: urllib.parse.ParseResult) -> bool:
   Returns:
       bool: True if URL is valid, else False
   """
-  return not not url.path.lower().endswith(DISALLOWED_FILE_TYPES)
+  return bool(url.path.lower().endswith(DISALLOWED_FILE_TYPES))
 
 
 def url_filter_not_same_domain(url_a: str, url_b: str) -> bool:
