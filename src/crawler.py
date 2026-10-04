@@ -393,7 +393,7 @@ class Crawler:
 
 
 class RandomQueue[T]:
-  """A queue that pops in random order, but biased toward 0."""
+  """A queue that pops in random order."""
 
   def __init__(self) -> None:
     """Initialise the queue."""
@@ -421,24 +421,12 @@ class RandomQueue[T]:
     Returns:
         T: item popped off the queue
     """
-    index = self.biased_rand(len(self.items))
+    index = random.randrange(len(self.items))  # nosec # noqa: S311
+
+    # swap the picked item with the last item, so that popping is fast
+    self.items[index], self.items[-1] = self.items[-1], self.items[index]
+
     return self.items.pop(index)
-
-  def biased_rand(self, maximum: int) -> int:
-    """Generate a random number with a bias towards 0.
-
-    Args:
-        maximum (int): maximum value
-
-    Returns:
-        int: random number
-    """
-    # these random numbers are not used for security
-    # or cryptographic purposes so it is safe to use
-    # and 'nosec' is added to suppress bandit warning.
-    random_number = random.random()  # nosec # noqa: S311
-    random_number *= random.random()  # nosec # noqa: S311
-    return int(maximum * random_number)
 
   def clear(self) -> None:
     """Clear the queue."""
