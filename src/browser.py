@@ -10,7 +10,7 @@ import time
 import traceback
 from typing import Any, cast
 
-import selenium
+import selenium.common.exceptions
 import urllib3
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -172,14 +172,8 @@ class Browser:
     try:
       self.viewport_size = {'width': width, 'height': height}
       self.driver.set_window_size(width, height)
-    except selenium.common.exceptions.TimeoutException:
-      logger.exception('TimeoutException')
-      self.safe_restart()
-    except selenium.common.exceptions.WebDriverException:
-      logger.exception('WebDriverException')
-      self.safe_restart()
-    except urllib3.exceptions.HTTPError:
-      logger.exception('urllib3 HTTPError')
+    except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
+      logger.exception('Failed to set window size')
       self.safe_restart()
 
   def spawn_single_webdriver(self, window_size: dict[Any, Any], headless_override: bool = False) -> WebDriverType:

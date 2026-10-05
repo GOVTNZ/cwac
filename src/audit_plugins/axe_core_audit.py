@@ -8,7 +8,7 @@ import logging
 import sys
 from typing import Any
 
-import selenium
+import selenium.common.exceptions
 
 from config import Config
 from src.audit_plugins.default_audit import DefaultAudit
@@ -145,11 +145,11 @@ class AxeCoreAudit(DefaultAudit):
       logger.info('Injecting axe %s', self.url)
       axe_core_results = self.browser.driver.execute_async_script(AxeCoreAudit.axe_core_js)
       logger.info('axe-core has returned results %s', self.url)
-    except selenium.common.exceptions.JavascriptException:
-      logger.exception('JavaScript exception %s', self.url)
-      return False
-    except selenium.common.exceptions.TimeoutException:
-      logger.exception('Timeout exception %s', self.url)
+    except (
+      selenium.common.exceptions.JavascriptException,
+      selenium.common.exceptions.TimeoutException,
+    ):
+      logger.exception('%s', self.url)
       return False
 
     # Get page information from DefaultAudit
