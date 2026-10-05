@@ -162,14 +162,6 @@ class Browser:
       logger.exception('Failed to quit browser')
     self.last_url_req = ''
 
-  def refresh(self) -> None:
-    """Refresh the browser."""
-    logger.info('Refreshing browser')
-    try:
-      self.driver.refresh()
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Error refreshing browser')
-
   def set_window_size(self, width: int, height: int) -> None:
     """Set browser size.
 
