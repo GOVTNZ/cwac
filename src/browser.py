@@ -182,27 +182,6 @@ class Browser:
       logger.exception('urllib3 HTTPError')
       self.safe_restart()
 
-  def get_window_size(self) -> dict[str, int]:
-    """Get browser size.
-
-    Returns:
-        dict[str, int]: width and height of browser.
-    """
-    try:
-      return self.driver.get_window_size()
-    except selenium.common.exceptions.TimeoutException:
-      logger.exception('TimeoutException')
-      self.safe_restart()
-      return self.driver.get_window_size()
-    except selenium.common.exceptions.WebDriverException:
-      logger.exception('WebDriverException')
-      self.safe_restart()
-      return self.driver.get_window_size()
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Unhandled exception')
-      self.safe_restart()
-      return self.viewport_size
-
   def spawn_single_webdriver(self, window_size: dict[Any, Any], headless_override: bool = False) -> WebDriverType:
     """Spawn a single instance of a browser.
 
