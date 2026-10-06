@@ -6,7 +6,7 @@ import time
 import urllib.parse
 from typing import Any, TypedDict
 
-import selenium
+import selenium.common.exceptions
 import urllib3
 
 import src.filters
@@ -62,7 +62,7 @@ class AuditManager:
       'kwargs': {**kwargs, 'site_data': site_data},
     }
 
-  def test_for_anti_bot(self, site_data: SiteData) -> str:  # noqa: PLR0911, PLR0912 # pylint: disable=# pylint: disable=too-many-return-statements,too-many-branches
+  def test_for_anti_bot(self, site_data: SiteData) -> str:
     """Inspect the currently loaded page for anti-bot blocking.
 
     If bot blocking services such as Cloudflare, Incapsula, Azure Front Door,
@@ -78,14 +78,11 @@ class AuditManager:
     # Get the current URL
     try:
       url = self.browser.driver.current_url
-    except selenium.common.exceptions.TimeoutException:
-      logger.error('TimeoutException when getting current URL')
-      return 'Pass'
-    except selenium.common.exceptions.WebDriverException:
-      logger.error('WebDriverException when getting current URL')
-      return 'Pass'
-    except urllib3.exceptions.HTTPError:
-      logger.error('urllib3 HTTPError when getting current URL')
+    except (
+      selenium.common.exceptions.WebDriverException,
+      urllib3.exceptions.HTTPError,
+    ) as e:
+      logger.error('%s when getting current URL', type(e).__name__)
       return 'Pass'
 
     # If the URL is already discarded return its result
@@ -95,14 +92,11 @@ class AuditManager:
     # Get the page source
     try:
       page_source = self.browser.driver.page_source
-    except selenium.common.exceptions.TimeoutException:
-      logger.error('TimeoutException when getting page source')
-      return 'Pass'
-    except selenium.common.exceptions.WebDriverException:
-      logger.error('WebDriverException when getting page source')
-      return 'Pass'
-    except urllib3.exceptions.HTTPError:
-      logger.error('urllib3 HTTPError when getting page source')
+    except (
+      selenium.common.exceptions.WebDriverException,
+      urllib3.exceptions.HTTPError,
+    ) as e:
+      logger.error('%s when getting page source', type(e).__name__)
       return 'Pass'
 
     status = 'Pass'

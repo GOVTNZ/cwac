@@ -134,14 +134,11 @@ class Crawler:
     """
     try:
       soup = BeautifulSoup(self.browser.driver.page_source, 'lxml')
-    except selenium.common.exceptions.TimeoutException:
-      logger.exception('Failed to get page source, TimeoutException%s', url)
-      return []
-    except selenium.common.exceptions.WebDriverException:
-      logger.exception('Failed to get page source, WebDriverException %s', url)
-      return []
-    except urllib3.exceptions.HTTPError:
-      logger.exception('Failed to get page source, urllib3 HTTPError %s', url)
+    except (
+      selenium.common.exceptions.WebDriverException,
+      urllib3.exceptions.HTTPError,
+    ):
+      logger.exception('Failed to get page source %s', url)
       return []
     links = []
 
