@@ -213,7 +213,7 @@ def generate_axe_core_template_aware_results(audit_name: str) -> None:
 
   Extra fields are added to each group:
     - num_issues: No. of issues with same `id` and similar HTML structure
-    - num_pages: No. of distinct URLs with the same `id` (axe-core rule violation name)
+    - num_pages: No. of distinct URLs with the same issue (i.e. on which the group's issues occur)
 
   Each group becomes a single row in the output CSV. The output is written to
   `axe_core_audit_template_aware.csv` for easier analysis.
@@ -272,7 +272,8 @@ def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) ->
     same values for those four columns.
   2. `num_pages`
     - A new column added by this function.
-    - It's value is the count of distinct URLs which have the same `issue_id` as the current row.
+    - Its value is the count of distinct URLs with issues in the same group,
+    i.e. with identical values for all columns in `groupby_cols`.
 
   Args:
       input_df (pd.DataFrame): Raw axe-core audit results.
@@ -286,7 +287,7 @@ def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) ->
         1. -num_issues (WARNING: this function changes column meaning)
           - Count of all issues with identical values for all columns in `groupby_cols`
         2. num_pages
-          - Count of distinct URLs which have the same `issue_id` as the current row.
+          - Count of distinct URLs with issues in the same group
   """
   # Select pages with no issues. These are preserved unchanged.
   zero_count_rows = input_df[input_df['num_issues'] == 0]
@@ -295,16 +296,24 @@ def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) ->
   # want to aggregate
   no_zero_count_df = input_df[input_df['num_issues'] != 0]
 
+  # Count the distinct pages each issue appears on. This has to happen before
+  # the groups are reduced to a single row below, as that only keeps the first
+  # `url` of each group.
+  no_zero_count_df = no_zero_count_df.assign(
+    num_pages=no_zero_count_df.groupby(groupby_cols)['url'].transform('nunique'),
+  )
+
   # Create groups within the DataFrame based on the values in the specified
   # columns.
   grouped_df = no_zero_count_df.groupby(groupby_cols)
 
   # Now we use aggregation to reduce each group to a single row.  We define an
   # aggregation (as a Dict) to tell Pandas how to reduce each column.  For the
-  # num_issues column, we sum the counts. For all other columns, we take the
-  # first occurrence in each group.
+  # num_issues column, we sum the counts. For all other columns (including
+  # num_pages, which is the same for every row in a group), we take the first
+  # occurrence in each group.
   agg_dict = {'num_issues': 'sum'}
-  for col in input_df.columns:
+  for col in no_zero_count_df.columns:
     if col not in agg_dict and col not in groupby_cols:
       agg_dict[col] = 'first'
   # agg_dict example: {'num_issues': 'sum', 'base_url': 'first', 'id': 'first', ...}
@@ -320,19 +329,8 @@ def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) ->
   # Add back in the rows with no issues which are passed through unchanged.
   agg_df = pd.concat([agg_df, zero_count_rows])
 
-  # Update the whole `num_pages` column in the DataFrame. For each row, the
-  # right-hand side calculates:
-  #
-  # 1. Find all rows with the same issue_id as the current row.
-  # 2. Count how many distinct url values are in that set.
-  # 3. Put that count into num_pages for that row.
-  #
-  # So the effect is: every row gets a page-count showing how widely that issue
-  # appears across different pages.
-  #
-  # Rows without an issue_id (i.e. pages with no issues) don't match any rows,
-  # so they get a count of 0.
-  agg_df['num_pages'] = agg_df.groupby('issue_id')['url'].transform('nunique').fillna(0).astype(int)
+  # Rows with no issues don't have a `num_pages` value, so they get 0.
+  agg_df['num_pages'] = agg_df['num_pages'].fillna(0).astype(int)
 
   # Reset the index of the final DataFrame to ensure a clean output
   agg_df.reset_index()
