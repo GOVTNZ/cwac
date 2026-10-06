@@ -51,7 +51,7 @@ class Browser:
       logger.info('Skipping %s as only_allow_https is set', url)
       return False
 
-    for attempts in range(5):
+    for attempts in range(self.num_retries):
       try:
         logger.info('Running .get: %s', url)
         self.driver.get(url)
