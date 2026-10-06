@@ -66,6 +66,10 @@
       "class_name": "ScreenshotAudit",
       "enabled": false
     },
+    "rendered_object_audit": {
+      "class_name": "RenderedObjectAudit",
+      "enabled": false
+    },
     "element_audit": {
       "class_name": "ElementAudit",
       "target_element_css_selector": "input:not([type='search'])",
