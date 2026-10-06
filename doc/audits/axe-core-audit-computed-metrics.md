@@ -13,8 +13,9 @@ It makes the following changes from the standard axe-core results:
 1. The `num_issues` column now represents the total number of failures in the
    result-set that have the same value for `base_url`, `id`, `viewport_size`,
    and `html`.
-1. A new `num_pages` column which represents how many other URLs had same type
-   of axe-core failure as the current row.
+1. A new `num_pages` column which represents how many URLs had the same failure
+   as the current row (i.e. the same value for `base_url`, `id`,
+   `viewport_size`, and `html`).
 
 > [!WARNING]
 >
@@ -38,12 +39,16 @@ and `html`.
 
 ## Interpreting `num_pages`
 
-The goal of `num_pages` is to give you a sense of which kinds of accessibility
-issue are the most common across the scanned pages.
+The goal of `num_pages` is to give you a sense of how widely each issue appears
+across the scanned pages.
 
 For the row you are looking at, the `num_pages` value is the total number of
-URLs in the result-set that had the same `id` value (`id` is the type of
-Axe-core failure).
+URLs in the result-set that had a failure with the same value for `base_url`,
+`id`, `viewport_size`, and `html`.
 
-For example if the current row has `id=image-alt` and `num_pages=12` then we
-know that 12 scanned pages had an `image-alt` issue.
+`num_pages` and `num_issues` will usually be the same, as an issue tends to
+appear once per page. If the same issue appears more than once on a page,
+`num_issues` will be bigger than `num_pages`.
+
+For example if the current row has `num_issues=15` and `num_pages=12` then we
+know that the issue was found 15 times across 12 scanned pages.
