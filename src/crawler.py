@@ -61,11 +61,7 @@ class Crawler:
 
     This is the entry point and main loop of the crawler.
     """
-    # Count how many URls have been iterated through
-    url_iteration = 0
     while not self.url_queue.empty():
-      url_iteration += 1
-
       # Get a url off the shared queue
       with self.config.lock:
         site_data = self.url_queue.get()
