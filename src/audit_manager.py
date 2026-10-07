@@ -251,6 +251,15 @@ class AuditManager:
         # injected JS) made by a previous audit do not affect the next audit.
         browser_status = self.browser.get(audit['kwargs']['url'])
 
+        # If the browser fails to load the page, skip test
+        if browser_status is False:
+          logger.warning(
+            'Skipping test %s on %s due to .get failure',
+            audit_name,
+            audit['kwargs']['url'],
+          )
+          continue
+
         # Test for anti-bot measures
         if self.test_for_anti_bot(audit['site_data']) != 'Pass':
           # If URL is blocked, skip this URL
@@ -260,15 +269,6 @@ class AuditManager:
             audit['kwargs']['url'],
           )
           return any_audit_succeeded
-
-        # If the browser fails to load the page, skip test
-        if browser_status is False:
-          logger.warning(
-            'Skipping test %s on %s due to .get failure',
-            audit_name,
-            audit['kwargs']['url'],
-          )
-          continue
 
         # Inject the audit ID
         audit['kwargs']['audit_id'] = audit_id
