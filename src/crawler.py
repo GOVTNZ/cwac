@@ -430,7 +430,7 @@ class RandomQueue[T]:
     # swap the picked item with the last item, so that popping is fast
     self.items[index], self.items[-1] = self.items[-1], self.items[index]
 
-    return self.items.pop(index)
+    return self.items.pop()
 
   def clear(self) -> None:
     """Clear the queue."""
