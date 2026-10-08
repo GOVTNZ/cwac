@@ -264,26 +264,6 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
   }
 
 
-def url_filter_same_protocol(url_a: str, url_b: str) -> bool:
-  """Filter url_a if url_b has different protocol.
-
-  Args:
-      url_a (str): A url to compare with url_b
-      url_b (str): A url to compare with url_a
-
-  Returns:
-      bool: True if url_b is within domain of url_a, else False
-  """
-  try:
-    parsed_a = urllib.parse.urlparse(url_a)
-    parsed_b = urllib.parse.urlparse(url_b)
-  except Exception as e:  # noqa: BLE001
-    logger.error('Failed to parse URL: %s', e)
-    return False
-
-  return parsed_a.scheme == parsed_b.scheme
-
-
 class URLFilter:
   """Registers and runs a set of url_filter functions."""
 
