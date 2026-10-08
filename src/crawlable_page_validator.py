@@ -1,7 +1,6 @@
 """Validator for crawlable pages."""
 
 import logging
-import posixpath
 import re
 import urllib
 import urllib.parse
@@ -11,6 +10,7 @@ import requests
 
 import src.filters
 import src.output
+import src.urls
 from config import Config, SiteData
 from src.analytics import Analytics
 
@@ -328,50 +328,10 @@ class CrawlablePageValidator:
     Returns:
         str: sanitised URL
     """
-    # Parse URL with urllib.parse
-    try:
-      parsed_url = urllib.parse.urlparse(url)
-    except ValueError as exc:
-      raise ValueError('Invalid URL') from exc
+    url = src.urls.normalize_url(url)
 
     # Ensure scheme is either http or https
-    if parsed_url.scheme not in ['http', 'https']:
+    if urllib.parse.urlparse(url).scheme not in ['http', 'https']:
       raise ValueError('Invalid URL scheme')
-
-    # Save if it was trailing slash
-    was_trailing_slash = url.endswith('/')
-
-    # Encode the URL path to handle special characters, leaving existing
-    # percent-encoding alone so it is not double-encoded
-    parsed_url = parsed_url._replace(path=urllib.parse.quote(parsed_url.path, safe='/%'))
-
-    # Percent-escapes are case-insensitive, so normalise them to uppercase (as
-    # recommended by RFC 3986) so the same URL always sanitises to the same string
-    parsed_url = parsed_url._replace(path=re.sub(r'%[0-9a-fA-F]{2}', lambda m: m.group(0).upper(), parsed_url.path))
-
-    # Treat percent-encoded dot segments (e.g. `%2e%2e`, `.%2e`) as dots, as
-    # browsers do, so that they are normalised along with regular dot segments
-    segments = parsed_url.path.split('/')
-    for i, segment in enumerate(segments):
-      if segment.lower() == '%2e':
-        segments[i] = '.'
-      elif segment.lower() in {'%2e%2e', '.%2e', '%2e.'}:
-        segments[i] = '..'
-    parsed_url = parsed_url._replace(path='/'.join(segments))
-
-    # A dot segment at the end of the path resolves to a directory, so it keeps
-    # a trailing slash once normalised, as it does in browsers
-    if segments[-1] in {'.', '..'}:
-      was_trailing_slash = True
-
-    # Prevent path traversal using posixpath.normpath
-    parsed_url = parsed_url._replace(path=posixpath.normpath(parsed_url.path))
-
-    # Add trailing slash if it was there
-    if was_trailing_slash and not parsed_url.path.endswith('/'):
-      parsed_url = parsed_url._replace(path=parsed_url.path + '/')
-
-    # Rebuild URL
-    url = urllib.parse.urlunparse(parsed_url)
 
     return url
