@@ -539,6 +539,35 @@ class TestUrlLoading:
 
     assert sorted(config.audit_subjects, key=lambda site: site['url']) == expected
 
+  def test_internationalized_domain_names_are_converted_to_punycode(self, fs: FakeFilesystem) -> None:
+    """Converts internationalized domain names to punycode, to match how browsers represent them."""
+    fs.add_real_file('config/config_default.json')
+
+    fs.create_file(
+      'base_urls/visit/idn.csv',
+      contents=textwrap.dedent("""
+        organisation,url,sector,region,priority
+        Ministry of Justice,https://www.māorilandcourt.govt.nz/mi,Justice,Wellington,High
+        Ministry of Social Development,https://www.TEKĀHUIKAUMĀTUA.govt.nz/,Social,Wellington,High
+        Ministry of Justice,https://www.xn--morilandcourt-wqb.govt.nz/,Justice,Wellington,High
+        Straße GmbH,https://straße.de/,Logistics,Overseas,Low
+        Māori Ltd,https://māori.nz:8080/,Sales,Auckland,Low
+      """).strip(),
+    )
+
+    config = Config('config_default.json')
+
+    assert sorted(site['url'] for site in config.audit_subjects if 'xn--' in site['url']) == [
+      'https://www.xn--morilandcourt-wqb.govt.nz/',
+      'https://www.xn--morilandcourt-wqb.govt.nz/mi',
+      'https://www.xn--tekhuikaumtua-yqbh.govt.nz/',
+      'https://xn--mori-qsa.nz:8080/',
+      # uses the same rules as browsers, which keep "ß" rather than mapping it to "ss"
+      'https://xn--strae-oqa.de/',
+    ]
+    assert 'www.xn--morilandcourt-wqb.govt.nz' in config.url_lookup
+    assert 'www.xn--tekhuikaumtua-yqbh.govt.nz' in config.url_lookup
+
   def test_raises_on_csv_missing_url_header(self, fs: FakeFilesystem) -> None:
     """Raises a helpful error when a csv does not have the required "url" header."""
     fs.add_real_file('config/config_default.json')

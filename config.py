@@ -13,6 +13,8 @@ from logging import INFO, FileHandler, Formatter, getLogger
 from typing import Any, TypedDict, cast
 from urllib import parse
 
+import idna
+
 logger = getLogger('cwac')
 
 getLogger('usp').parent = logger
@@ -141,6 +143,9 @@ class Config:
   def __normalize_url(self, url: str) -> str:
     """Normalize a URL, making it lowercase and stripping out any extra whitespace.
 
+    Internationalized domain names are converted to their ASCII (punycode) form,
+    to match how browsers represent them in links.
+
     Args:
         url (str): URL to normalize
 
@@ -148,7 +153,11 @@ class Config:
         str: normalize URL
     """
     parsed = parse.urlparse(url)
-    modified = parsed._replace(scheme=parsed.scheme.lower(), netloc=parsed.netloc.lower())
+    netloc = parsed.netloc.lower()
+    if not netloc.isascii():
+      host, sep, port = netloc.partition(':')
+      netloc = idna.encode(host, uts46=True).decode('ascii') + sep + port
+    modified = parsed._replace(scheme=parsed.scheme.lower(), netloc=netloc)
     return parse.urlunparse(modified)
 
   def __import_base_urls_without_head_support(self) -> set[str]:
