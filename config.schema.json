@@ -285,6 +285,21 @@
           "required": ["class_name", "enabled"],
           "additionalProperties": false
         },
+        "rendered_object_audit": {
+          "description": "Detects JavaScript object coercion text in rendered page content",
+          "type": "object",
+          "properties": {
+            "class_name": {
+              "enum": ["RenderedObjectAudit"]
+            },
+            "enabled": {
+              "description": "Whether this plugin is active",
+              "type": "boolean"
+            }
+          },
+          "required": ["class_name", "enabled"],
+          "additionalProperties": false
+        },
         "element_audit": {
           "description": "Audits specific elements on a page matching a CSS selector",
           "type": "object",
