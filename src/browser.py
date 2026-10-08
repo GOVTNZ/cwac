@@ -8,7 +8,7 @@ import os
 import platform
 import time
 import traceback
-from typing import Any, cast
+from typing import Any
 
 import selenium.common.exceptions
 import urllib3
@@ -123,19 +123,6 @@ class Browser:
       logger.error(traceback.format_exc())
       doctype_string = '<!DOCTYPE html>'
     return doctype_string
-
-  def get_base_uri(self) -> str:
-    """Returns document.baseURI of currently loaded page.
-
-    Returns:
-        str: base URI of current page.
-    """
-    try:
-      return cast(str, self.driver.execute_script('return document.baseURI'))
-    except Exception:
-      logger.exception('TimeoutException when getting base URI')
-      self.safe_restart()
-      raise
 
   def get_page_source(self) -> str:
     """Return HTML source of currently loaded page.

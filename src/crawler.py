@@ -7,13 +7,10 @@ import importlib
 import logging
 import random
 import time
-import urllib
-import urllib.parse
 from queue import SimpleQueue
 
 import selenium.common.exceptions
 import urllib3
-from bs4 import BeautifulSoup
 from usp.objects.sitemap import AbstractIndexSitemap
 from usp.tree import sitemap_tree_for_homepage
 
@@ -74,43 +71,6 @@ class Crawler:
       # Restart the browser between each website
       self.browser.safe_restart()
 
-  def handle_base_element(self, url: str) -> str:
-    """Compare given URL and `<base>` URL, returning the most suitable one for resolving relative URLs.
-
-    If a URL from `<base>` is found and it has the same domain and protocol as
-    the `url` provided, return that URL. Otherwise, we conclude that we can't do
-    better than the given `url` so we return it.
-
-    This function depends on browser state!. It does not navigate to the page.
-    It assumes the appropriate page is already loaded in the browser.
-    """
-    base_element = url
-    try:
-      base_element = self.browser.get_base_uri()
-    except Exception:
-      logger.exception('Failed to get <base> element %s', url)
-      return url
-
-    # Check that the base_element has same domain as base_url
-    if not src.filters.url_filter_not_same_domain(base_element, url):
-      logger.info(
-        'Found <base> element %s on page but rejecting it because it has a different domain than: %s',
-        base_element,
-        url,
-      )
-      return url
-
-    # Check that the protocol is equal between base_element and url
-    if not src.filters.url_filter_same_protocol(base_element, url):
-      logger.info(
-        'Found <base> element %s on page but rejecting it because it has a different protocol than: %s',
-        base_element,
-        url,
-      )
-      return url
-
-    return base_element
-
   def get_links(self, base_url: str, url: str) -> list[str]:
     """Generate a list of viable links for crawling from the page currently loaded in the browser.
 
@@ -129,30 +89,17 @@ class Crawler:
           list.
     """
     try:
-      soup = BeautifulSoup(self.browser.driver.page_source, 'lxml')
+      hrefs = self.browser.driver.execute_script('return [...new Set(Array.from(document.links, a => a.href))]')
     except (
       selenium.common.exceptions.WebDriverException,
       urllib3.exceptions.HTTPError,
-    ):
-      logger.exception('Failed to get page source %s', url)
+    ) as e:
+      logger.error('%s when getting links on %s', type(e).__name__, url)
       return []
+
     links = []
 
-    all_a_elements = soup.find_all('a', href=True)
-
-    # Handles if <base> element is manipulating relative URLs
-    # otherwise, it is simply the 'url' value.
-    base_uri = self.handle_base_element(url)
-
-    for new_url in all_a_elements:
-      # Compiles the full URL
-      href = new_url.get('href').strip()
-      try:
-        href = urllib.parse.urljoin(base_uri, href)
-      except ValueError:
-        logger.exception('Failed to join URL %s %s', base_uri, href)
-        continue
-
+    for href in hrefs:
       # Run a range of filters on the URL
       if not self.url_filter.run_url_filters(href):
         continue
