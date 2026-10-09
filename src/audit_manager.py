@@ -288,9 +288,9 @@ class AuditManager:
           self._check_for_closed_details_elements()
 
           audit_result: list[dict[str, Any]] | bool = test_instance.run()
-        except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
+        except Exception:  # pylint: disable=broad-exception-caught
           logger.exception(
-            'Due to WebDriverException, test %s skipped on viewport %s for website %s',
+            'test %s skipped on viewport %s for website %s',
             audit_name,
             viewport,
             audit['kwargs']['url'],
@@ -305,14 +305,6 @@ class AuditManager:
             self.config.viewport_sizes[viewport]['height'],
           )
 
-          continue
-
-        except Exception:  # pylint: disable=broad-exception-caught
-          logger.exception(
-            'Unhandled exception %s %s',
-            audit_name,
-            audit['kwargs']['url'],
-          )
           continue
 
         logger.info('Test finished %s, %s', audit_name, audit['kwargs']['url'])
