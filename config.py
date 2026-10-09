@@ -13,6 +13,8 @@ from logging import INFO, FileHandler, Formatter, getLogger
 from typing import Any, TypedDict, cast
 from urllib import parse
 
+import src.urls
+
 logger = getLogger('cwac')
 
 getLogger('usp').parent = logger
@@ -138,19 +140,6 @@ class Config:
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-  def __normalize_url(self, url: str) -> str:
-    """Normalize a URL, making it lowercase and stripping out any extra whitespace.
-
-    Args:
-        url (str): URL to normalize
-
-    Returns:
-        str: normalize URL
-    """
-    parsed = parse.urlparse(url)
-    modified = parsed._replace(scheme=parsed.scheme.lower(), netloc=parsed.netloc.lower())
-    return parse.urlunparse(modified)
-
   def __import_base_urls_without_head_support(self) -> set[str]:
     """Import base urls that don't support HEAD requests.
 
@@ -175,8 +164,11 @@ class Config:
             # Strip whitespace from URL
             dict_row['url'] = dict_row['url'].strip()
 
-            # Make the URL lowercase
-            dict_row['url'] = self.__normalize_url(dict_row['url'])
+            try:
+              dict_row['url'] = src.urls.normalize_url(dict_row['url'])
+            except ValueError:
+              logger.error('URL is not valid, skipping %s', dict_row['url'])
+              continue
 
             base_urls.add(dict_row['url'])
     return base_urls
@@ -272,7 +264,12 @@ class Config:
             if self.__should_skip_row(subject):
               continue
 
-            subject['url'] = self.__normalize_url(subject['url'])
+            try:
+              subject['url'] = src.urls.normalize_url(subject['url'])
+            except ValueError:
+              logger.error('URL is not valid, skipping %s', subject['url'])
+              continue
+
             subject['columns']['url'] = subject['url']
 
             subject['supports_head'] = subject['url'] not in headless_base_urls
