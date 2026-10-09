@@ -63,15 +63,11 @@ class ScreenshotAudit(DefaultAudit):
     # ) as file:
     #     file.write(source)
 
-    try:
-      cv2.imwrite(
-        screenshot_path,
-        self.screenshot(),
-        [cv2.IMWRITE_PNG_COMPRESSION, 9],
-      )
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Failed to save screenshot')
-      return False
+    cv2.imwrite(
+      screenshot_path,
+      self.screenshot(),
+      [cv2.IMWRITE_PNG_COMPRESSION, 9],
+    )
 
     return [
       {
