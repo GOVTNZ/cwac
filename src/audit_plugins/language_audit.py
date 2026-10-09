@@ -15,7 +15,6 @@ import nltk  # type: ignore
 from bs4 import BeautifulSoup
 from nltk.corpus import cmudict  # type: ignore
 from nltk.sentiment import SentimentIntensityAnalyzer  # type: ignore
-from selenium.common import WebDriverException
 
 from src.audit_plugins.default_audit import DefaultAudit
 
@@ -191,11 +190,7 @@ class LanguageAudit(DefaultAudit):
     self._load_readability()
 
     # Execute JavaScript
-    try:
-      content = self.browser.driver.execute_script(LanguageAudit.readability_js)
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('WebDriver exception for Readability')
-      return ''
+    content = self.browser.driver.execute_script(LanguageAudit.readability_js)
 
     if content is False:
       logger.warning(
@@ -224,11 +219,7 @@ class LanguageAudit(DefaultAudit):
     return str(flat_output)
 
   def __get_document_lang(self) -> str:
-    try:
-      return cast(str, self.browser.driver.execute_script('return document.documentElement.lang')).lower()
-    except WebDriverException:
-      logger.exception('Could not get document element language')
-      return ''
+    return cast(str, self.browser.driver.execute_script('return document.documentElement.lang')).lower()
 
   def count_syllables(self, word: str) -> int:
     """Count num of syllables in a word.

@@ -41,18 +41,10 @@ class ElementAudit(DefaultAudit):
         bool: False if test fails, else a list of results
     """
     # Scrape the page source of the loaded browser
-    try:
-      page_source = self.browser.driver.page_source
-    except Exception as exc:  # noqa: BLE001
-      logger.error('Error getting page source: %s', exc)
-      return False
+    page_source = self.browser.driver.page_source
 
     # Try to parse using BeautifulSoup
-    try:
-      soup = BeautifulSoup(page_source, 'lxml')
-    except Exception as exc:  # noqa: BLE001
-      logger.error('Error parsing page source: %s', exc)
-      return False
+    soup = BeautifulSoup(page_source, 'lxml')
 
     # Find all elements of the target type (css selector)
     elements = soup.select(self.target_element)

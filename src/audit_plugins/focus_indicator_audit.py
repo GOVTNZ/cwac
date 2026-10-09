@@ -45,21 +45,16 @@ class FocusIndicatorAudit(DefaultAudit):
     logger.info('Waiting for page to stop animating...')
     initial_time = time.time()
     for i in range(5):
-      try:
-        # Take a screenshot
-        logger.info('Taking initial screenshot %s #%i', self.url, i)
-        img_a_data = self.screenshot()
+      # Take a screenshot
+      logger.info('Taking initial screenshot %s #%i', self.url, i)
+      img_a_data = self.screenshot()
 
-        # Wait to see if anything animates
-        time.sleep(0.5)
+      # Wait to see if anything animates
+      time.sleep(0.5)
 
-        # Take a second screenshot 0.5s later
-        logger.info('Taking second screenshot %s #%i', self.url, i)
-        img_b_data = self.screenshot()
-
-      except Exception:  # pylint: disable=broad-exception-caught
-        logger.exception('Failed to take screenshot')
-        return False
+      # Take a second screenshot 0.5s later
+      logger.info('Taking second screenshot %s #%i', self.url, i)
+      img_b_data = self.screenshot()
 
       # If the two images are the same, the page is still
       if np.sum(img_a_data != img_b_data) == 0:
@@ -82,17 +77,14 @@ class FocusIndicatorAudit(DefaultAudit):
     This is to prevent the page from scrolling
     when the Tab key is pressed.
     """
-    try:
-      scroll_height = self.browser.driver.execute_script('return document.documentElement.scrollHeight;')
-      # Limit the scroll height to 10000px
-      scroll_height = min(scroll_height, 10000)
-      logger.info('Setting browser height to %i', scroll_height)
-      self.browser.driver.set_window_size(
-        self.browser.driver.get_window_size()['width'],
-        scroll_height,
-      )
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Failed to get scroll height')
+    scroll_height = self.browser.driver.execute_script('return document.documentElement.scrollHeight;')
+    # Limit the scroll height to 10000px
+    scroll_height = min(scroll_height, 10000)
+    logger.info('Setting browser height to %i', scroll_height)
+    self.browser.driver.set_window_size(
+      self.browser.driver.get_window_size()['width'],
+      scroll_height,
+    )
 
   def check_if_page_has_focus(self) -> bool:
     """Check if the page has focus.
@@ -104,11 +96,7 @@ class FocusIndicatorAudit(DefaultAudit):
     Returns:
         bool: if the page has focus
     """
-    try:
-      return bool(self.browser.driver.execute_script('return document.hasFocus()'))
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Failed to check if page has focus')
-      return False
+    return bool(self.browser.driver.execute_script('return document.hasFocus()'))
 
   def screenshot(self) -> Any:
     """Take a screenshot of the page that's loaded in the browser.
@@ -132,11 +120,7 @@ class FocusIndicatorAudit(DefaultAudit):
         self.root_element_css_selector,
       )
 
-    try:
-      return self.browser.driver.find_element(By.TAG_NAME, 'body')
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Failed to find body element')
-      return None
+    return self.browser.driver.find_element(By.TAG_NAME, 'body')
 
   def run(self) -> list[dict[str, Any]] | bool:
     """Run the audit.
@@ -185,11 +169,7 @@ class FocusIndicatorAudit(DefaultAudit):
       ]
 
     # Take an initial page screenshot as the first 'reference' image
-    try:
-      reference_image = self.screenshot()
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Failed to take screenshot')
-      return False
+    reference_image = self.screenshot()
 
     root_element = self.__find_root_content_element()
 
@@ -219,11 +199,7 @@ class FocusIndicatorAudit(DefaultAudit):
         break
 
       # Take a screenshot
-      try:
-        current_image = self.screenshot()
-      except Exception:  # pylint: disable=broad-exception-caught
-        logger.exception('Failed to take screenshot')
-        continue
+      current_image = self.screenshot()
 
       # Get the difference between the reference image and the
       # current image. Measured as # of pixels that differ
@@ -233,11 +209,7 @@ class FocusIndicatorAudit(DefaultAudit):
       if num_different_pixels == 0:
         # No focus indicator was seen
         # Get the html of the element that has focus
-        try:
-          html = self.browser.driver.execute_script('return document.activeElement.outerHTML')
-        except Exception:  # pylint: disable=broad-exception-caught
-          logger.exception('Failed to get html of focused element')
-          continue
+        html = self.browser.driver.execute_script('return document.activeElement.outerHTML')
         result_list.append({'html': html[:100], 'tab_press': i + 1})
 
     # If result_list is empty, return a success result
