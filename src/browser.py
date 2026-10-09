@@ -7,7 +7,6 @@ import logging
 import os
 import platform
 import time
-import traceback
 from typing import Any
 
 import selenium.common.exceptions
@@ -98,47 +97,6 @@ class Browser:
       logger.exception('urllib3 HTTPError, browser probably hung %s', self.last_url_req)
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.last_url_req = ''
-
-  def get_doctype(self) -> str:
-    """Get the doctype of the currently loaded page.
-
-    Returns:
-        str: the doctype of the loaded page
-    """
-    doctype_string = ''
-    doctype_js = """return "<!DOCTYPE " + document.doctype.name \
-            + (document.doctype.publicId ? ' PUBLIC "' \
-            + document.doctype.publicId + '"' : '') \
-            + (!document.doctype.publicId && \
-             document.doctype.systemId ? ' SYSTEM' : '') \
-            + (document.doctype.systemId ? ' "' +\
-            document.doctype.systemId + '"' : '') + '>';"""
-    try:
-      doctype_string = self.driver.execute_script(doctype_js)
-    except Exception:  # noqa: BLE001 # pylint: disable=broad-exception-caught
-      logger.error(
-        ("An error occurred while trying to get this website's doctype. Defaulting to html5 for %s"),
-        self.driver.current_url,
-      )
-      logger.error(traceback.format_exc())
-      doctype_string = '<!DOCTYPE html>'
-    return doctype_string
-
-  def get_page_source(self) -> str:
-    """Return HTML source of currently loaded page.
-
-    This function does not load the page, it assumes that the page is already
-    loaded in the webdriver.
-
-    Returns:
-        str: page source
-    """
-    try:
-      return self.get_doctype() + '\n' + self.driver.page_source
-    except selenium.common.exceptions.TimeoutException:
-      logger.exception('TimeoutException when getting page source')
-      self.safe_restart()
-      raise
 
   def close(self) -> None:
     """Close the browser."""

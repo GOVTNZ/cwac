@@ -42,7 +42,7 @@ class ElementAudit(DefaultAudit):
     """
     # Scrape the page source of the loaded browser
     try:
-      page_source = self.browser.get_page_source()
+      page_source = self.browser.driver.page_source
     except Exception as exc:  # noqa: BLE001
       logger.error('Error getting page source: %s', exc)
       return False
