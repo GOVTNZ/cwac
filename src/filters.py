@@ -146,28 +146,6 @@ def url_filter_filetype(_config: Config, url: urllib.parse.ParseResult) -> bool:
   return not url.path.lower().endswith(DISALLOWED_FILE_TYPES)
 
 
-def url_filter_not_same_domain(url_a: str, url_b: str) -> bool:
-  """Filter out url_a when url_a and url_b have different domains.
-
-  Args:
-      url_a (str): A url to compare with url_b
-      url_b (str): A url to compare with url_a
-
-  Returns:
-      bool: True if url_b is within domain of url_a, else False
-  """
-  # Ensure netloc are lowercase
-  domain_a = urllib.parse.urlparse(url_a).netloc.lower()
-  domain_b = urllib.parse.urlparse(url_b).netloc.lower()
-
-  domain_a = domain_a.removeprefix('www.')
-  domain_b = domain_b.removeprefix('www.')
-
-  if domain_a != domain_b:
-    logger.info('url out due to domain mismatch %s %s', url_a, url_b)
-  return domain_a == domain_b
-
-
 def url_filter_by_header_content_type(url: str, headers: dict[Any, Any]) -> bool:
   """Filter out when invalid Content-Type is set.
 
