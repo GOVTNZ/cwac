@@ -81,9 +81,8 @@ class Crawler:
         url (str): The URL currently loaded in the browser
 
     Returns:
-        list[str]: a list of links on the page which are within the scope of the
-          base_url and pass all filters. If an error occurs, returns an empty
-          list.
+        list[str]: a list of the http(s) links on the page, which are yet to be
+          validated for crawling. If an error occurs, returns an empty list.
     """
     try:
       hrefs = self.browser.driver.execute_script('return [...new Set(Array.from(document.links, a => a.href))]')
@@ -94,7 +93,7 @@ class Crawler:
       logger.error('%s when getting links on %s', type(e).__name__, url)
       return []
 
-    return hrefs
+    return [href for href in hrefs if href.startswith(('https:', 'http:'))]
 
   def register_audit_plugins(
     self,
