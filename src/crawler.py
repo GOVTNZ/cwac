@@ -170,8 +170,8 @@ class Crawler:
     queue = RandomQueue[tuple[str, str]]()
     queue.push((base_url, base_url))
 
-    # track visited urls
-    visited = {base_url}
+    # track seen urls
+    seen = {base_url}
 
     # Filter and sanitise the initial URL
     if not self.url_filter.run_url_filters(base_url):
@@ -232,7 +232,7 @@ class Crawler:
         logger.info('Found %i url%s from sitemaps', len(urls_from_sitemap), '' if len(urls_from_sitemap) == 1 else 's')
 
         for parent_and_url in urls_from_sitemap:
-          visited.add(parent_and_url[1])
+          seen.add(parent_and_url[1])
           queue.push(parent_and_url)
         has_crawled_sitemap = True
 
@@ -240,8 +240,8 @@ class Crawler:
 
       # Add all links to the queue
       for new_link in links:
-        if new_link not in visited:
-          visited.add(new_link)
+        if new_link not in seen:
+          seen.add(new_link)
           queue.push((url, new_link))
       # End of queue processing loop
 
