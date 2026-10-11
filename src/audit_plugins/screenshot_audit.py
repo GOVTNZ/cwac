@@ -63,11 +63,12 @@ class ScreenshotAudit(DefaultAudit):
     # ) as file:
     #     file.write(source)
 
-    cv2.imwrite(
+    if not cv2.imwrite(
       screenshot_path,
       self.screenshot(),
       [cv2.IMWRITE_PNG_COMPRESSION, 9],
-    )
+    ):
+      raise OSError(f'Failed to save screenshot to {screenshot_path}')
 
     return [
       {
