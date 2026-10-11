@@ -72,7 +72,7 @@ class Crawler:
       self.browser.safe_restart()
 
   def get_links(self, url: str) -> list[str]:
-    """Generate a list of viable links for crawling from the page currently loaded in the browser.
+    """Generate a list of the links on the page currently loaded in the browser.
 
     This function depends on browser state! It does not navigate to the page. It
     assumes the page HTML is already loaded in the browser and that the page
@@ -82,19 +82,17 @@ class Crawler:
         url (str): The URL currently loaded in the browser
 
     Returns:
-        list[str]: a list of the http(s) links on the page, which are yet to be
-          validated for crawling. If an error occurs, returns an empty list.
+        list[str]: a list of the links on the page, which are yet to be filtered
+          and validated for crawling. If an error occurs, returns an empty list.
     """
     try:
-      hrefs = self.browser.driver.execute_script('return [...new Set(Array.from(document.links, a => a.href))]')
+      return self.browser.driver.execute_script('return [...new Set(Array.from(document.links, a => a.href))]')
     except (
       selenium.common.exceptions.WebDriverException,
       urllib3.exceptions.HTTPError,
     ) as e:
       logger.error('%s when getting links on %s', type(e).__name__, url)
       return []
-
-    return [href for href in hrefs if href.startswith(('https:', 'http:'))]
 
   def register_audit_plugins(
     self,

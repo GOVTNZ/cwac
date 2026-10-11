@@ -44,6 +44,26 @@ class TestPageQueue:
 
     assert queue.pop() == queued_page('xyz')
 
+  def test_push_skips_non_http_urls(self) -> None:
+    """Pushes items that start with http or https only."""
+    queue = PageQueue()
+
+    urls = [
+      'mailto:bob@invalid',
+      'hTTps://example.com/a',
+      'http://example.net',
+      'HTTP://example.net/abc',
+      'javascript:void(0)',
+      'https://example.net',
+      'https://example.net/abc',
+    ]
+
+    # put some items on the queue
+    for url in urls:
+      queue.push(QueuedPage('https://example.net/', url))
+
+    assert len(queue) == 5
+
   def test_pops_the_randomly_picked_item(
     self,
     monkeypatch: pytest.MonkeyPatch,

@@ -12,7 +12,7 @@ class QueuedPage(typing.NamedTuple):
 
 
 class PageQueue:
-  """A queue of urls that pops in random order, skipping urls it has already seen."""
+  """A queue of urls that pops in random order, skipping urls that have already been seen or are not http(s)."""
 
   def __init__(self) -> None:
     """Initialise the queue."""
@@ -28,12 +28,12 @@ class PageQueue:
     return str(self.items)
 
   def push(self, item: QueuedPage) -> None:
-    """Push an item onto the queue, if its url has not been pushed before.
+    """Push an item onto the queue, unless its url has been pushed before or does not use the http(s) scheme.
 
     Args:
         item (QueuedPage): item to push onto the queue
     """
-    if item.url in self.seen:
+    if item.url in self.seen or not item.url.lower().startswith(('https:', 'http:')):
       return
 
     self.items.append(item)
