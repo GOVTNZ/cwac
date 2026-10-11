@@ -228,8 +228,8 @@ class Crawler:
 
         logger.info('Found %i url%s from sitemaps', len(urls_from_sitemap), '' if len(urls_from_sitemap) == 1 else 's')
 
-        for queued_url in urls_from_sitemap:
-          queue.push(queued_url)
+        for queued_page in urls_from_sitemap:
+          queue.push(queued_page)
         has_crawled_sitemap = True
 
       links = self.get_links(url)
@@ -262,7 +262,7 @@ class Crawler:
     # them, which makes the crawl queue very slow and memory hungry
     limit = self.config.max_links_per_domain * SITEMAP_URLS_PER_MAX_LINK
 
-    parents_and_urls: list[QueuedPage] = []
+    queued_pages: list[QueuedPage] = []
     num_found = 0
 
     # use reservoir sampling so that if there are more urls than the limit, we
@@ -275,19 +275,19 @@ class Crawler:
 
       for page in sitemap.all_pages():
         num_found += 1
-        if len(parents_and_urls) < limit:
-          parents_and_urls.append(QueuedPage(sitemap.url, page.url))
+        if len(queued_pages) < limit:
+          queued_pages.append(QueuedPage(sitemap.url, page.url))
         else:
           # these random numbers are not used for security or cryptographic
           # purposes so it is safe to use and 'nosec' suppresses bandit
           index = random.randrange(num_found)  # nosec # noqa: S311
           if index < limit:
-            parents_and_urls[index] = QueuedPage(sitemap.url, page.url)
+            queued_pages[index] = QueuedPage(sitemap.url, page.url)
 
     if num_found > limit:
       logger.info('Found %i urls from sitemaps for %s, randomly selected %i of them', num_found, url, limit)
 
-    return parents_and_urls
+    return queued_pages
 
   def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
     """Record the number of pages that were scanned for the site."""
