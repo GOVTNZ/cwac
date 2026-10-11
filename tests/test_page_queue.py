@@ -4,7 +4,12 @@ import random
 
 import pytest
 
-from src.page_queue import PageQueue
+from src.page_queue import PageQueue, QueuedPage
+
+
+def queued_page(path: str) -> QueuedPage:
+  """Build a QueuedPage for the given path on a test site."""
+  return QueuedPage(parent_url='https://example.com/', url=f'https://example.com/{path}')
 
 
 class TestPageQueue:
@@ -15,20 +20,20 @@ class TestPageQueue:
     monkeypatch: pytest.MonkeyPatch,
   ) -> None:
     """Pops the item at the index returned by the random number generator."""
-    queue = PageQueue[str]()
+    queue = PageQueue()
 
-    for item in ['a', 'b', 'c', 'd', 'e']:
-      queue.push(item)
+    for path in ['a', 'b', 'c', 'd', 'e']:
+      queue.push(queued_page(path))
 
     picks = iter([1, 0, 2, 1, 0])
     monkeypatch.setattr(random, 'randrange', lambda _: next(picks))
 
     # each pick moves the last item into the picked item's slot
-    assert queue.pop() == 'b'  # [a, e, c, d]
-    assert queue.pop() == 'a'  # [d, e, c]
-    assert queue.pop() == 'c'  # [d, e]
-    assert queue.pop() == 'e'  # [d]
-    assert queue.pop() == 'd'  # []
+    assert queue.pop() == queued_page('b')  # [a, e, c, d]
+    assert queue.pop() == queued_page('a')  # [d, e, c]
+    assert queue.pop() == queued_page('c')  # [d, e]
+    assert queue.pop() == queued_page('e')  # [d]
+    assert queue.pop() == queued_page('d')  # []
 
     assert len(queue) == 0
 
@@ -37,10 +42,10 @@ class TestPageQueue:
     monkeypatch: pytest.MonkeyPatch,
   ) -> None:
     """Asks for a random index within the current length of the queue."""
-    queue = PageQueue[int]()
+    queue = PageQueue()
 
-    for item in range(5):
-      queue.push(item)
+    for i in range(5):
+      queue.push(queued_page(str(i)))
 
     calls: list[int] = []
 
@@ -57,19 +62,20 @@ class TestPageQueue:
 
   def test_pops_every_item_exactly_once(self) -> None:
     """Pops every pushed item exactly once."""
-    queue = PageQueue[int]()
+    queue = PageQueue()
 
-    for item in range(100):
+    items = [queued_page(str(i)) for i in range(100)]
+    for item in items:
       queue.push(item)
 
     popped = [queue.pop() for _ in range(100)]
 
-    assert sorted(popped) == list(range(100))
+    assert sorted(popped) == sorted(items)
     assert len(queue) == 0
 
   def test_pop_from_empty_queue_raises(self) -> None:
     """Raises when popping from an empty queue."""
-    queue = PageQueue[int]()
+    queue = PageQueue()
 
     with pytest.raises(ValueError, match='empty range'):
       queue.pop()

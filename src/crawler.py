@@ -22,7 +22,7 @@ from src.audit_manager import AuditManager
 from src.browser import Browser
 from src.crawlable_page_validator import CrawlablePageValidator
 from src.output import CSVWriter
-from src.page_queue import PageQueue
+from src.page_queue import PageQueue, QueuedPage
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-locals
 
@@ -167,9 +167,8 @@ class Crawler:
     # Counts number of pages scanned
     pages_scanned = 0
 
-    # queue element: (parent_url, url)
-    queue = PageQueue[tuple[str, str]]()
-    queue.push((base_url, base_url))
+    queue = PageQueue()
+    queue.push(QueuedPage(base_url, base_url))
 
     # track seen urls
     seen = {base_url}
@@ -243,7 +242,7 @@ class Crawler:
       for new_link in links:
         if new_link not in seen:
           seen.add(new_link)
-          queue.push((url, new_link))
+          queue.push(QueuedPage(url, new_link))
       # End of queue processing loop
 
     self.analytics.record_test_failure(base_url)
@@ -251,7 +250,7 @@ class Crawler:
     if self.config.max_links_per_domain != 1:
       logger.info('Crawl exhausted all links %s', base_url)
 
-  def __crawl_sitemap(self, url: str) -> list[tuple[str, str]]:
+  def __crawl_sitemap(self, url: str) -> list[QueuedPage]:
     """Crawls the urls sitemap, if there is one.
 
     Performance:
@@ -269,7 +268,7 @@ class Crawler:
     # them, which makes the crawl queue very slow and memory hungry
     limit = self.config.max_links_per_domain * SITEMAP_URLS_PER_MAX_LINK
 
-    parents_and_urls: list[tuple[str, str]] = []
+    parents_and_urls: list[QueuedPage] = []
     num_found = 0
 
     # use reservoir sampling so that if there are more urls than the limit, we
@@ -283,13 +282,13 @@ class Crawler:
       for page in sitemap.all_pages():
         num_found += 1
         if len(parents_and_urls) < limit:
-          parents_and_urls.append((sitemap.url, page.url))
+          parents_and_urls.append(QueuedPage(sitemap.url, page.url))
         else:
           # these random numbers are not used for security or cryptographic
           # purposes so it is safe to use and 'nosec' suppresses bandit
           index = random.randrange(num_found)  # nosec # noqa: S311
           if index < limit:
-            parents_and_urls[index] = (sitemap.url, page.url)
+            parents_and_urls[index] = QueuedPage(sitemap.url, page.url)
 
     if num_found > limit:
       logger.info('Found %i urls from sitemaps for %s, randomly selected %i of them', num_found, url, limit)
