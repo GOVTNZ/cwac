@@ -70,7 +70,7 @@ class Crawler:
       # Restart the browser between each website
       self.browser.safe_restart()
 
-  def get_links(self, base_url: str, url: str) -> list[str]:
+  def get_links(self, url: str) -> list[str]:
     """Generate a list of viable links for crawling from the page currently loaded in the browser.
 
     This function depends on browser state! It does not navigate to the page. It
@@ -78,8 +78,6 @@ class Crawler:
     loaded in the browser is the same page as the one at `url`.
 
     Args:
-        base_url (str): The base URL from the input CSV used for this crawl. Any
-          URLs found outside the scope of this URL are rejected.
         url (str): The URL currently loaded in the browser
 
     Returns:
@@ -96,31 +94,7 @@ class Crawler:
       logger.error('%s when getting links on %s', type(e).__name__, url)
       return []
 
-    links = []
-
-    for href in hrefs:
-      # Run a range of filters on the URL
-      if not self.url_filter.run_url_filters(href):
-        continue
-
-      # If URL is not on the same domain, skip it
-      if not src.filters.url_filter_not_same_domain(href, base_url):
-        continue
-
-      # If URL has been scanned previously, skip it
-      # if self.analytics.is_url_in_pages_scanned(href):
-      #    continue
-
-      if len(href) > 2 and base_url == href[:-1]:
-        logger.info(
-          'get_links skipped due to equality of: %s %s',
-          base_url,
-          href,
-        )
-        continue
-      links.append(href)
-
-    return links
+    return hrefs
 
   def register_audit_plugins(
     self,
@@ -262,7 +236,7 @@ class Crawler:
           queue.push(parent_and_url)
         has_crawled_sitemap = True
 
-      links = self.get_links(base_url, url)
+      links = self.get_links(url)
 
       # Add all links to the queue
       for new_link in links:
