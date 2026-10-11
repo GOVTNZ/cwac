@@ -1,21 +1,21 @@
-"""Tests the behaviour of the crawler classes and functions."""
+"""Tests the behaviour of the PageQueue class."""
 
 import random
 
 import pytest
 
-from src.crawler import RandomQueue
+from src.page_queue import PageQueue
 
 
-class TestRandomQueue:
-  """Tests the RandomQueue class."""
+class TestPageQueue:
+  """Tests the PageQueue class."""
 
   def test_pops_the_randomly_picked_item(
     self,
     monkeypatch: pytest.MonkeyPatch,
   ) -> None:
     """Pops the item at the index returned by the random number generator."""
-    queue = RandomQueue[str]()
+    queue = PageQueue[str]()
 
     for item in ['a', 'b', 'c', 'd', 'e']:
       queue.push(item)
@@ -37,7 +37,7 @@ class TestRandomQueue:
     monkeypatch: pytest.MonkeyPatch,
   ) -> None:
     """Asks for a random index within the current length of the queue."""
-    queue = RandomQueue[int]()
+    queue = PageQueue[int]()
 
     for item in range(5):
       queue.push(item)
@@ -57,7 +57,7 @@ class TestRandomQueue:
 
   def test_pops_every_item_exactly_once(self) -> None:
     """Pops every pushed item exactly once."""
-    queue = RandomQueue[int]()
+    queue = PageQueue[int]()
 
     for item in range(100):
       queue.push(item)
@@ -69,7 +69,7 @@ class TestRandomQueue:
 
   def test_pop_from_empty_queue_raises(self) -> None:
     """Raises when popping from an empty queue."""
-    queue = RandomQueue[int]()
+    queue = PageQueue[int]()
 
     with pytest.raises(ValueError, match='empty range'):
       queue.pop()
