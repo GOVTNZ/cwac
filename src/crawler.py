@@ -232,6 +232,7 @@ class Crawler:
         logger.info('Found %i url%s from sitemaps', len(urls_from_sitemap), '' if len(urls_from_sitemap) == 1 else 's')
 
         for parent_and_url in urls_from_sitemap:
+          visited.add(parent_and_url[1])
           queue.push(parent_and_url)
         has_crawled_sitemap = True
 
