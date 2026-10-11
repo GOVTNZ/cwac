@@ -170,9 +170,6 @@ class Crawler:
     queue = PageQueue()
     queue.push(QueuedPage(base_url, base_url))
 
-    # track seen urls
-    seen = {base_url}
-
     # Filter and sanitise the initial URL
     if not self.url_filter.run_url_filters(base_url):
       self.record_pages_scanned(site_data, pages_scanned)
@@ -231,18 +228,15 @@ class Crawler:
 
         logger.info('Found %i url%s from sitemaps', len(urls_from_sitemap), '' if len(urls_from_sitemap) == 1 else 's')
 
-        for parent_and_url in urls_from_sitemap:
-          seen.add(parent_and_url[1])
-          queue.push(parent_and_url)
+        for queued_url in urls_from_sitemap:
+          queue.push(queued_url)
         has_crawled_sitemap = True
 
       links = self.get_links(url)
 
       # Add all links to the queue
       for new_link in links:
-        if new_link not in seen:
-          seen.add(new_link)
-          queue.push(QueuedPage(url, new_link))
+        queue.push(QueuedPage(url, new_link))
       # End of queue processing loop
 
     self.analytics.record_test_failure(base_url)

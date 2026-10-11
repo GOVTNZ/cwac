@@ -15,6 +15,35 @@ def queued_page(path: str) -> QueuedPage:
 class TestPageQueue:
   """Tests the PageQueue class."""
 
+  def test_push_skips_previously_seen_urls(self) -> None:
+    """Pushes items that have not already been seen based on url only."""
+    queue = PageQueue()
+
+    paths = ['a', 'b', 'b', 'abc', 'a', 'a/b', 'a']
+
+    # put some items on the queue
+    for path in paths:
+      queue.push(queued_page(path))
+    queue.push(QueuedPage('https://example.net/', 'https://example.com/a'))
+
+    # we should only have four items
+    assert len(queue) == 4
+
+    # pop everything off the queue
+    while len(queue) != 0:
+      queue.pop()
+
+    # attempt to put the items back on the queue, + a new one
+    for path in paths:
+      queue.push(queued_page(path))
+    queue.push(queued_page('xyz'))
+    queue.push(QueuedPage('https://example.net/', 'https://example.com/a'))
+
+    # we should only have the item that had not been previously seen
+    assert len(queue) == 1
+
+    assert queue.pop() == queued_page('xyz')
+
   def test_pops_the_randomly_picked_item(
     self,
     monkeypatch: pytest.MonkeyPatch,

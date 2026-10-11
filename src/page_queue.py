@@ -12,11 +12,12 @@ class QueuedPage(typing.NamedTuple):
 
 
 class PageQueue:
-  """A queue that pops in random order."""
+  """A queue of urls that pops in random order, skipping urls it has already seen."""
 
   def __init__(self) -> None:
     """Initialise the queue."""
     self.items: list[QueuedPage] = []
+    self.seen = set[str]()
 
   def __len__(self) -> int:
     """Return the number of items in the queue."""
@@ -27,12 +28,16 @@ class PageQueue:
     return str(self.items)
 
   def push(self, item: QueuedPage) -> None:
-    """Push an item onto the queue.
+    """Push an item onto the queue, if its url has not been pushed before.
 
     Args:
         item (QueuedPage): item to push onto the queue
     """
+    if item.url in self.seen:
+      return
+
     self.items.append(item)
+    self.seen.add(item.url)
 
   def pop(self) -> QueuedPage:
     """Pop a randomly picked item off the queue.
