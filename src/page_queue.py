@@ -54,7 +54,3 @@ class PageQueue:
     self.items[index], self.items[-1] = self.items[-1], self.items[index]
 
     return self.items.pop()
-
-  def clear(self) -> None:
-    """Clear the queue."""
-    self.items = []
