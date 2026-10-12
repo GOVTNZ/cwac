@@ -140,6 +140,165 @@ def test_validate_rejects_url_outside_base_url(
   assert len(mocked_responses.calls) == 0
 
 
+@pytest.mark.parametrize(
+  ('base_url', 'url'),
+  [
+    ('https://example.com/', 'https://example.com/'),
+    ('https://example.com/', 'https://example.com/a'),
+    ('https://example.com/', 'https://example.com/a/b/'),
+    ('https://example.com/news', 'https://example.com/news'),
+    ('https://example.com/news', 'https://example.com/news/'),
+    ('https://example.com/news', 'https://example.com/news/a'),
+    ('https://example.com/news/', 'https://example.com/news'),
+    ('https://example.com/news/', 'https://example.com/news/a'),
+    # query strings and fragments are not part of the path
+    ('https://example.com/?page=1', 'https://example.com/a'),
+    ('https://example.com/news?page=1', 'https://example.com/news'),
+    ('https://example.com/news?page=1', 'https://example.com/news/a'),
+    ('https://example.com/news?page=1', 'https://example.com/news?page=2'),
+    ('https://example.com/news', 'https://example.com/news?page=1'),
+    ('https://example.com/news', 'https://example.com/news/a?page=1'),
+    ('https://example.com/news', 'https://example.com/news/?q=/other'),
+    ('https://example.com/news#top', 'https://example.com/news'),
+    ('https://example.com/news#top', 'https://example.com/news/a'),
+    ('https://example.com/news?page=1#top', 'https://example.com/news/a?page=2'),
+    # semicolons are part of the path segment they are in
+    ('https://example.com/news', 'https://example.com/news/a;b=1'),
+    ('https://example.com/news;a=1', 'https://example.com/news;a=1'),
+    ('https://example.com/news;a=1', 'https://example.com/news;a=1/b'),
+    ('https://example.com/a;b=1/c', 'https://example.com/a;b=1/c/d'),
+    # base urls that point at a file are treated as being for its directory
+    ('https://example.com/index.html', 'https://example.com/a'),
+    ('https://example.com/a/Default.aspx', 'https://example.com/a/Default.aspx'),
+    ('https://example.com/a/Default.aspx', 'https://example.com/a/b'),
+    ('https://example.com/a/index.html?id=1', 'https://example.com/a/b'),
+    ('https://example.com/a.b/', 'https://example.com/a.b/c'),
+    ('https://example.com/v1.2/docs', 'https://example.com/v1.2/docs/a'),
+  ],
+)
+def test_validate_accepts_url_within_base_url(validator: CrawlablePageValidator, base_url: str, url: str) -> None:
+  """Accepts URLs on the same origin whose path segments start with those of the base URL."""
+  assert validator.validate(SITE_DATA, base_url, PARENT_URL, url) == url
+
+
+@pytest.mark.parametrize(
+  ('base_url', 'url'),
+  [
+    ('https://example.com/news', 'https://example.com/newsletter'),
+    ('https://example.com/news/', 'https://example.com/newsletter'),
+    ('https://example.com/news', 'https://example.com/'),
+    ('https://example.com/a/b', 'https://example.com/a'),
+    ('https://example.com/a/b', 'https://example.com/a/bc/d'),
+    # paths are case-sensitive
+    ('https://example.com/news', 'https://example.com/News/a'),
+    # an encoded slash does not separate path segments
+    ('https://example.com/news', 'https://example.com/news%2Fa'),
+    # query strings and fragments are not part of the path
+    ('https://example.com/news', 'https://example.com/?q=/news/a'),
+    ('https://example.com/news', 'https://example.com/newsletter?q=/news/a'),
+    ('https://example.com/news?q=/a', 'https://example.com/a'),
+    ('https://example.com/news#/a', 'https://example.com/a'),
+    ('https://example.com/news', 'https://example.com/newsletter#/news/a'),
+    # semicolons are part of the path segment they are in
+    ('https://example.com/news', 'https://example.com/news;a=1'),
+    ('https://example.com/news;a=1', 'https://example.com/news'),
+    ('https://example.com/news;a=1', 'https://example.com/news/b'),
+    ('https://example.com/news;a=1', 'https://example.com/news;a=2/b'),
+    # base urls that point at a file are treated as being for its directory
+    ('https://example.com/a/index.html', 'https://example.com/b'),
+    ('https://example.com/a.b/', 'https://example.com/a.c'),
+    ('https://example.com/v1.2/docs', 'https://example.com/v1.2/other'),
+  ],
+)
+def test_validate_rejects_url_outside_base_url_path(
+  validator: CrawlablePageValidator,
+  base_url: str,
+  url: str,
+) -> None:
+  """Rejects URLs whose path segments do not start with those of the base URL."""
+  assert validator.validate(SITE_DATA, base_url, PARENT_URL, url) is None
+
+
+@pytest.mark.parametrize(
+  'url',
+  [
+    'http://example.com/a',
+    'https://example.com.evil.org/a',
+    'https://example.com:8443/a',
+    'https://www.example.com/a',
+  ],
+)
+def test_validate_rejects_url_on_different_origin(
+  validator: CrawlablePageValidator,
+  config: SimpleNamespace,
+  url: str,
+) -> None:
+  """Rejects URLs whose scheme, host, or port differ from those of the base URL."""
+  # ensure the url is only rejected by the scope check
+  config.only_allow_https = False
+  config.url_lookup = {'example.com', 'example.com.evil.org', 'example.com:8443'}
+
+  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, url) is None
+
+
+@pytest.mark.parametrize(
+  ('base_url', 'other_base_url', 'url'),
+  [
+    ('https://example.com/', 'https://example.com/news', 'https://example.com/news'),
+    ('https://example.com/', 'https://example.com/news', 'https://example.com/news/'),
+    ('https://example.com/', 'https://example.com/news', 'https://example.com/news/a'),
+    ('https://example.com/', 'https://example.com/news/', 'https://example.com/news/a'),
+    ('https://example.com/', 'https://example.com/news/a', 'https://example.com/news/a/b'),
+    ('https://example.com/a', 'https://example.com/a/b', 'https://example.com/a/b/c'),
+    ('https://example.com/', 'https://example.com/a/index.html', 'https://example.com/a/b'),
+    ('https://example.com/', 'https://example.com/news?page=1', 'https://example.com/news/a'),
+  ],
+)
+def test_validate_rejects_url_within_more_specific_base_url(
+  validator: CrawlablePageValidator,
+  analytics: SimpleNamespace,
+  base_url: str,
+  other_base_url: str,
+  url: str,
+) -> None:
+  """Rejects URLs that are within another base URL which is more specific than the current one."""
+  analytics.base_urls = {base_url, other_base_url}
+
+  assert validator.validate(SITE_DATA, base_url, PARENT_URL, url) is None
+
+
+@pytest.mark.parametrize(
+  ('base_url', 'other_base_url', 'url'),
+  [
+    # the url is not within the other base url
+    ('https://example.com/', 'https://example.com/news', 'https://example.com/'),
+    ('https://example.com/', 'https://example.com/news', 'https://example.com/a'),
+    ('https://example.com/', 'https://example.com/news', 'https://example.com/newsletter'),
+    ('https://example.com/', 'https://example.com/news', 'https://example.com/News/a'),
+    ('https://example.com/', 'https://example.com/news;a=1', 'https://example.com/news/a'),
+    ('https://example.com/', 'https://other.example/news', 'https://example.com/news/a'),
+    ('https://example.com/a', 'https://example.com/a/b', 'https://example.com/a/bc'),
+    # the other base url is not more specific than the current one
+    ('https://example.com/news', 'https://example.com/', 'https://example.com/news/a'),
+    ('https://example.com/news', 'https://example.com/news/', 'https://example.com/news/a'),
+    ('https://example.com/news/', 'https://example.com/news', 'https://example.com/news/a'),
+    ('https://example.com/news', 'https://example.com/news?page=1', 'https://example.com/news/a'),
+    ('https://example.com/a', 'https://example.com/a/index.html', 'https://example.com/a/b'),
+  ],
+)
+def test_validate_accepts_url_not_within_more_specific_base_url(
+  validator: CrawlablePageValidator,
+  analytics: SimpleNamespace,
+  base_url: str,
+  other_base_url: str,
+  url: str,
+) -> None:
+  """Accepts URLs that are not within another base URL which is more specific than the current one."""
+  analytics.base_urls = {base_url, other_base_url}
+
+  assert validator.validate(SITE_DATA, base_url, PARENT_URL, url) == url
+
+
 @pytest.mark.parametrize('perform_header_check', [False, True])
 def test_validate_rejects_previously_scanned_url(
   validator: CrawlablePageValidator,
@@ -154,6 +313,7 @@ def test_validate_rejects_previously_scanned_url(
 
   assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') is None
   assert len(mocked_responses.calls) == 0
+  analytics.is_url_in_pages_scanned.assert_called_once_with(BASE_URL, 'https://example.com/page')
 
 
 def test_validate_skips_header_processing_when_disabled(
