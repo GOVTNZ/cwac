@@ -33,8 +33,6 @@ class SuccessfulAudit:
 
 def make_audit_manager(mocker: MockerFixture) -> AuditManager:
   """Create an AuditManager with mocked dependencies for unit tests."""
-  mocker.patch('src.audit_manager.src.filters.URLFilter')
-
   config = MagicMock()
   config.viewport_sizes = {'small': {'width': 320, 'height': 640}}
   config.audit_plugins = {'first': {}, 'second': {}}
@@ -45,7 +43,7 @@ def make_audit_manager(mocker: MockerFixture) -> AuditManager:
   browser.get.return_value = True
   browser.driver = MagicMock()
 
-  manager = AuditManager(config, browser, MagicMock())
+  manager = AuditManager(config, browser)
   mocker.patch.object(manager, '_check_for_closed_details_elements')
   mocker.patch('src.audit_manager.CSVWriter')
 
