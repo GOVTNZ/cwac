@@ -3,6 +3,8 @@
 import random
 import typing
 
+import src.urls
+
 
 class QueuedPage(typing.NamedTuple):
   """A url to be crawled, along with the url of the page it was found on."""
@@ -28,16 +30,24 @@ class PageQueue:
     return str(self.items)
 
   def push(self, item: QueuedPage) -> None:
-    """Push an item onto the queue, unless its url has been pushed before or does not use the http(s) scheme.
+    """Push an item onto the queue with its url normalized.
+
+    The item is skipped if its url is invalid, does not use the http(s) scheme,
+    or has been pushed before.
 
     Args:
         item (QueuedPage): item to push onto the queue
     """
-    if item.url in self.seen or not item.url.lower().startswith(('https:', 'http:')):
+    try:
+      url = src.urls.normalize_url(item.url)
+    except ValueError:
       return
 
-    self.items.append(item)
-    self.seen.add(item.url)
+    if url in self.seen or not url.startswith(('https:', 'http:')):
+      return
+
+    self.items.append(item._replace(url=url))
+    self.seen.add(url)
 
   def pop(self) -> QueuedPage:
     """Pop a randomly picked item off the queue.

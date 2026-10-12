@@ -64,6 +64,48 @@ class TestPageQueue:
 
     assert len(queue) == 5
 
+  def test_push_normalizes_urls(self) -> None:
+    """Pushes items with their url normalized, leaving the parent url as is."""
+    queue = PageQueue()
+
+    queue.push(QueuedPage('HTTPS://Example.COM/', 'HTTPS://Example.COM:443/b/../a'))
+
+    assert queue.pop() == QueuedPage('HTTPS://Example.COM/', 'https://example.com/a')
+
+  def test_push_skips_urls_that_normalize_to_previously_seen_urls(self) -> None:
+    """Pushes items that have not already been seen based on their normalized url."""
+    queue = PageQueue()
+
+    urls = [
+      'https://example.com/a',
+      'HTTPS://EXAMPLE.COM/a',
+      'https://example.com:443/a',
+      'https://example.com/b/../a',
+      'https://example.com',
+      'https://example.com/',
+    ]
+
+    for url in urls:
+      queue.push(QueuedPage('https://example.com/', url))
+
+    assert len(queue) == 2
+
+  def test_push_skips_invalid_urls(self) -> None:
+    """Pushes items whose url is valid only."""
+    queue = PageQueue()
+
+    urls = [
+      '',
+      '/a',
+      'https://exa mple.com/',
+      'https://[example.com]/',
+    ]
+
+    for url in urls:
+      queue.push(QueuedPage('https://example.com/', url))
+
+    assert len(queue) == 0
+
   def test_pops_the_randomly_picked_item(
     self,
     monkeypatch: pytest.MonkeyPatch,
