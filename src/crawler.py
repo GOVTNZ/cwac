@@ -232,10 +232,8 @@ class Crawler:
 
       links = self.get_links(url)
 
-      # Add all links to the queue
       for new_link in links:
         queue.push(QueuedPage(url, new_link))
-      # End of queue processing loop
 
     self.analytics.record_test_failure(base_url)
     self.record_pages_scanned(site_data, pages_scanned)
