@@ -7,6 +7,7 @@ import importlib
 import logging
 import random
 from queue import SimpleQueue
+from typing import cast
 
 import selenium.common.exceptions
 import urllib3
@@ -86,7 +87,10 @@ class Crawler:
           and validated for crawling. If an error occurs, returns an empty list.
     """
     try:
-      return self.browser.driver.execute_script('return [...new Set(Array.from(document.links, a => a.href))]')
+      return cast(
+        list[str],
+        self.browser.driver.execute_script('return [...new Set(Array.from(document.links, a => a.href))]'),
+      )
     except (
       selenium.common.exceptions.WebDriverException,
       urllib3.exceptions.HTTPError,
