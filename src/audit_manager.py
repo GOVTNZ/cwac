@@ -193,18 +193,16 @@ class AuditManager:
 
     1. The browser window is resized to the specified dimensions.
     2. For each audit configured to run at the current viewport size:
-      1. The page is loaded
+      1. The page is (re)loaded.
       2. The antibot check is run. If the page is blocked, the audit is skipped.
       3. if force_open_details_elements is True, any closed <details> elements on the page are opened.
       4. The audit is run and the results are written to a CSV file.
-    3. The browser is refreshed. If the refresh fails, the browser is restarted.
 
     If an exception is raised during the execution of an audit, then the browser
     state is reset for the next audit:
 
     1. The browser is restarted.
     2. the viewport size is set again.
-    3. The page is loaded again via `self.browser.get()`.
 
     Returns:
         bool: True if at least one audit successfully produced results, else False
