@@ -14,7 +14,7 @@ class QueuedPage(typing.NamedTuple):
 
 
 class PageQueue:
-  """A queue of urls that pops in random order, skipping urls that have already been seen or are not http(s)."""
+  """A queue of urls that pops in random order, skipping urls that are invalid, not http(s), or already seen."""
 
   def __init__(self) -> None:
     """Initialise the queue."""
