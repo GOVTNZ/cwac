@@ -120,19 +120,6 @@ def url_filter_fragment(_config: Config, url: urllib.parse.ParseResult) -> bool:
   return url.fragment == ''
 
 
-def url_filter_http(_config: Config, url: urllib.parse.ParseResult) -> bool:
-  """Filter out non-http/https URLs.
-
-  Args:
-      _config (Config): The configuration to use
-      url (urllib.parse.ParseResult): A URL to filter
-
-  Returns:
-      bool: True of URL is valid, else False
-  """
-  return url.scheme in ('http', 'https')
-
-
 def url_filter_filetype(_config: Config, url: urllib.parse.ParseResult) -> bool:
   """Filter out common file extensions in URLs.
 
@@ -254,7 +241,6 @@ class URLFilter:
     # Register URL filtration functions defined at the top of this file
     self.register_url_filter('Non-empty fragment', url_filter_fragment)
     self.register_url_filter('HTTPS only', url_filter_https_only)
-    self.register_url_filter('Non-http/s path', url_filter_http)
     self.register_url_filter('Non-allowed file extension', url_filter_filetype)
     self.register_url_filter('Whitelist', url_filter_whitelist)
 
