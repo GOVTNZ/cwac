@@ -93,10 +93,7 @@ class CrawlablePageValidator:
     if not self.url_filter.run_url_filters(clean_url):
       return None
 
-    # Confines to URLs that are within the scope of the base_url
-    # and prevents URLs that intersect with another base_url
-    # (useful for multiple websites on the same domain)
-    if not self._url_filter_prevent_intersections(base_url, clean_url):
+    if not self._owns_url(base_url, clean_url):
       return None
 
     # Check if URL has been scanned before
@@ -238,87 +235,77 @@ class CrawlablePageValidator:
 
     return result
 
-  def _url_filter_prevent_intersections(self, current_base_url: str, current_url: str) -> bool:
-    """Filter out when a URL intersects with another base_url.
+  def _split_scope(self, url: str) -> tuple[tuple[str, str], list[str]]:
+    """Split a normalized url into its origin and its path segments, ignoring leading and trailing slashes."""
+    parts = urllib.parse.urlsplit(url)
 
-    Prevents, for instance, https://example.com/ from being scanned
-    when https://example.com/abc/ is being scanned and
-    prevents https://example.com/abc/ from being scanned when
-    https://example.com/ is being scanned
+    path = parts.path.removeprefix('/').removesuffix('/')
+
+    return (parts.scheme, parts.netloc), path.split('/') if path else []
+
+  def _split_base_url_scope(self, base_url: str) -> tuple[tuple[str, str], list[str]]:
+    """Split a normalized base url into its origin and its path segments, treating a url for a file as its directory."""
+    origin, segments = self._split_scope(base_url)
+
+    # base urls that point at a file (e.g. https://example.com/a/index.html) are
+    # treated as being for the directory containing that file
+    if segments and '.' in segments[-1] and not urllib.parse.urlsplit(base_url).path.endswith('/'):
+      segments = segments[:-1]
+
+    return origin, segments
+
+  def _is_url_within_base_url(self, base_url: str, url: str) -> bool:
+    """Return True if the url has the same origin as the base url, and its path starts with the base url's path.
+
+    Paths are compared by segment, and both urls are expected to have already been normalized.
+    """
+    base_origin, base_segments = self._split_base_url_scope(base_url)
+    url_origin, url_segments = self._split_scope(url)
+
+    return base_origin == url_origin and url_segments[: len(base_segments)] == base_segments
+
+  def _owns_url(self, current_base_url: str, current_url: str) -> bool:
+    """Check if the base url is the most appropriate owner of the current url.
+
+    A url is owned by a base url if it is within that base url and not also within
+    another base url with more path segments, e.g. if both https://example.com/ and
+    https://example.com/abc are base urls, then https://example.com/abc/def is owned
+    by https://example.com/abc rather than https://example.com/
 
     Args:
-        url (str): A URL to filter
+        current_base_url (str): The base url currently being crawled
+        current_url (str): The url to check
 
     Returns:
-        bool: True if URL is valid, else False
+        bool: True if the current base url owns the url, else False
     """
-    # Prepares the base_url and url for the matching algorithm
-    current_base_url = self._normalize_url(current_base_url)
-    current_url = self._normalize_url(current_url)
-
-    # If the current_url does not start with the current_base_url,
-    # then the url should not be scanned as it is not within the
-    # scope of the current_base_url
-    if not current_url.startswith(current_base_url):
+    if not self._is_url_within_base_url(current_base_url, current_url):
       logger.info(
-        'URL filtered out due to not starting with base_url %s %s',
+        'URL filtered out due to not being within base_url %s %s',
         current_base_url,
         current_url,
       )
       return False
 
-    # Iterate through all (other) base_urls and check if the current_url
-    # starts with any of them. If it does, then the current_url
-    # should not be scanned as it is within the scope of another
-    # base_url
+    _, current_base_segments = self._split_base_url_scope(current_base_url)
 
+    # iterate through all (other) base_urls to see if there's a deeper
+    # base_url that owns this url
     for base_url in self.analytics.base_urls:
-      base_url = self._normalize_url(base_url)  # noqa: PLW2901
-      if current_url.startswith(base_url) and len(base_url) > len(current_base_url):
-        # If the current_url starts with a base_url that is longer
-        # this means that the current_url is within the scope of
-        # another base_url that is more specific than current_base_url
+      if not self._is_url_within_base_url(base_url, current_url):
+        continue
+
+      _, base_url_segments = self._split_base_url_scope(base_url)
+
+      # at this point the base url with the most path segments wins
+      if len(base_url_segments) > len(current_base_segments):
         logger.info(
-          'URL filtered out due to being within \
-                            the scope of another base_url %s %s',
+          'URL filtered out due to being within the scope of another base_url %s %s',
           base_url,
           current_url,
         )
         return False
     return True
-
-  def _normalize_url(self, url: str) -> str:
-    """Normalize a URL for comparison.
-
-    This includes:
-      - making the url protocol and domain lowercase
-      - removing files from the path
-      - removing trailing slashes
-
-    E.g. HTTPS://MyCoolSite.com/abc/def.html -> https://mycoolsite.com/abc
-
-    Args:
-        url (str): URL to normalize
-
-    Returns:
-        str: normalized URL
-    """
-    parsed_url = urllib.parse.urlparse(url)
-
-    # lowercase the protocol and domain
-    scheme = parsed_url.scheme.lower()
-    netloc = parsed_url.netloc.lower()
-
-    path = parsed_url.path
-
-    # if the path ends with a file, remove it
-    if '.' in path:
-      path = path[: path.rfind('/') + 1]
-
-    # remove trailing slash
-    path = path.rstrip('/')
-
-    return f'{scheme}://{netloc}{path}'
 
   def _url_sanitise(self, url: str) -> str:
     """Sanitise URLs.
