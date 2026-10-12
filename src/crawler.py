@@ -25,7 +25,7 @@ from src.crawlable_page_validator import CrawlablePageValidator
 from src.output import CSVWriter
 from src.page_queue import PageQueue, QueuedPage
 
-# pylint: disable=too-many-branches, too-many-statements, too-many-locals
+# pylint: disable=too-many-branches, too-many-locals
 
 
 logger = logging.getLogger('cwac')
