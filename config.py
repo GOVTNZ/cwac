@@ -57,7 +57,6 @@ class Config:
   filter_to_urls: list[str]
   viewport_sizes: dict[str, dict[str, int]]
   audit_plugins: dict[str, dict[str, Any]]
-  record_unexpected_response_codes: bool
   force_open_details_elements: bool
 
   reporting: dict[str, Any] | None
