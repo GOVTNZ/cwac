@@ -185,7 +185,7 @@ class Crawler:
     logger.info('Starting %s of %s', action, base_url)
 
     # Create an AuditManager instance
-    audit_manager = AuditManager(config=self.config, browser=self.browser, analytics=self.analytics)
+    audit_manager = AuditManager(config=self.config, browser=self.browser)
 
     # Counts number of test failures
     test_failures = 0

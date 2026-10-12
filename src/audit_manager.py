@@ -9,9 +9,7 @@ from typing import Any, TypedDict
 import selenium.common.exceptions
 import urllib3
 
-import src.filters
 from config import Config, SiteData
-from src.analytics import Analytics
 from src.browser import Browser
 from src.output import CSVWriter
 
@@ -29,13 +27,11 @@ class AuditData(TypedDict):
 class AuditManager:
   """Runs tests on browsers."""
 
-  def __init__(self, config: Config, browser: Browser, analytics: Analytics) -> None:
+  def __init__(self, config: Config, browser: Browser) -> None:
     """Init variables."""
     self.config = config
     self.browser = browser
-    self.analytics = analytics
     self.audits: dict[str, AuditData] = {}
-    self.filter = src.filters.URLFilter(self.config)
 
     # Stores URLs discarded as a key-value pair
     # of URL (str): reason (str). URLs are discarded
