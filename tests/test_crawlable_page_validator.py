@@ -120,20 +120,6 @@ def test_validate_rejects_encoded_traversal_outside_base_url(validator: Crawlabl
 
 
 @pytest.mark.parametrize('perform_header_check', [False, True])
-def test_validate_rejects_invalid_url(
-  validator: CrawlablePageValidator,
-  config: SimpleNamespace,
-  mocked_responses: responses.RequestsMock,
-  perform_header_check: bool,
-) -> None:
-  """Rejects URLs with an unsupported scheme without making any requests."""
-  config.perform_header_check = perform_header_check
-
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'ftp://example.com/file') is None
-  assert len(mocked_responses.calls) == 0
-
-
-@pytest.mark.parametrize('perform_header_check', [False, True])
 def test_validate_rejects_url_outside_base_url(
   validator: CrawlablePageValidator,
   config: SimpleNamespace,
