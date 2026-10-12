@@ -70,12 +70,8 @@ class ReflowAudit(DefaultAudit):
       return False
 
     # Determine if there is a horizontal overflow
-    try:
-      self.browser.driver.execute_script('window.scrollTo(100, 0);')
-      overflow_amount = self.browser.driver.execute_script('return window.scrollX;')
-    except Exception:  # pylint: disable=broad-exception-caught
-      logger.exception('Failed to scroll to 100px %s', self.url)
-      return False
+    self.browser.driver.execute_script('window.scrollTo(100, 0);')
+    overflow_amount = self.browser.driver.execute_script('return window.scrollX;')
 
     # Run a ScreenshotAudit if the page overflows
     if self.config.audit_plugins['reflow_audit']['screenshot_failures'] and overflow_amount > 0:
