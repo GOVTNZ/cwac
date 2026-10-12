@@ -33,7 +33,6 @@ def fixture_config() -> SimpleNamespace:
   return SimpleNamespace(
     audit_name='test-audit',
     follow_robots_txt=False,
-    only_allow_https=True,
     perform_header_check=False,
     robots_txt_cache={},
     url_lookup={'example.com'},
@@ -227,8 +226,6 @@ def test_validate_rejects_url_on_different_origin(
   url: str,
 ) -> None:
   """Rejects URLs whose scheme, host, or port differ from those of the base URL."""
-  # ensure the url is only rejected by the scope check
-  config.only_allow_https = False
   config.url_lookup = {'example.com', 'example.com.evil.org', 'example.com:8443'}
 
   assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, url) is None
