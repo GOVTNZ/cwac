@@ -15,8 +15,6 @@ from src.analytics import Analytics
 from src.browser import Browser
 from src.output import CSVWriter
 
-# pylint: disable=too-many-statements
-
 logger = logging.getLogger('cwac')
 
 
@@ -185,7 +183,7 @@ class AuditManager:
 
     logger.info('opened %i <details> element%s', num_of_details, plural)
 
-  def run_audits(self) -> bool:  # noqa: PLR0915
+  def run_audits(self) -> bool:
     """Iterate through registered audits and runs them.
 
     Main entry point for running audits. Iterates through all registered audits
@@ -195,18 +193,16 @@ class AuditManager:
 
     1. The browser window is resized to the specified dimensions.
     2. For each audit configured to run at the current viewport size:
-      1. The page is loaded
+      1. The page is (re)loaded.
       2. The antibot check is run. If the page is blocked, the audit is skipped.
       3. if force_open_details_elements is True, any closed <details> elements on the page are opened.
       4. The audit is run and the results are written to a CSV file.
-    3. The browser is refreshed. If the refresh fails, the browser is restarted.
 
     If an exception is raised during the execution of an audit, then the browser
     state is reset for the next audit:
 
     1. The browser is restarted.
     2. the viewport size is set again.
-    3. The page is loaded again via `self.browser.get()`.
 
     Returns:
         bool: True if at least one audit successfully produced results, else False
@@ -220,7 +216,7 @@ class AuditManager:
     any_audit_succeeded = False
 
     # Re-run tests for each viewport size in config.json
-    for index, viewport in enumerate(self.config.viewport_sizes):
+    for viewport in self.config.viewport_sizes:
       # Generate a unique audit ID
       audit_id = page_id + '_' + viewport
 
@@ -355,17 +351,5 @@ class AuditManager:
 
         # At least one audit successfully produced results
         any_audit_succeeded = True
-
-      # If we're not on the last viewport size
-      if index < len(self.config.viewport_sizes) - 1:
-        # Refresh the page
-        try:
-          self.browser.driver.refresh()
-          # Give browser time to adjust to viewport size
-          time.sleep(self.config.delay_between_viewports)
-        except Exception:  # pylint: disable=broad-exception-caught
-          logger.exception('Failed to refresh page')
-          self.browser.safe_restart()
-          break
 
     return any_audit_succeeded

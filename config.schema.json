@@ -61,16 +61,6 @@
       "type": "number",
       "minimum": 0
     },
-    "delay_between_page_loads": {
-      "description": "Seconds to wait between loading consecutive pages. Use to reduce server load",
-      "type": "number",
-      "minimum": 0
-    },
-    "delay_between_viewports": {
-      "description": "Seconds to wait after resizing the browser to a new viewport before running audits",
-      "type": "number",
-      "minimum": 0
-    },
     "delay_after_page_load": {
       "description": "Seconds to wait after a page load completes before running audits",
       "type": "number",
@@ -321,8 +311,6 @@
     "follow_robots_txt",
     "script_timeout",
     "page_load_timeout",
-    "delay_between_page_loads",
-    "delay_between_viewports",
     "delay_after_page_load",
     "only_allow_https",
     "perform_header_check",
