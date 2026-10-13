@@ -18,7 +18,6 @@
   "base_urls_visit_path": "./base_urls/visit/",
   "base_urls_nohead_path": "./base_urls/nohead/",
   "crawl_sitemaps": true,
-  "record_unexpected_response_codes": true,
   "force_open_details_elements": true,
   "filter_to_organisations": [],
   "filter_to_urls": [],

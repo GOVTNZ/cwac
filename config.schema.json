@@ -92,10 +92,6 @@
       "description": "Whether to crawl sitemaps for base_urls, for additional URLs",
       "type": "boolean"
     },
-    "record_unexpected_response_codes": {
-      "description": "Whether to log and record unexpected HTTP response codes encountered during crawling",
-      "type": "boolean"
-    },
     "force_open_details_elements": {
       "description": "Whether to forcibly expand all <details> elements on a page before auditing, so their contents are included in the audit",
       "type": "boolean"
@@ -317,7 +313,6 @@
     "shuffle_base_urls",
     "base_urls_visit_path",
     "base_urls_nohead_path",
-    "record_unexpected_response_codes",
     "force_open_details_elements",
     "filter_to_organisations",
     "filter_to_urls",

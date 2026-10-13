@@ -1,5 +1,6 @@
 """Tests for crawlable page validation."""
 
+import textwrap
 from collections.abc import Iterator
 from types import SimpleNamespace
 from typing import cast
@@ -8,6 +9,7 @@ from unittest.mock import Mock
 import pytest
 import requests
 import responses
+from pyfakefs.fake_filesystem import FakeFilesystem
 from responses import matchers
 
 from config import Config, SiteData
@@ -19,6 +21,12 @@ PARENT_URL = 'https://example.com/parent/'
 SITE_DATA: SiteData = {'url': BASE_URL, 'supports_head': True, 'columns': {}}
 
 
+@pytest.fixture(autouse=True)
+def setup_filesystem(fs: FakeFilesystem) -> None:
+  """Set up the filesystem."""
+  fs.makedirs('results/test-audit')
+
+
 @pytest.fixture(name='config')
 def fixture_config() -> SimpleNamespace:
   """Return the minimum configuration used by the validator."""
@@ -27,7 +35,6 @@ def fixture_config() -> SimpleNamespace:
     follow_robots_txt=False,
     only_allow_https=True,
     perform_header_check=False,
-    record_unexpected_response_codes=False,
     robots_txt_cache={},
     url_lookup={'example.com'},
     user_agent='cwac-test',
@@ -369,11 +376,20 @@ def test_validate_rejects_unacceptable_status_code(
   mocked_responses: responses.RequestsMock,
   status: int,
 ) -> None:
-  """Rejects a response with an unsupported status code."""
+  """Rejects a response with an unsupported status code, recording it in the process."""
   config.perform_header_check = True
   mocked_responses.head('https://example.com/page', status=status, content_type='text/html')
 
   assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') is None
+
+  with open('results/test-audit/unexpected_response_codes.csv', encoding='utf-8-sig') as f:
+    assert (
+      f.read()
+      == textwrap.dedent(f"""
+        base_url,parent_url,url,status_code
+        {BASE_URL},{PARENT_URL},https://example.com/page,{status}
+      """).lstrip()
+    )
 
 
 @pytest.mark.parametrize(
