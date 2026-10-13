@@ -6,14 +6,14 @@ can be customised in the config file using a CSS selector.
 """
 
 import logging
-from typing import Any
+from typing import Any, Unpack
 
 from bs4 import BeautifulSoup
 
 from config import Config
 
 # from src.audit_manager import AuditManager
-from src.audit_plugins.default_audit import DefaultAudit
+from src.audit_plugins.default_audit import AuditKwargs, DefaultAudit
 from src.browser import Browser
 
 # import selenium.common.exceptions as sel_exceptions
@@ -26,7 +26,7 @@ class ElementAudit(DefaultAudit):
 
   audit_type = 'ElementAudit'
 
-  def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
+  def __init__(self, config: Config, browser: Browser, **kwargs: Unpack[AuditKwargs]) -> None:
     """Init variables."""
     super().__init__(config, browser, **kwargs)
     self.target_element = self.config.audit_plugins['element_audit']['target_element_css_selector']

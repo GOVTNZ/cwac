@@ -4,10 +4,11 @@ This plugin returns basic page information.
 """
 
 import urllib.parse
-from typing import Any
+from typing import Any, TypedDict, Unpack
 
 from config import Config, SiteData
 from src.browser import Browser
+
 
 # Audit classes for use with AuditManager
 # Audit classes are registered with register_test
@@ -19,6 +20,14 @@ from src.browser import Browser
 #   - if audit is successful, returns a list of dictionaries
 #       which form CSV data rows
 #   - if the audit fails, returns False
+class AuditKwargs(TypedDict):
+  """Arguments that get passed to all audits."""
+
+  url: str
+  site_data: SiteData
+  audit_id: str
+  page_id: str
+  viewport_size: dict[str, int]
 
 
 class DefaultAudit:
@@ -27,7 +36,7 @@ class DefaultAudit:
   It retrieves things such as the page title, viewport size, and base url.
   """
 
-  def __init__(self, config: Config, browser: Browser, **kwargs: Any):
+  def __init__(self, config: Config, browser: Browser, **kwargs: Unpack[AuditKwargs]):
     """Init variables."""
     self.config = config
     self.browser = browser

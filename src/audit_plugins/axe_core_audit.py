@@ -6,10 +6,10 @@ This plugin uses axe-core to test a webpage.
 import hashlib
 import logging
 import sys
-from typing import Any
+from typing import Any, Unpack
 
 from config import Config
-from src.audit_plugins.default_audit import DefaultAudit
+from src.audit_plugins.default_audit import AuditKwargs, DefaultAudit
 from src.browser import Browser
 
 logger = logging.getLogger('cwac')
@@ -23,7 +23,7 @@ class AxeCoreAudit(DefaultAudit):
   # Stores axe.min.js to prevent re-reading the file
   axe_core_js = ''
 
-  def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
+  def __init__(self, config: Config, browser: Browser, **kwargs: Unpack[AuditKwargs]) -> None:
     """Init variables."""
     super().__init__(config, browser, **kwargs)
     self.base_url = kwargs['site_data']['url']

@@ -15,10 +15,10 @@ Disclaimer:
 """
 
 import logging
-from typing import Any
+from typing import Any, Unpack
 
 from config import Config
-from src.audit_plugins.default_audit import DefaultAudit
+from src.audit_plugins.default_audit import AuditKwargs, DefaultAudit
 from src.browser import Browser
 
 logger = logging.getLogger('cwac')
@@ -29,7 +29,7 @@ class ReflowAudit(DefaultAudit):
 
   audit_type = 'ReflowAudit'
 
-  def __init__(self, config: Config, browser: Browser, **kwargs: Any) -> None:
+  def __init__(self, config: Config, browser: Browser, **kwargs: Unpack[AuditKwargs]) -> None:
     """Init variables."""
     super().__init__(config, browser, **kwargs)
 
