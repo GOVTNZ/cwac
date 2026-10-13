@@ -27,7 +27,6 @@ class AxeCoreAudit(DefaultAudit):
     """Init variables."""
     super().__init__(config, browser, **kwargs)
     self.base_url = kwargs['site_data']['url']
-    self.viewport_size = kwargs['viewport_size']
     self.best_practice = self.config.audit_plugins['axe_core_audit']['best-practice']
 
   def best_practice_string(self, best_practice: bool) -> str:
@@ -42,7 +41,7 @@ class AxeCoreAudit(DefaultAudit):
     """Return a hash of an axe-core issue."""
     # hashes are calculated with: "base_url", "id", "html", "viewport_size"
 
-    raw_str = self.base_url + violation['id'] + node['html'] + str(self.viewport_size)
+    raw_str = self.base_url + violation['id'] + node['html'] + str(self.browser.viewport_size)
 
     return hashlib.shake_256(raw_str.encode()).hexdigest(5)
 

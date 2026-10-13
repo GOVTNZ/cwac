@@ -258,7 +258,6 @@ class AuditManager:
           browser=self.browser,
           audit_id=audit_id,
           page_id=page_id,
-          viewport_size=self.config.viewport_sizes[viewport],
           url=url,
           site_data=site_data,
         )

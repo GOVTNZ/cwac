@@ -27,7 +27,6 @@ class AuditKwargs(TypedDict):
   site_data: SiteData
   audit_id: str
   page_id: str
-  viewport_size: dict[str, int]
 
 
 class DefaultAudit:
