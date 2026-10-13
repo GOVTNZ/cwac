@@ -20,7 +20,7 @@ site_data: SiteData = {
 }
 
 
-class SuccessfulAudit:
+class FakeAudit:
   """Test audit that always returns a successful result."""
 
   def __init__(self, **_: object) -> None:
@@ -56,8 +56,8 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   """Returns True when anti-bot blocking happens after an earlier audit succeeded."""
   manager = make_audit_manager(mocker)
 
-  manager.register_audit('first', SuccessfulAudit, url='https://example.govt.nz/ok', site_data=site_data)
-  manager.register_audit('second', SuccessfulAudit, url='https://example.govt.nz/blocked', site_data=site_data)
+  manager.register_audit('first', FakeAudit, url='https://example.govt.nz/ok', site_data=site_data)
+  manager.register_audit('second', FakeAudit, url='https://example.govt.nz/blocked', site_data=site_data)
 
   mocker.patch.object(manager, 'test_for_anti_bot', side_effect=['Pass', 'Cloudflare'])
 
@@ -70,7 +70,7 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   """Returns False when anti-bot blocking happens before any audit succeeded."""
   manager = make_audit_manager(mocker)
 
-  manager.register_audit('first', SuccessfulAudit, url='https://example.govt.nz/blocked', site_data=site_data)
+  manager.register_audit('first', FakeAudit, url='https://example.govt.nz/blocked', site_data=site_data)
 
   mocker.patch.object(manager, 'test_for_anti_bot', return_value='Cloudflare')
 
