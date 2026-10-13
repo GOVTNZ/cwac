@@ -6,17 +6,15 @@ from typing import Any
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
 
-from config import Config
+from config import Config, SiteData
 from src.audit_manager import AuditManager
 from src.browser import Browser
 
 
-def setup_filesystem(fs: FakeFilesystem, config_changes: dict[str, Any]) -> None:
+def setup_filesystem(fs: FakeFilesystem) -> None:
   """Set up the fake filesystem with the config, package.json, and base urls needed by Config."""
   fs.add_real_file('config/config_default.json', read_only=False)
   fs.add_real_file('package.json')
-
-  modify_default_config({**config_changes, 'delay_after_page_load': 0})
 
   fs.create_file(
     'base_urls/visit/urls.csv',
@@ -46,14 +44,14 @@ class FakeAudit:
     return [{'result': 'ok'}]
 
 
-def make_audit_manager(fs: FakeFilesystem, mocker: MockerFixture) -> AuditManager:
+def make_audit_manager(mocker: MockerFixture) -> AuditManager:
   """Create an AuditManager with mocked dependencies for unit tests."""
-  setup_filesystem(
-    fs,
+  modify_default_config(
     {
       'viewport_sizes': {'small': {'width': 320, 'height': 450}},
       'audit_plugins': {'first': {}, 'second': {}},
-    },
+      'delay_after_page_load': 0,
+    }
   )
 
   config = Config('config_default.json')
@@ -67,12 +65,86 @@ def make_audit_manager(fs: FakeFilesystem, mocker: MockerFixture) -> AuditManage
   return manager
 
 
+def test_run_audits_single_page_single_viewport_single_audit(
+  fs: FakeFilesystem,
+  mocker: MockerFixture,
+) -> None:
+  """Runs the audit against a single page at a single viewport."""
+  setup_filesystem(fs)
+
+  manager = make_audit_manager(mocker)
+
+  manager.register_audit(
+    'first',
+    FakeAudit,
+    url='https://bnl.com/news',
+    site_data={
+      'url': 'https://bnl.com/',
+      'supports_head': True,
+      'columns': {'url': 'https://bnl.com/'},
+    },
+  )
+
+  assert manager.run_audits() is True
+
+
+def test_run_audits_multiple_sites_pages_viewports_and_audits(
+  fs: FakeFilesystem,
+  mocker: MockerFixture,
+) -> None:
+  """Runs the audit against multiple pages across multiple sites at multiple viewports."""
+  setup_filesystem(fs)
+
+  # this mirrors how the tool ends up running the audit manager
+  for base_url, urls in {
+    'https://bnl.com/': [
+      'https://bnl.com/',
+      'https://bnl.com/news',
+    ],
+    'https://acme.com/': [
+      'https://acme.com/',
+      'https://acme.com/contact',
+      'https://acme.com/legal',
+    ],
+    'https://wayne.com/': [
+      'https://wayne.com/',
+      'https://wayne.com/security',
+      'https://wayne.com/legal',
+    ],
+  }.items():
+    site_data: SiteData = {
+      'url': base_url,
+      'supports_head': True,
+      'columns': {'url': base_url},
+    }
+
+    for url in urls:
+      manager = make_audit_manager(mocker)
+
+      manager.register_audit(
+        'first',
+        FakeAudit,
+        url=url,
+        site_data=site_data,
+      )
+      manager.register_audit(
+        'second',
+        FakeAudit,
+        url=url,
+        site_data=site_data,
+      )
+
+      assert manager.run_audits() is True
+
+
 def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
   """Returns True when anti-bot blocking happens after an earlier audit succeeded."""
-  manager = make_audit_manager(fs, mocker)
+  setup_filesystem(fs)
+
+  manager = make_audit_manager(mocker)
 
   manager.register_audit(
     'first',
@@ -113,7 +185,9 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   mocker: MockerFixture,
 ) -> None:
   """Returns False when anti-bot blocking happens before any audit succeeded."""
-  manager = make_audit_manager(fs, mocker)
+  setup_filesystem(fs)
+
+  manager = make_audit_manager(mocker)
 
   manager.register_audit(
     'first',
