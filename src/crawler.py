@@ -20,6 +20,7 @@ from config import Config
 from config import SiteData as ConfigSiteData
 from src.analytics import Analytics
 from src.audit_manager import AuditManager
+from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 from src.crawlable_page_validator import CrawlablePageValidator
 from src.output import CSVWriter
@@ -125,6 +126,10 @@ class Crawler:
 
       audit_module = importlib.import_module(f'src.audit_plugins.{filename}')
       audit_class = getattr(audit_module, self.config.audit_plugins[filename]['class_name'])
+
+      if not issubclass(audit_class, DefaultAudit):
+        raise TypeError(f'Audit plugin {filename} is not a subclass of DefaultAudit')
+
       audit_manager.register_audit(
         audit_name=filename,
         audit_class=audit_class,
