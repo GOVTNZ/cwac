@@ -3,7 +3,7 @@
 import logging
 import os
 import urllib.parse
-from typing import Any, TypedDict
+from typing import Any
 
 import selenium.common.exceptions
 import urllib3
@@ -16,12 +16,6 @@ from src.output import CSVWriter
 logger = logging.getLogger('cwac')
 
 
-class AuditData(TypedDict):
-  """Data for running an audit."""
-
-  audit_class: type[DefaultAudit]
-
-
 class AuditManager:
   """Runs tests on browsers."""
 
@@ -29,7 +23,7 @@ class AuditManager:
     """Init variables."""
     self.config = config
     self.browser = browser
-    self.audits: dict[str, AuditData] = {}
+    self.audits: dict[str, type[DefaultAudit]] = {}
 
     # Stores URLs discarded as a key-value pair
     # of URL (str): reason (str). URLs are discarded
@@ -50,9 +44,7 @@ class AuditManager:
         audit_class (Type[Any]): Reference to a class that runs the audit
     """
     # Register the audit (or update its kwargs)
-    self.audits[audit_name] = {
-      'audit_class': audit_class,
-    }
+    self.audits[audit_name] = audit_class
 
   def test_for_anti_bot(self, site_data: SiteData) -> str:
     """Inspect the currently loaded page for anti-bot blocking.
@@ -261,7 +253,7 @@ class AuditManager:
           continue
 
         # Run the tests
-        audit_instance = audit['audit_class'](
+        audit_instance = audit(
           config=self.config,
           browser=self.browser,
           audit_id=audit_id,
