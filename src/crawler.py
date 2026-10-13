@@ -156,8 +156,10 @@ class Crawler:
       action = 'visit'
     logger.info('Starting %s of %s', action, base_url)
 
-    # Create an AuditManager instance
+    # Create an AuditManager instance and register enabled plugins
     audit_manager = AuditManager(config=self.config, browser=self.browser)
+
+    self.register_audit_plugins(audit_manager)
 
     # Counts number of test failures
     test_failures = 0
@@ -200,7 +202,6 @@ class Crawler:
         },
       )
 
-      self.register_audit_plugins(audit_manager)
       test_success = audit_manager.run_audits(url, site_data)
 
       if test_success:
