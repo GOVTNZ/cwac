@@ -55,8 +55,6 @@ class Browser:
         logger.info('Running .get: %s', url)
         self.driver.get(url)
         logger.info('.get successful')
-        self.driver.set_script_timeout(self.config.script_timeout)
-        self.driver.set_page_load_timeout(self.config.page_load_timeout)
         self.last_url_req = url
         break
       except selenium.common.exceptions.TimeoutException:
@@ -153,6 +151,12 @@ class Browser:
 
     chrome_options.unhandled_prompt_behavior = 'dismiss'
 
+    # Timeouts are in milliseconds
+    chrome_options.timeouts = {
+      'script': self.config.script_timeout * 1000,
+      'pageLoad': self.config.page_load_timeout * 1000,
+    }
+
     # Disable downloads
     chrome_options.add_experimental_option(
       'prefs',
@@ -174,9 +178,6 @@ class Browser:
     chrome_options.binary_location = self.config.chrome_binary_location
 
     driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
-
-    driver.set_script_timeout(self.config.script_timeout)
-    driver.set_page_load_timeout(self.config.page_load_timeout)
 
     x_pos = 100 + 400 * (self.thread_id % 4)
     y_pos = 0 if self.thread_id < 4 else 400
