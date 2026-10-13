@@ -597,6 +597,72 @@ class TestUrlLoading:
       {'url': 'https://valid.com/', 'supports_head': True, 'columns': {'url': 'https://valid.com/'}},
     ]
 
+  def test_http_urls_skipped_when_only_allow_https_true(self, fs: FakeFilesystem) -> None:
+    """Skips HTTP URLs when only_allow_https is enabled."""
+    fs.add_real_file('config/config_default.json', read_only=False)
+
+    # make sure only_allow_https is true
+    with open('config/config_default.json', 'r+', encoding='utf-8') as f:
+      c = {**json.load(f), 'only_allow_https': True}
+      f.seek(0)
+      json.dump(c, f)
+      f.truncate()
+
+    # remove the csvs from setup so we only load the urls for this test
+    fs.remove('base_urls/visit/my urls.csv')
+    fs.remove('base_urls/visit/q3_2024_urls.csv')
+    fs.remove('base_urls/visit/theirs_urls.csv')
+
+    fs.create_file(
+      'base_urls/visit/http.csv',
+      contents=textwrap.dedent("""
+        url
+        https://valid.com/
+        http://valid.net/
+      """).strip(),
+    )
+
+    config = Config('config_default.json')
+
+    assert config.audit_subjects == [
+      {'url': 'https://valid.com/', 'supports_head': True, 'columns': {'url': 'https://valid.com/'}},
+    ]
+
+  def test_unsupported_schemes_are_skipped(self, fs: FakeFilesystem) -> None:
+    """Skips urls that have an unsupported or missing scheme."""
+    fs.add_real_file('config/config_default.json', read_only=False)
+
+    # make sure only_allow_https is false
+    with open('config/config_default.json', 'r+', encoding='utf-8') as f:
+      c = {**json.load(f), 'only_allow_https': False}
+      f.seek(0)
+      json.dump(c, f)
+      f.truncate()
+
+    # remove the csvs from setup so we only load the urls for this test
+    fs.remove('base_urls/visit/my urls.csv')
+    fs.remove('base_urls/visit/q3_2024_urls.csv')
+    fs.remove('base_urls/visit/theirs_urls.csv')
+
+    fs.create_file(
+      'base_urls/visit/schemes.csv',
+      contents=textwrap.dedent("""
+        url
+        ftp://example.com/
+        https://valid.com/
+        http://valid.net/
+        example.net
+        javascript:void(0)
+      """).strip(),
+    )
+
+    config = Config('config_default.json')
+
+    assert config.audit_subjects == [
+      {'url': 'https://valid.com/', 'supports_head': True, 'columns': {'url': 'https://valid.com/'}},
+      {'url': 'http://valid.net/', 'supports_head': True, 'columns': {'url': 'http://valid.net/'}},
+    ]
+
   def test_raises_on_csv_missing_url_header(self, fs: FakeFilesystem) -> None:
     """Raises a helpful error when a csv does not have the required "url" header."""
     fs.add_real_file('config/config_default.json')

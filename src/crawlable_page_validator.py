@@ -86,7 +86,7 @@ class CrawlablePageValidator:
     Return the cleaned version of the URL if it is eligible to be crawled, otherwise None.
     """
     try:
-      clean_url = self._url_sanitise(url)
+      clean_url = src.urls.normalize_url(url)
     except ValueError:
       return None
 
@@ -305,19 +305,3 @@ class CrawlablePageValidator:
         )
         return False
     return True
-
-  def _url_sanitise(self, url: str) -> str:
-    """Sanitise URLs.
-
-    Args:
-        url (str): URL to be sanitised
-    Returns:
-        str: sanitised URL
-    """
-    url = src.urls.normalize_url(url)
-
-    # Ensure scheme is either http or https
-    if urllib.parse.urlparse(url).scheme not in ['http', 'https']:
-      raise ValueError('Invalid URL scheme')
-
-    return url

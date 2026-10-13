@@ -245,8 +245,8 @@ class Config:
             # Parse the URL to get just the domain
             parsed_url = parse.urlparse(subject['url'])
 
-            if parsed_url.scheme == '':
-              logger.error('URL missing protocol, skipping %s', subject['url'])
+            if parsed_url.scheme not in ('http', 'https'):
+              logger.error('URL missing or unsupported scheme, skipping %s', subject['url'])
               continue
 
             # If only_allow_https is True, then only add
