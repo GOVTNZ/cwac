@@ -29,7 +29,7 @@ automatically.
 
 CWAC can be used as a mechanism to monitor the New Zealand Government's
 implementation of minimum accessibility standards and guidelines on its
-websites. The primary standard, is the
+websites. The primary standard is the
 [NZ Government Web Accessibility Standard](https://www.digital.govt.nz/standards-and-guidance/nz-government-web-standards/web-accessibility-standard-1-2/),
 which includes
 [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/)

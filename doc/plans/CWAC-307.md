@@ -12,7 +12,7 @@ replicate the findings.
 
 The `drivers/` directory had a binary for x64 Intel macs but cwac itself never
 supported loading it in [config.py](../../config.py). This ticket will not
-attempt to add support Intel based macs.
+attempt to add support for Intel based macs.
 
 ### Stop committing the chromedriver binaries to the repo.
 

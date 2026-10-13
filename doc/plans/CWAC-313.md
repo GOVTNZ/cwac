@@ -63,7 +63,7 @@ The current process within `Crawler#crawl` is:
    4. extract all links on the page, and push them into the queue
 
 Since we only need to fetch the sitemap once, we could do this before step 2.
-however since urls are popped off the queue at random, we risk not auditing the
+However, since urls are popped off the queue at random, we risk not auditing the
 `base_url` before reaching the `max_links_per_domain` limit, which might be
 surprising.
 

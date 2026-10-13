@@ -31,7 +31,7 @@ class CWAC:
     Args:
         thread_id (int): identifier for the thread
     """
-    # Create the webdriver instance (wrapped in `Browser)` for this thread. This
+    # Create the webdriver instance (wrapped in `Browser`) for this thread. This
     # instance is essentially shared mutable state for all code in the thread.
     browser = Browser(self.config, thread_id)
     crawl = Crawler(config=self.config, browser=browser, url_queue=self.url_queue, analytics=self.analytics)
@@ -90,7 +90,7 @@ class CWAC:
         queue.put(skipped_item)
         skipped_item = None
 
-    # ensure that the last item is added, even if its consecutive
+    # ensure that the last item is added, even if it's consecutive
     if skipped_item is not None:
       queue.put(skipped_item)
 

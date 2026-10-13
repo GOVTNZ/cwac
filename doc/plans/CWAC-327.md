@@ -108,7 +108,7 @@ Pros:
 
 Cons:
 
-- no ways to filter by other columns
+- no way to filter by other columns
 
 #### Option 2: replace with a more flexible `filters` feature
 

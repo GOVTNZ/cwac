@@ -40,7 +40,7 @@ class FocusIndicatorAudit(DefaultAudit):
     """Wait for animations to finish on the page.
 
     Returns:
-        bool: if the page is still animating after 3 seconds
+        bool: True if the page stops animating within the retry limit, otherwise False
     """
     logger.info('Waiting for page to stop animating...')
     initial_time = time.time()

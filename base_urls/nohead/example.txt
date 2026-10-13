@@ -1,5 +1,5 @@
 # Place URLs in CSV files within /base_urls/nohead/
-# and the CWAC will avoid making HEAD requests to
+# and CWAC will avoid making HEAD requests to
 # those websites if they are listed in /base_urls/visit/
 
 # You can place multiple CSV files into the /base_urls/nohead/ folder
