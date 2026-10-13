@@ -210,7 +210,7 @@ class AuditManager:
         self.config.viewport_sizes[viewport]['height'],
       )
 
-      for audit_name, audit in self.audits.items():
+      for audit_name, audit_class in self.audits.items():
         # if viewport_to_test is set
         if (
           'viewport_to_test' in self.config.audit_plugins[audit_name]
@@ -240,7 +240,7 @@ class AuditManager:
           continue
 
         # Run the tests
-        audit_instance = audit(
+        audit_instance = audit_class(
           config=self.config,
           browser=self.browser,
           audit_id=audit_id,
