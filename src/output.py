@@ -270,7 +270,7 @@ def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) ->
     same values for those four columns.
   2. `num_pages`
     - A new column added by this function.
-    - It's value is the count of distinct URLs which have the same `issue_id` as the current row.
+    - Its value is the count of distinct URLs which have the same `issue_id` as the current row.
 
   Args:
       input_df (pd.DataFrame): Raw axe-core audit results.

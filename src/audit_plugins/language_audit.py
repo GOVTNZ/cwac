@@ -266,7 +266,7 @@ class LanguageAudit(DefaultAudit):
         words (list[str]): the words to calculate the Flesch-Kincaid Grade Level
 
     Returns:
-        float: the Flesch-Kincaid Grade Level
+        dict[Any, Any]: the Flesch-Kincaid Grade Level
     """
     # Calculate the average number of words per sentence
     words_per_sentence = len(words) / len(sentences)

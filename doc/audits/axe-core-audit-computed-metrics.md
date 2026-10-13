@@ -13,8 +13,8 @@ It makes the following changes from the standard axe-core results:
 1. The `num_issues` column now represents the total number of failures in the
    result-set that have the same value for `base_url`, `id`, `viewport_size`,
    and `html`.
-1. A new `num_pages` column which represents how many other URLs had same type
-   of axe-core failure as the current row.
+1. A new `num_pages` column which represents how many distinct URLs had the same
+   type of axe-core failure as the current row, including the current URL.
 
 > [!WARNING]
 >

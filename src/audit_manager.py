@@ -67,7 +67,7 @@ class AuditManager:
     3. The URL is added to the discarded_urls dict with the reason for discarding.
 
     Returns:
-      str: 'Pass'|'Imperva'|'Cloudflare'|'Blocked'|'Azure Front Door'|'Red Shield'|'Cloudfront'
+      str: 'Pass'|'Imperva'|'Cloudflare'|'Azure Front Door'|'Red Shield'|'Cloudfront'
     """
     # Get the current URL
     try:

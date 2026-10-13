@@ -19,9 +19,9 @@ for more details.
 > fewer than 10 sentences or 200 words are also skipped as the scores would not
 > be reliable.
 
-More technical details about how the scores are calculated is available from the
-[Python Natural Language Toolkit](https://www.nltk.org/) which is the underlying
-technology used by the audit.
+More technical details about how the scores are calculated are available from
+the [Python Natural Language Toolkit](https://www.nltk.org/) which is the
+underlying technology used by the audit.
 
 ## Configuration
 
