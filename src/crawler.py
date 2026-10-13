@@ -7,6 +7,7 @@ import importlib
 import logging
 import random
 from queue import SimpleQueue
+from typing import cast
 
 import selenium.common.exceptions
 import urllib3
@@ -22,8 +23,9 @@ from src.audit_manager import AuditManager
 from src.browser import Browser
 from src.crawlable_page_validator import CrawlablePageValidator
 from src.output import CSVWriter
+from src.page_queue import PageQueue, QueuedPage
 
-# pylint: disable=too-many-branches, too-many-statements, too-many-locals
+# pylint: disable=too-many-branches, too-many-locals
 
 
 logger = logging.getLogger('cwac')
@@ -70,57 +72,31 @@ class Crawler:
       # Restart the browser between each website
       self.browser.safe_restart()
 
-  def get_links(self, base_url: str, url: str) -> list[str]:
-    """Generate a list of viable links for crawling from the page currently loaded in the browser.
+  def get_links(self, url: str) -> list[str]:
+    """Generate a list of the links on the page currently loaded in the browser.
 
     This function depends on browser state! It does not navigate to the page. It
     assumes the page HTML is already loaded in the browser and that the page
     loaded in the browser is the same page as the one at `url`.
 
     Args:
-        base_url (str): The base URL from the input CSV used for this crawl. Any
-          URLs found outside the scope of this URL are rejected.
         url (str): The URL currently loaded in the browser
 
     Returns:
-        list[str]: a list of links on the page which are within the scope of the
-          base_url and pass all filters. If an error occurs, returns an empty
-          list.
+        list[str]: a list of the links on the page, which are yet to be filtered
+          and validated for crawling. If an error occurs, returns an empty list.
     """
     try:
-      hrefs = self.browser.driver.execute_script('return [...new Set(Array.from(document.links, a => a.href))]')
+      return cast(
+        list[str],
+        self.browser.driver.execute_script('return [...new Set(Array.from(document.links, a => a.href))]'),
+      )
     except (
       selenium.common.exceptions.WebDriverException,
       urllib3.exceptions.HTTPError,
     ) as e:
       logger.error('%s when getting links on %s', type(e).__name__, url)
       return []
-
-    links = []
-
-    for href in hrefs:
-      # Run a range of filters on the URL
-      if not self.url_filter.run_url_filters(href):
-        continue
-
-      # If URL is not on the same domain, skip it
-      if not src.filters.url_filter_not_same_domain(href, base_url):
-        continue
-
-      # If URL has been scanned previously, skip it
-      # if self.analytics.is_url_in_pages_scanned(href):
-      #    continue
-
-      if len(href) > 2 and base_url == href[:-1]:
-        logger.info(
-          'get_links skipped due to equality of: %s %s',
-          base_url,
-          href,
-        )
-        continue
-      links.append(href)
-
-    return links
 
   def register_audit_plugins(
     self,
@@ -193,12 +169,8 @@ class Crawler:
     # Counts number of pages scanned
     pages_scanned = 0
 
-    # queue element: (parent_url, url)
-    queue = RandomQueue[tuple[str, str]]()
-    queue.push((base_url, base_url))
-
-    # track visited urls
-    visited = {base_url}
+    queue = PageQueue()
+    queue.push(QueuedPage(base_url, base_url))
 
     # Filter and sanitise the initial URL
     if not self.url_filter.run_url_filters(base_url):
@@ -258,25 +230,21 @@ class Crawler:
 
         logger.info('Found %i url%s from sitemaps', len(urls_from_sitemap), '' if len(urls_from_sitemap) == 1 else 's')
 
-        for parent_and_url in urls_from_sitemap:
-          queue.push(parent_and_url)
+        for queued_page in urls_from_sitemap:
+          queue.push(queued_page)
         has_crawled_sitemap = True
 
-      links = self.get_links(base_url, url)
+      links = self.get_links(url)
 
-      # Add all links to the queue
       for new_link in links:
-        if new_link not in visited:
-          visited.add(new_link)
-          queue.push((url, new_link))
-      # End of queue processing loop
+        queue.push(QueuedPage(url, new_link))
 
     self.analytics.record_test_failure(base_url)
     self.record_pages_scanned(site_data, pages_scanned)
     if self.config.max_links_per_domain != 1:
       logger.info('Crawl exhausted all links %s', base_url)
 
-  def __crawl_sitemap(self, url: str) -> list[tuple[str, str]]:
+  def __crawl_sitemap(self, url: str) -> list[QueuedPage]:
     """Crawls the urls sitemap, if there is one.
 
     Performance:
@@ -294,7 +262,7 @@ class Crawler:
     # them, which makes the crawl queue very slow and memory hungry
     limit = self.config.max_links_per_domain * SITEMAP_URLS_PER_MAX_LINK
 
-    parents_and_urls: list[tuple[str, str]] = []
+    queued_pages: list[QueuedPage] = []
     num_found = 0
 
     # use reservoir sampling so that if there are more urls than the limit, we
@@ -307,19 +275,19 @@ class Crawler:
 
       for page in sitemap.all_pages():
         num_found += 1
-        if len(parents_and_urls) < limit:
-          parents_and_urls.append((sitemap.url, page.url))
+        if len(queued_pages) < limit:
+          queued_pages.append(QueuedPage(sitemap.url, page.url))
         else:
           # these random numbers are not used for security or cryptographic
           # purposes so it is safe to use and 'nosec' suppresses bandit
           index = random.randrange(num_found)  # nosec # noqa: S311
           if index < limit:
-            parents_and_urls[index] = (sitemap.url, page.url)
+            queued_pages[index] = QueuedPage(sitemap.url, page.url)
 
     if num_found > limit:
       logger.info('Found %i urls from sitemaps for %s, randomly selected %i of them', num_found, url, limit)
 
-    return parents_and_urls
+    return queued_pages
 
   def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
     """Record the number of pages that were scanned for the site."""
@@ -333,44 +301,3 @@ class Crawler:
           'number_of_pages': pages_scanned,
         },
       )
-
-
-class RandomQueue[T]:
-  """A queue that pops in random order."""
-
-  def __init__(self) -> None:
-    """Initialise the queue."""
-    self.items: list[T] = []
-
-  def __len__(self) -> int:
-    """Return the length of the queue."""
-    return len(self.items)
-
-  def __str__(self) -> str:
-    """Return the queue as a string."""
-    return str(self.items)
-
-  def push(self, item: T) -> None:
-    """Push an item onto the queue.
-
-    Args:
-        item (T): item to push onto the queue
-    """
-    self.items.append(item)
-
-  def pop(self) -> T:
-    """Pop an item off the queue.
-
-    Returns:
-        T: item popped off the queue
-    """
-    index = random.randrange(len(self.items))  # nosec # noqa: S311
-
-    # swap the picked item with the last item, so that popping is fast
-    self.items[index], self.items[-1] = self.items[-1], self.items[index]
-
-    return self.items.pop()
-
-  def clear(self) -> None:
-    """Clear the queue."""
-    self.items = []
