@@ -30,7 +30,6 @@ class ElementAudit(DefaultAudit):
     """Init variables."""
     super().__init__(config, browser, **kwargs)
     self.target_element = self.config.audit_plugins['element_audit']['target_element_css_selector']
-    self.base_url = kwargs['site_data']['url']
 
   def run(self) -> list[dict[str, Any]] | bool:
     """Run an element detection on a specified URL.
