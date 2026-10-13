@@ -4,20 +4,7 @@ from unittest.mock import MagicMock
 
 from pytest_mock import MockerFixture
 
-from config import SiteData
 from src.audit_manager import AuditManager
-
-site_data: SiteData = {
-  'url': 'https://bnl.com/',
-  'supports_head': True,
-  'columns': {
-    'organisation': "Buy 'n' Large",
-    'url': 'https://bnl.com/',
-    'sector': 'Sales',
-    'region': 'Overseas',
-    'priority': 'Medium',
-  },
-}
 
 
 class FakeAudit:
@@ -56,8 +43,34 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   """Returns True when anti-bot blocking happens after an earlier audit succeeded."""
   manager = make_audit_manager(mocker)
 
-  manager.register_audit('first', FakeAudit, url='https://example.govt.nz/ok', site_data=site_data)
-  manager.register_audit('second', FakeAudit, url='https://example.govt.nz/blocked', site_data=site_data)
+  manager.register_audit(
+    'first',
+    FakeAudit,
+    url='https://example.govt.nz/ok',
+    site_data={
+      'url': 'https://bnl.com/',
+      'supports_head': True,
+      'columns': {
+        'organisation': "Buy 'n' Large",
+        'url': 'https://bnl.com/',
+        'sector': 'Sales',
+        'region': 'Overseas',
+        'priority': 'Medium',
+      },
+    },
+  )
+  manager.register_audit(
+    'second',
+    FakeAudit,
+    url='https://example.govt.nz/blocked',
+    site_data={
+      'url': 'https://bnl.com/',
+      'supports_head': True,
+      'columns': {
+        'url': 'https://bnl.com/',
+      },
+    },
+  )
 
   mocker.patch.object(manager, 'test_for_anti_bot', side_effect=['Pass', 'Cloudflare'])
 
@@ -70,7 +83,18 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   """Returns False when anti-bot blocking happens before any audit succeeded."""
   manager = make_audit_manager(mocker)
 
-  manager.register_audit('first', FakeAudit, url='https://example.govt.nz/blocked', site_data=site_data)
+  manager.register_audit(
+    'first',
+    FakeAudit,
+    url='https://example.govt.nz/blocked',
+    site_data={
+      'url': 'https://bnl.com/',
+      'supports_head': True,
+      'columns': {
+        'url': 'https://bnl.com/',
+      },
+    },
+  )
 
   mocker.patch.object(manager, 'test_for_anti_bot', return_value='Cloudflare')
 
