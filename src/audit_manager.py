@@ -19,27 +19,22 @@ logger = logging.getLogger('cwac')
 class AuditManager:
   """Runs tests on browsers."""
 
-  def __init__(self, config: Config, browser: Browser) -> None:
-    """Init variables."""
+  def __init__(self, config: Config, browser: Browser, audits: dict[str, type[DefaultAudit]]) -> None:
+    """Init variables.
+
+    Args:
+        config (Config): the config for this run
+        browser (Browser): the browser to run audits in
+        audits (dict[str, type[DefaultAudit]]): audit classes to run, keyed by audit name
+    """
     self.config = config
     self.browser = browser
-    self.audits: dict[str, type[DefaultAudit]] = {}
+    self.audits = audits
 
     # Stores URLs discarded as a key-value pair
     # of URL (str): reason (str). URLs are discarded
     # if they are blocked by anti-bot measures.
     self.discarded_urls: dict[str, str] = {}
-
-  def register_audit(self, audit_name: str, audit_class: type[DefaultAudit]) -> None:
-    """Register audits to be run by run_audits().
-
-    Registering an audit with an existing name replaces it.
-
-    Args:
-        audit_name (str): Human-readable name for audit
-        audit_class (type[DefaultAudit]): Reference to a class that runs the audit
-    """
-    self.audits[audit_name] = audit_class
 
   def test_for_anti_bot(self, site_data: SiteData) -> str:
     """Inspect the currently loaded page for anti-bot blocking.

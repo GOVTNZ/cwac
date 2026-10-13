@@ -54,6 +54,7 @@ class Crawler:
     self.analytics = analytics
     self.url_filter = src.filters.URLFilter(self.config)
     self.page_validator = CrawlablePageValidator(config=self.config, analytics=self.analytics)
+    self.audit_plugins = self.load_audit_plugins()
 
   def iterate_through_base_urls(self) -> None:
     """Pick URLs from url_queue, and initiates a crawl on that URL.
@@ -99,12 +100,14 @@ class Crawler:
       logger.error('%s when getting links on %s', type(e).__name__, url)
       return []
 
-  def register_audit_plugins(self, audit_manager: AuditManager) -> None:
-    """Register audit plugins with AuditManager.
+  def load_audit_plugins(self) -> dict[str, type[DefaultAudit]]:
+    """Load the audit plugins enabled in config.json.
 
-    Args:
-        audit_manager (AuditManager): AuditManager instance
+    Returns:
+        dict[str, type[DefaultAudit]]: audit plugin classes, keyed by audit name
     """
+    audit_plugins: dict[str, type[DefaultAudit]] = {}
+
     for filename, audit_config in self.config.audit_plugins.items():
       # Use importlib to dynamically import audit plugins specified
       # inside config.json.
@@ -123,12 +126,11 @@ class Crawler:
       if not issubclass(audit_class, DefaultAudit):
         raise TypeError(f'Audit plugin {filename} is not a subclass of DefaultAudit')
 
-      audit_manager.register_audit(
-        audit_name=filename,
-        audit_class=audit_class,
-      )
+      audit_plugins[filename] = audit_class
 
-  def crawl(self, site_data: SiteData, base_url: str) -> None:  # noqa: PLR0912, PLR0915
+    return audit_plugins
+
+  def crawl(self, site_data: SiteData, base_url: str) -> None:  # noqa: PLR0912
     """Crawls a domain and executes the AuditManager.
 
     Sanitises the URL and checks if it should be crawled by checking:
@@ -156,10 +158,8 @@ class Crawler:
       action = 'visit'
     logger.info('Starting %s of %s', action, base_url)
 
-    # Create an AuditManager instance and register enabled plugins
-    audit_manager = AuditManager(config=self.config, browser=self.browser)
-
-    self.register_audit_plugins(audit_manager)
+    # Create an AuditManager instance
+    audit_manager = AuditManager(config=self.config, browser=self.browser, audits=self.audit_plugins)
 
     # Counts number of test failures
     test_failures = 0

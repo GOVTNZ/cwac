@@ -24,8 +24,8 @@ class DefaultAudit:
 
   It retrieves things such as the page title, viewport size, and base url.
 
-  All audit plugins must subclass this, and are registered with
-  AuditManager.register_audit().
+  All audit plugins must subclass this, and are loaded by
+  Crawler.load_audit_plugins().
   """
 
   def __init__(self, config: Config, browser: Browser, **kwargs: Unpack[AuditKwargs]):
