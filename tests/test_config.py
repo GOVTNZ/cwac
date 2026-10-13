@@ -598,7 +598,7 @@ class TestUrlLoading:
     ]
 
   def test_http_urls_skipped_when_only_allow_https_true(self, fs: FakeFilesystem) -> None:
-    """Skips urls that have an unsupported or missing scheme."""
+    """Skips HTTP URLs when only_allow_https is enabled."""
     fs.add_real_file('config/config_default.json', read_only=False)
 
     # make sure only_allow_https is true
