@@ -99,10 +99,7 @@ class Crawler:
       logger.error('%s when getting links on %s', type(e).__name__, url)
       return []
 
-  def register_audit_plugins(
-    self,
-    audit_manager: AuditManager,
-  ) -> None:
+  def register_audit_plugins(self, audit_manager: AuditManager) -> None:
     """Register audit plugins with AuditManager.
 
     Args:

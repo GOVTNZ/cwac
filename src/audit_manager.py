@@ -30,11 +30,7 @@ class AuditManager:
     # if they are blocked by anti-bot measures.
     self.discarded_urls: dict[str, str] = {}
 
-  def register_audit(
-    self,
-    audit_name: str,
-    audit_class: type[DefaultAudit],
-  ) -> None:
+  def register_audit(self, audit_name: str, audit_class: type[DefaultAudit]) -> None:
     """Register audits to be run by run_audits().
 
     Registering an audit with an existing name replaces it.
@@ -224,11 +220,7 @@ class AuditManager:
           continue
 
         # Log the start of this audit
-        logger.info(
-          'Starting audit %s on %s',
-          audit_name,
-          url,
-        )
+        logger.info('Starting audit %s on %s', audit_name, url)
 
         # The first time through this loop, we load the page to ensure that the
         # page is loaded with the correct viewport size. On subsequent
@@ -239,20 +231,12 @@ class AuditManager:
         # Test for anti-bot measures
         if self.test_for_anti_bot(site_data) != 'Pass':
           # If URL is blocked, skip this URL
-          logger.warning(
-            'Skipping test %s on %s due to anti-bot',
-            audit_name,
-            url,
-          )
+          logger.warning('Skipping test %s on %s due to anti-bot', audit_name, url)
           return any_audit_succeeded
 
         # If the browser fails to load the page, skip test
         if browser_status is False:
-          logger.warning(
-            'Skipping test %s on %s due to .get failure',
-            audit_name,
-            url,
-          )
+          logger.warning('Skipping test %s on %s due to .get failure', audit_name, url)
           continue
 
         # Run the tests
@@ -270,12 +254,7 @@ class AuditManager:
 
           audit_result: list[dict[str, Any]] | bool = audit_instance.run()
         except Exception:  # pylint: disable=broad-exception-caught
-          logger.exception(
-            'test %s skipped on viewport %s for website %s',
-            audit_name,
-            viewport,
-            url,
-          )
+          logger.exception('test %s skipped on viewport %s for website %s', audit_name, viewport, url)
           # If the browser crashes, skip this test
           # and restart the browser
           self.browser.safe_restart()
@@ -295,29 +274,17 @@ class AuditManager:
         # because it is not applicable to the current page,
         # but the audit did not fail to execute
         if audit_result is True:
-          logger.info(
-            'Skipping audit %s, %s',
-            audit_name,
-            url,
-          )
+          logger.info('Skipping audit %s, %s', audit_name, url)
           continue
 
         # If a test fails, .run() returns False
         if audit_result is False:
-          logger.error(
-            'Test failed %s, %s',
-            audit_name,
-            url,
-          )
+          logger.error('Test failed %s, %s', audit_name, url)
           continue
 
         # If a test returns an empty result, log an error
         if audit_result == []:
-          logger.error(
-            'Test gave empty response %s, %s',
-            audit_name,
-            url,
-          )
+          logger.error('Test gave empty response %s, %s', audit_name, url)
           continue
 
         # Write results
