@@ -261,7 +261,7 @@ class AuditManager:
           continue
 
         # Run the tests
-        test_instance = audit['audit_class'](
+        audit_instance = audit['audit_class'](
           config=self.config,
           browser=self.browser,
           audit_id=audit_id,
@@ -274,7 +274,7 @@ class AuditManager:
         try:
           self._check_for_closed_details_elements()
 
-          audit_result: list[dict[str, Any]] | bool = test_instance.run()
+          audit_result: list[dict[str, Any]] | bool = audit_instance.run()
         except Exception:  # pylint: disable=broad-exception-caught
           logger.exception(
             'test %s skipped on viewport %s for website %s',
