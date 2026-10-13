@@ -2,13 +2,13 @@
 
 import json
 from typing import Any
-from unittest.mock import MagicMock
 
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
 
 from config import Config
 from src.audit_manager import AuditManager
+from src.browser import Browser
 
 
 def setup_filesystem(fs: FakeFilesystem, config_changes: dict[str, Any]) -> None:
@@ -58,9 +58,8 @@ def make_audit_manager(fs: FakeFilesystem, mocker: MockerFixture) -> AuditManage
 
   config = Config('config_default.json')
 
-  browser = MagicMock()
-  browser.get.return_value = True
-  browser.driver = MagicMock()
+  mocker.patch('src.browser.webdriver.Chrome')
+  browser = Browser(config, 1)
 
   manager = AuditManager(config, browser)
   mocker.patch.object(manager, '_check_for_closed_details_elements')
