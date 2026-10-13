@@ -102,8 +102,6 @@ class Crawler:
   def register_audit_plugins(
     self,
     audit_manager: AuditManager,
-    new_link: str,
-    site_data: SiteData,
   ) -> None:
     """Register audit plugins with AuditManager.
 
@@ -133,8 +131,6 @@ class Crawler:
       audit_manager.register_audit(
         audit_name=filename,
         audit_class=audit_class,
-        url=new_link,
-        site_data=site_data,
       )
 
   def crawl(self, site_data: SiteData, base_url: str) -> None:  # noqa: PLR0912, PLR0915
@@ -209,8 +205,8 @@ class Crawler:
         },
       )
 
-      self.register_audit_plugins(audit_manager, url, site_data)
-      test_success = audit_manager.run_audits()
+      self.register_audit_plugins(audit_manager)
+      test_success = audit_manager.run_audits(url, site_data)
 
       if test_success:
         self.analytics.add_page_scanned(base_url, url)

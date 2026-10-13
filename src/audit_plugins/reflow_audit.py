@@ -33,6 +33,8 @@ class ReflowAudit(DefaultAudit):
     """Init variables."""
     super().__init__(config, browser, **kwargs)
 
+    self.viewport_size = kwargs['viewport_size']
+
     # Provide warning if headless mode is not enabled
     if not self.config.headless:
       logger.warning(
@@ -85,6 +87,7 @@ class ReflowAudit(DefaultAudit):
         site_data=self.site_data,
         audit_id=self.audit_id,
         page_id=self.page_id,
+        viewport_size=self.viewport_size,
       )
       screenshot_audit.run()
 

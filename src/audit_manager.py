@@ -20,8 +20,6 @@ class AuditData(TypedDict):
   """Data for running an audit."""
 
   audit_class: type[DefaultAudit]
-  site_data: SiteData
-  kwargs: dict[str, Any]
 
 
 class AuditManager:
@@ -42,8 +40,6 @@ class AuditManager:
     self,
     audit_name: str,
     audit_class: type[DefaultAudit],
-    site_data: SiteData,
-    **kwargs: Any,
   ) -> None:
     """Register audits to be run by run_audits().
 
@@ -52,14 +48,10 @@ class AuditManager:
     Args:
         audit_name (str): Human-readable name for audit
         audit_class (Type[Any]): Reference to a class that runs the audit
-        site_data (SiteData): Data about the site being audited
-        kwargs (Any): Arbitrary args to be passed to audit_class
     """
     # Register the audit (or update its kwargs)
     self.audits[audit_name] = {
       'audit_class': audit_class,
-      'site_data': site_data,
-      'kwargs': {**kwargs, 'site_data': site_data},
     }
 
   def test_for_anti_bot(self, site_data: SiteData) -> str:
@@ -185,7 +177,7 @@ class AuditManager:
 
     logger.info('opened %i <details> element%s', num_of_details, plural)
 
-  def run_audits(self) -> bool:
+  def run_audits(self, url: str, site_data: SiteData) -> bool:
     """Iterate through registered audits and runs them.
 
     Main entry point for running audits. Iterates through all registered audits
@@ -240,22 +232,22 @@ class AuditManager:
         logger.info(
           'Starting audit %s on %s',
           audit_name,
-          audit['kwargs']['url'],
+          url,
         )
 
         # The first time through this loop, we load the page to ensure that the
         # page is loaded with the correct viewport size. On subsequent
         # iterations, we load the page again to ensure that any changes (e.g.
         # injected JS) made by a previous audit do not affect the next audit.
-        browser_status = self.browser.get(audit['kwargs']['url'])
+        browser_status = self.browser.get(url)
 
         # Test for anti-bot measures
-        if self.test_for_anti_bot(audit['site_data']) != 'Pass':
+        if self.test_for_anti_bot(site_data) != 'Pass':
           # If URL is blocked, skip this URL
           logger.warning(
             'Skipping test %s on %s due to anti-bot',
             audit_name,
-            audit['kwargs']['url'],
+            url,
           )
           return any_audit_succeeded
 
@@ -264,21 +256,20 @@ class AuditManager:
           logger.warning(
             'Skipping test %s on %s due to .get failure',
             audit_name,
-            audit['kwargs']['url'],
+            url,
           )
           continue
 
-        # Inject the audit ID
-        audit['kwargs']['audit_id'] = audit_id
-
-        # Inject the page ID
-        audit['kwargs']['page_id'] = page_id
-
-        # Inject the viewport size dict
-        audit['kwargs']['viewport_size'] = self.config.viewport_sizes[viewport]
-
         # Run the tests
-        test_instance = audit['audit_class'](config=self.config, browser=self.browser, **audit['kwargs'])
+        test_instance = audit['audit_class'](
+          config=self.config,
+          browser=self.browser,
+          audit_id=audit_id,
+          page_id=page_id,
+          viewport_size=self.config.viewport_sizes[viewport],
+          url=url,
+          site_data=site_data,
+        )
 
         try:
           self._check_for_closed_details_elements()
@@ -289,7 +280,7 @@ class AuditManager:
             'test %s skipped on viewport %s for website %s',
             audit_name,
             viewport,
-            audit['kwargs']['url'],
+            url,
           )
           # If the browser crashes, skip this test
           # and restart the browser
@@ -303,7 +294,7 @@ class AuditManager:
 
           continue
 
-        logger.info('Test finished %s, %s', audit_name, audit['kwargs']['url'])
+        logger.info('Test finished %s, %s', audit_name, url)
 
         # If audit_result is the boolean value True
         # a 'True' from the audit means to skip the audit
@@ -313,7 +304,7 @@ class AuditManager:
           logger.info(
             'Skipping audit %s, %s',
             audit_name,
-            audit['kwargs']['url'],
+            url,
           )
           continue
 
@@ -322,7 +313,7 @@ class AuditManager:
           logger.error(
             'Test failed %s, %s',
             audit_name,
-            audit['kwargs']['url'],
+            url,
           )
           continue
 
@@ -331,7 +322,7 @@ class AuditManager:
           logger.error(
             'Test gave empty response %s, %s',
             audit_name,
-            audit['kwargs']['url'],
+            url,
           )
           continue
 

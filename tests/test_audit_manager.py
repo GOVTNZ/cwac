@@ -86,20 +86,17 @@ def test_run_audits_single_page_single_viewport_single_audit(
 
   manager = make_audit_manager(mocker)
 
-  manager.register_audit(
-    'first',
-    FakeAudit,
-    url='https://bnl.com/news',
-    site_data={
-      'url': 'https://bnl.com/',
-      'supports_head': True,
-      'columns': {'url': 'https://bnl.com/'},
-    },
-  )
+  manager.register_audit('first', FakeAudit)
 
   browser_get = mocker.spy(manager.browser, 'get')
 
-  assert manager.run_audits() is True
+  site_data: SiteData = {
+    'url': 'https://bnl.com/',
+    'supports_head': True,
+    'columns': {'url': 'https://bnl.com/'},
+  }
+
+  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
 
   assert browser_get.call_args_list == [
     mocker.call('https://bnl.com/news'),
@@ -108,11 +105,7 @@ def test_run_audits_single_page_single_viewport_single_audit(
   assert on_run.call_args_list == [
     mocker.call(
       url='https://bnl.com/news',
-      site_data={
-        'url': 'https://bnl.com/',
-        'supports_head': True,
-        'columns': {'url': 'https://bnl.com/'},
-      },
+      site_data=site_data,
       audit_id='1_small',
       page_id='1',
       viewport={'width': 320, 'height': 450},
@@ -177,20 +170,10 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
       browser_get.reset_mock()
       on_run.reset_mock()
 
-      manager.register_audit(
-        'first',
-        FakeAudit,
-        url=url,
-        site_data=site_data,
-      )
-      manager.register_audit(
-        'second',
-        FakeAudit,
-        url=url,
-        site_data=site_data,
-      )
+      manager.register_audit('first', FakeAudit)
+      manager.register_audit('second', FakeAudit)
 
-      assert manager.run_audits() is True
+      assert manager.run_audits(url=url, site_data=site_data) is True
 
       assert browser_get.call_args_list == [
         mocker.call(url),
@@ -260,47 +243,37 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  manager.register_audit(
-    'first',
-    FakeAudit,
-    url='https://bnl.com/first',
-    site_data=site_data,
-  )
+  manager.register_audit('first', FakeAudit)
 
-  manager.register_audit(
-    'second',
-    FakeAudit,
-    url='https://bnl.com/second',
-    site_data=site_data,
-  )
+  manager.register_audit('second', FakeAudit)
 
   browser_get = mocker.spy(manager.browser, 'get')
 
-  assert manager.run_audits() is True
+  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
   assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/first'),
-    mocker.call('https://bnl.com/second'),
-    mocker.call('https://bnl.com/first'),
+    mocker.call('https://bnl.com/'),
+    mocker.call('https://bnl.com/'),
+    mocker.call('https://bnl.com/'),
   ]
 
   assert on_run.call_args_list == [
     mocker.call(
-      url='https://bnl.com/first',
+      url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_small',
       page_id='1',
       viewport={'width': 320, 'height': 450},
     ),
     mocker.call(
-      url='https://bnl.com/second',
+      url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_small',
       page_id='1',
       viewport={'width': 320, 'height': 450},
     ),
     mocker.call(
-      url='https://bnl.com/first',
+      url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_medium',
       page_id='1',
@@ -320,46 +293,30 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
 
   manager = make_audit_manager(mocker)
 
-  manager.register_audit(
-    'first',
-    FakeAudit,
-    url='https://bnl.com/ok',
-    site_data={
-      'url': 'https://bnl.com/',
-      'supports_head': True,
-      'columns': {'url': 'https://bnl.com/'},
-    },
-  )
-  manager.register_audit(
-    'second',
-    FakeAudit,
-    url='https://bnl.com/blocked',
-    site_data={
-      'url': 'https://bnl.com/',
-      'supports_head': True,
-      'columns': {'url': 'https://bnl.com/'},
-    },
-  )
+  manager.register_audit('first', FakeAudit)
+  manager.register_audit('second', FakeAudit)
 
   mocker.patch.object(manager, 'test_for_anti_bot', side_effect=['Pass', 'Cloudflare'])
 
   browser_get = mocker.spy(manager.browser, 'get')
 
-  assert manager.run_audits() is True
+  site_data: SiteData = {
+    'url': 'https://bnl.com/',
+    'supports_head': True,
+    'columns': {'url': 'https://bnl.com/'},
+  }
+
+  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
   assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/ok'),
-    mocker.call('https://bnl.com/blocked'),
+    mocker.call('https://bnl.com/'),
+    mocker.call('https://bnl.com/'),
   ]
 
   assert on_run.call_args_list == [
     mocker.call(
-      url='https://bnl.com/ok',
-      site_data={
-        'url': 'https://bnl.com/',
-        'supports_head': True,
-        'columns': {'url': 'https://bnl.com/'},
-      },
+      url='https://bnl.com/',
+      site_data=site_data,
       audit_id='1_small',
       page_id='1',
       viewport={'width': 320, 'height': 450},
@@ -378,25 +335,22 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
 
   manager = make_audit_manager(mocker)
 
-  manager.register_audit(
-    'first',
-    FakeAudit,
-    url='https://bnl.com/blocked',
-    site_data={
-      'url': 'https://bnl.com/',
-      'supports_head': True,
-      'columns': {'url': 'https://bnl.com/'},
-    },
-  )
+  manager.register_audit('first', FakeAudit)
 
   mocker.patch.object(manager, 'test_for_anti_bot', return_value='Cloudflare')
 
   browser_get = mocker.spy(manager.browser, 'get')
 
-  assert manager.run_audits() is False
+  site_data: SiteData = {
+    'url': 'https://bnl.com/',
+    'supports_head': True,
+    'columns': {'url': 'https://bnl.com/'},
+  }
+
+  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
 
   assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/blocked'),
+    mocker.call('https://bnl.com/'),
   ]
 
   assert on_run.call_args_list == []
