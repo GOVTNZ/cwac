@@ -1,10 +1,38 @@
 """Tests the behaviour of the AuditManager class."""
 
+import json
+from typing import Any
 from unittest.mock import MagicMock
 
+from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
 
+from config import Config
 from src.audit_manager import AuditManager
+
+
+def setup_filesystem(fs: FakeFilesystem, config_changes: dict[str, Any]) -> None:
+  """Set up the fake filesystem with the config, package.json, and base urls needed by Config."""
+  fs.add_real_file('config/config_default.json', read_only=False)
+  fs.add_real_file('package.json')
+
+  modify_default_config({**config_changes, 'delay_after_page_load': 0})
+
+  fs.create_file(
+    'base_urls/visit/urls.csv',
+    contents='url\nhttps://example.com',
+  )
+  fs.makedirs('base_urls/nohead')
+  fs.makedirs('results')
+
+
+def modify_default_config(modifications: dict[str, Any]) -> None:
+  """Merge the given modifications into the default config on disk."""
+  with open('config/config_default.json', 'r+', encoding='utf-8') as f:
+    c = {**json.load(f), **modifications}
+    f.seek(0)
+    json.dump(c, f)
+    f.truncate()
 
 
 class FakeAudit:
@@ -18,13 +46,17 @@ class FakeAudit:
     return [{'result': 'ok'}]
 
 
-def make_audit_manager(mocker: MockerFixture) -> AuditManager:
+def make_audit_manager(fs: FakeFilesystem, mocker: MockerFixture) -> AuditManager:
   """Create an AuditManager with mocked dependencies for unit tests."""
-  config = MagicMock()
-  config.viewport_sizes = {'small': {'width': 320, 'height': 640}}
-  config.audit_plugins = {'first': {}, 'second': {}}
-  config.audit_name = 'test-audit'
-  config.get_unique_id.return_value = 'page-id'
+  setup_filesystem(
+    fs,
+    {
+      'viewport_sizes': {'small': {'width': 320, 'height': 450}},
+      'audit_plugins': {'first': {}, 'second': {}},
+    },
+  )
+
+  config = Config('config_default.json')
 
   browser = MagicMock()
   browser.get.return_value = True
@@ -32,16 +64,16 @@ def make_audit_manager(mocker: MockerFixture) -> AuditManager:
 
   manager = AuditManager(config, browser)
   mocker.patch.object(manager, '_check_for_closed_details_elements')
-  mocker.patch('src.audit_manager.CSVWriter')
 
   return manager
 
 
 def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
+  fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
   """Returns True when anti-bot blocking happens after an earlier audit succeeded."""
-  manager = make_audit_manager(mocker)
+  manager = make_audit_manager(fs, mocker)
 
   manager.register_audit(
     'first',
@@ -78,10 +110,11 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
 
 
 def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
+  fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
   """Returns False when anti-bot blocking happens before any audit succeeded."""
-  manager = make_audit_manager(mocker)
+  manager = make_audit_manager(fs, mocker)
 
   manager.register_audit(
     'first',
