@@ -9,6 +9,7 @@ import selenium.common.exceptions
 import urllib3
 
 from config import Config, SiteData
+from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 from src.output import CSVWriter
 
@@ -18,7 +19,7 @@ logger = logging.getLogger('cwac')
 class AuditData(TypedDict):
   """Data for running an audit."""
 
-  audit_class: type[Any]
+  audit_class: type[DefaultAudit]
   site_data: SiteData
   kwargs: dict[str, Any]
 
@@ -37,7 +38,13 @@ class AuditManager:
     # if they are blocked by anti-bot measures.
     self.discarded_urls: dict[str, str] = {}
 
-  def register_audit(self, audit_name: str, audit_class: type[Any], site_data: SiteData, **kwargs: Any) -> None:
+  def register_audit(
+    self,
+    audit_name: str,
+    audit_class: type[DefaultAudit],
+    site_data: SiteData,
+    **kwargs: Any,
+  ) -> None:
     """Register audits to be run by run_audits().
 
     This can also be used to re-run a test with updated kwargs.
