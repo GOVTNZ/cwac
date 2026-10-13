@@ -107,8 +107,6 @@ class Crawler:
 
     Args:
         audit_manager (AuditManager): AuditManager instance
-        new_link (str): the link to be audited
-        site_data (dict[Any, Any]): contains info about the site
     """
     for filename, audit_config in self.config.audit_plugins.items():
       # Use importlib to dynamically import audit plugins specified

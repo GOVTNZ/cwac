@@ -37,13 +37,12 @@ class AuditManager:
   ) -> None:
     """Register audits to be run by run_audits().
 
-    This can also be used to re-run a test with updated kwargs.
+    Registering an audit with an existing name replaces it.
 
     Args:
         audit_name (str): Human-readable name for audit
-        audit_class (Type[Any]): Reference to a class that runs the audit
+        audit_class (type[DefaultAudit]): Reference to a class that runs the audit
     """
-    # Register the audit (or update its kwargs)
     self.audits[audit_name] = audit_class
 
   def test_for_anti_bot(self, site_data: SiteData) -> str:
@@ -189,6 +188,10 @@ class AuditManager:
 
     1. The browser is restarted.
     2. the viewport size is set again.
+
+    Args:
+        url (str): the URL of the page to audit
+        site_data (SiteData): data about the site the page belongs to
 
     Returns:
         bool: True if at least one audit successfully produced results, else False
