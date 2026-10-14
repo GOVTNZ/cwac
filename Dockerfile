@@ -20,7 +20,7 @@ FROM --platform=linux/amd64 ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2b
 # Chrome itself since that gets managed using @puppeteer/browsers as part of the npm install
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends wget python3.15-venv && \
+    apt-get install -y --no-install-recommends wget && \
     wget -nv https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     apt-get satisfy -y --no-install-recommends "$(dpkg-deb -f google-chrome-stable_current_amd64.deb Depends | tr '\n' ' ')" && \
     apt-get clean && \
@@ -30,8 +30,11 @@ RUN apt-get update && \
 # create cwac directory
 WORKDIR /cwac
 
-# create .venv
-RUN python3.15 -m venv .venv
+# install python (via uv) and create the .venv
+ENV UV_PYTHON_INSTALL_DIR=/opt/python
+RUN --mount=from=ghcr.io/astral-sh/uv:0.13.0,source=/uv,target=/bin/uv \
+    uv python install 3.15.0 && \
+    $(uv python find 3.15.0) -m venv .venv
 
 ENV VIRTUAL_ENV=".venv" \
     PATH=".venv/bin:$PATH"
