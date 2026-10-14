@@ -63,6 +63,7 @@ def create_event_tracker(mocker: MockerFixture, manager: AuditManager, on_run: M
 
   events.attach_mock(mocker.spy(manager.browser, 'get'), 'get')
   events.attach_mock(mocker.spy(manager.browser, 'safe_restart'), 'restart')
+  events.attach_mock(mocker.spy(manager.browser, 'set_window_size'), 'set_window_size')
   events.attach_mock(on_run, 'run')
 
   return events
@@ -131,6 +132,7 @@ def test_run_audits_single_page_single_viewport_single_audit(
   assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
 
   assert event_log(events) == [
+    ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/news'),
     ('run', 'first'),
   ]
@@ -206,66 +208,82 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
 
   # expect the page to be fetched for each audit at each viewport
   assert event_log(events) == [
+    ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
     ('get', 'https://bnl.com/'),
     ('run', 'second'),
+    ('set_window_size', 1280, 800),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
     ('get', 'https://bnl.com/'),
     ('run', 'second'),
+    ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/news'),
     ('run', 'first'),
     ('get', 'https://bnl.com/news'),
     ('run', 'second'),
+    ('set_window_size', 1280, 800),
     ('get', 'https://bnl.com/news'),
     ('run', 'first'),
     ('get', 'https://bnl.com/news'),
     ('run', 'second'),
+    ('set_window_size', 320, 450),
     ('get', 'https://acme.com/'),
     ('run', 'first'),
     ('get', 'https://acme.com/'),
     ('run', 'second'),
+    ('set_window_size', 1280, 800),
     ('get', 'https://acme.com/'),
     ('run', 'first'),
     ('get', 'https://acme.com/'),
     ('run', 'second'),
+    ('set_window_size', 320, 450),
     ('get', 'https://acme.com/contact'),
     ('run', 'first'),
     ('get', 'https://acme.com/contact'),
     ('run', 'second'),
+    ('set_window_size', 1280, 800),
     ('get', 'https://acme.com/contact'),
     ('run', 'first'),
     ('get', 'https://acme.com/contact'),
     ('run', 'second'),
+    ('set_window_size', 320, 450),
     ('get', 'https://acme.com/legal'),
     ('run', 'first'),
     ('get', 'https://acme.com/legal'),
     ('run', 'second'),
+    ('set_window_size', 1280, 800),
     ('get', 'https://acme.com/legal'),
     ('run', 'first'),
     ('get', 'https://acme.com/legal'),
     ('run', 'second'),
+    ('set_window_size', 320, 450),
     ('get', 'https://wayne.com/'),
     ('run', 'first'),
     ('get', 'https://wayne.com/'),
     ('run', 'second'),
+    ('set_window_size', 1280, 800),
     ('get', 'https://wayne.com/'),
     ('run', 'first'),
     ('get', 'https://wayne.com/'),
     ('run', 'second'),
+    ('set_window_size', 320, 450),
     ('get', 'https://wayne.com/security'),
     ('run', 'first'),
     ('get', 'https://wayne.com/security'),
     ('run', 'second'),
+    ('set_window_size', 1280, 800),
     ('get', 'https://wayne.com/security'),
     ('run', 'first'),
     ('get', 'https://wayne.com/security'),
     ('run', 'second'),
+    ('set_window_size', 320, 450),
     ('get', 'https://wayne.com/legal'),
     ('run', 'first'),
     ('get', 'https://wayne.com/legal'),
     ('run', 'second'),
+    ('set_window_size', 1280, 800),
     ('get', 'https://wayne.com/legal'),
     ('run', 'first'),
     ('get', 'https://wayne.com/legal'),
@@ -403,10 +421,12 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
   assert event_log(events) == [
+    ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
     ('get', 'https://bnl.com/'),
     ('run', 'second'),
+    ('set_window_size', 1280, 800),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
   ]
@@ -460,6 +480,7 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
 
   assert event_log(events) == [
     # first "get" is not blocked, so we run the audit
+    ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
     # second "get" is blocked, so we stop entirely
@@ -498,6 +519,7 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
 
   assert event_log(events) == [
+    ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
   ]
 
@@ -528,6 +550,7 @@ def test_run_audits_skips_audit_when_page_fails_to_load(
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
   assert event_log(events) == [
+    ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
     ('get', 'https://bnl.com/'),
@@ -578,24 +601,18 @@ def test_run_audits_restarts_browser_and_continues_when_an_audit_raises(
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  browser_set_window_size = mocker.spy(manager.browser, 'set_window_size')
-
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
   assert event_log(events) == [
+    ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
     ('get', 'https://bnl.com/'),
     ('run', 'second'),
     ('restart',),
+    ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'third'),
-  ]
-
-  # expect the viewport to be set at the start, and then restored after the restart
-  assert browser_set_window_size.call_args_list == [
-    mocker.call(320, 450),
-    mocker.call(320, 450),
   ]
 
   # expect the audit to have been called three times with the right data
@@ -649,6 +666,7 @@ def test_run_audits_does_not_count_audits_without_results_as_success(
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
 
   assert event_log(events) == [
+    ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
   ]
