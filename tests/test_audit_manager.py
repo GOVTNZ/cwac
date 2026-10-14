@@ -1,6 +1,7 @@
 """Tests the behaviour of the AuditManager class."""
 
 import json
+from collections.abc import Callable
 from typing import Any
 
 from pyfakefs.fake_filesystem import FakeFilesystem
@@ -8,6 +9,7 @@ from pytest_mock import MockerFixture
 
 from config import Config, SiteData
 from src.audit_manager import AuditManager
+from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 
 
@@ -33,15 +35,21 @@ def modify_default_config(modifications: dict[str, Any]) -> None:
     f.truncate()
 
 
-class FakeAudit:
-  """Test audit that always returns a successful result."""
+class FakeAudit(DefaultAudit):
+  """An audit that reports the conditions it was run under via on_run."""
 
-  def __init__(self, **_: object) -> None:
-    """Init variables."""
+  on_run: Callable[..., None] = staticmethod(lambda **_: None)
 
   def run(self) -> list[dict[str, str]]:
-    """Return a non-empty audit result."""
-    return [{'result': 'ok'}]
+    """Report the current url, site data, ids, and browser viewport to on_run."""
+    self.on_run(
+      url=self.url,
+      site_data=self.site_data,
+      audit_id=self.audit_id,
+      page_id=self.page_id,
+      viewport=dict(self.browser.viewport_size),
+    )
+    return [{}]
 
 
 def make_audit_manager(mocker: MockerFixture) -> AuditManager:
@@ -70,6 +78,8 @@ def test_run_audits_single_page_single_viewport_single_audit(
   mocker: MockerFixture,
 ) -> None:
   """Runs the audit against a single page at a single viewport."""
+  on_run = mocker.patch.object(FakeAudit, 'on_run')
+
   setup_filesystem(fs)
 
   manager = make_audit_manager(mocker)
@@ -93,13 +103,36 @@ def test_run_audits_single_page_single_viewport_single_audit(
     mocker.call('https://bnl.com/news'),
   ]
 
+  assert on_run.call_args_list == [
+    mocker.call(
+      url='https://bnl.com/news',
+      site_data={
+        'url': 'https://bnl.com/',
+        'supports_head': True,
+        'columns': {'url': 'https://bnl.com/'},
+      },
+      audit_id='1_small',
+      page_id='1',
+      viewport={'width': 320, 'height': 450},
+    ),
+  ]
+
 
 def test_run_audits_multiple_sites_pages_viewports_and_audits(
   fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
   """Runs the audit against multiple pages across multiple sites at multiple viewports."""
+  on_run = mocker.patch.object(FakeAudit, 'on_run')
+
   setup_filesystem(fs)
+
+  # the config and browser are shared across the whole run, like in the tool
+  base_manager = make_audit_manager(mocker)
+  config, browser = base_manager.config, base_manager.browser
+  browser_get = mocker.spy(browser, 'get')
+
+  page_id = 0
 
   # this mirrors how the tool ends up running the audit manager
   for base_url, urls in {
@@ -124,8 +157,14 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
       'columns': {'url': base_url},
     }
 
+    # each site gets its own audit manager, like in the crawler
+    manager = AuditManager(config, browser)
+    mocker.patch.object(manager, '_check_for_closed_details_elements')
+
     for url in urls:
-      manager = make_audit_manager(mocker)
+      page_id += 1
+      browser_get.reset_mock()
+      on_run.reset_mock()
 
       manager.register_audit(
         'first',
@@ -140,13 +179,28 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
         site_data=site_data,
       )
 
-      browser_get = mocker.spy(manager.browser, 'get')
-
       assert manager.run_audits() is True
 
       assert browser_get.call_args_list == [
         mocker.call(url),
         mocker.call(url),
+      ]
+
+      assert on_run.call_args_list == [
+        mocker.call(
+          url=url,
+          site_data=site_data,
+          audit_id=f'{page_id}_small',
+          page_id=f'{page_id}',
+          viewport={'width': 320, 'height': 450},
+        ),
+        mocker.call(
+          url=url,
+          site_data=site_data,
+          audit_id=f'{page_id}_small',
+          page_id=f'{page_id}',
+          viewport={'width': 320, 'height': 450},
+        ),
       ]
 
 
