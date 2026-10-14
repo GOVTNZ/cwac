@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
@@ -42,9 +42,12 @@ class FakeAudit(DefaultAudit):
 
   on_run: Callable[..., None] = staticmethod(lambda **_: None)
 
+  audit_name = ''
+
   def run(self) -> list[dict[str, str]]:
     """Report the current url, site data, ids, and browser viewport to on_run."""
     self.on_run(
+      audit_name=self.audit_name,
       url=self.url,
       site_data=self.site_data,
       audit_id=self.audit_id,
@@ -75,7 +78,15 @@ def make_audit_manager(
   mocker.patch('src.browser.webdriver.Chrome')
   browser = Browser(config, 1)
 
-  manager = AuditManager(config, browser, dict.fromkeys(audit_plugins, FakeAudit))
+  audits = {
+    name: cast(
+      type[DefaultAudit],
+      type('FakeAudit', (FakeAudit,), {'audit_name': name}),
+    )
+    for name in audit_plugins
+  }
+
+  manager = AuditManager(config, browser, audits)
   mocker.patch.object(manager, '_check_for_closed_details_elements')
   mocker.patch.object(manager, 'test_for_anti_bot', return_value='Pass')
 
@@ -111,6 +122,7 @@ def test_run_audits_single_page_single_viewport_single_audit(
 
   assert on_run.call_args_list == [
     mocker.call(
+      audit_name='first',
       url='https://bnl.com/news',
       site_data=site_data,
       audit_id='1_small',
@@ -203,6 +215,7 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
   assert on_run.call_args_list == [
     *[
       mocker.call(
+        audit_name=audit_name,
         url='https://bnl.com/',
         site_data=site_datas['https://bnl.com/'],
         audit_id=f'1_{label}',
@@ -210,10 +223,11 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
         viewport=viewport,
       )
       for label, viewport in viewport_sizes.items()
-      for _ in range(2)
+      for audit_name in ['first', 'second']
     ],
     *[
       mocker.call(
+        audit_name=audit_name,
         url='https://bnl.com/news',
         site_data=site_datas['https://bnl.com/'],
         audit_id=f'2_{label}',
@@ -221,10 +235,11 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
         viewport=viewport,
       )
       for label, viewport in viewport_sizes.items()
-      for _ in range(2)
+      for audit_name in ['first', 'second']
     ],
     *[
       mocker.call(
+        audit_name=audit_name,
         url='https://acme.com/',
         site_data=site_datas['https://acme.com/'],
         audit_id=f'3_{label}',
@@ -232,10 +247,11 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
         viewport=viewport,
       )
       for label, viewport in viewport_sizes.items()
-      for _ in range(2)
+      for audit_name in ['first', 'second']
     ],
     *[
       mocker.call(
+        audit_name=audit_name,
         url='https://acme.com/contact',
         site_data=site_datas['https://acme.com/'],
         audit_id=f'4_{label}',
@@ -243,10 +259,11 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
         viewport=viewport,
       )
       for label, viewport in viewport_sizes.items()
-      for _ in range(2)
+      for audit_name in ['first', 'second']
     ],
     *[
       mocker.call(
+        audit_name=audit_name,
         url='https://acme.com/legal',
         site_data=site_datas['https://acme.com/'],
         audit_id=f'5_{label}',
@@ -254,10 +271,11 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
         viewport=viewport,
       )
       for label, viewport in viewport_sizes.items()
-      for _ in range(2)
+      for audit_name in ['first', 'second']
     ],
     *[
       mocker.call(
+        audit_name=audit_name,
         url='https://wayne.com/',
         site_data=site_datas['https://wayne.com/'],
         audit_id=f'6_{label}',
@@ -265,10 +283,11 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
         viewport=viewport,
       )
       for label, viewport in viewport_sizes.items()
-      for _ in range(2)
+      for audit_name in ['first', 'second']
     ],
     *[
       mocker.call(
+        audit_name=audit_name,
         url='https://wayne.com/security',
         site_data=site_datas['https://wayne.com/'],
         audit_id=f'7_{label}',
@@ -276,10 +295,11 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
         viewport=viewport,
       )
       for label, viewport in viewport_sizes.items()
-      for _ in range(2)
+      for audit_name in ['first', 'second']
     ],
     *[
       mocker.call(
+        audit_name=audit_name,
         url='https://wayne.com/legal',
         site_data=site_datas['https://wayne.com/'],
         audit_id=f'8_{label}',
@@ -287,7 +307,7 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
         viewport=viewport,
       )
       for label, viewport in viewport_sizes.items()
-      for _ in range(2)
+      for audit_name in ['first', 'second']
     ],
   ]
 
@@ -335,6 +355,7 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
 
   assert on_run.call_args_list == [
     mocker.call(
+      audit_name='first',
       url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_small',
@@ -342,6 +363,7 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
       viewport={'width': 320, 'height': 450},
     ),
     mocker.call(
+      audit_name='second',
       url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_small',
@@ -349,6 +371,7 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
       viewport={'width': 320, 'height': 450},
     ),
     mocker.call(
+      audit_name='first',
       url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_medium',
@@ -390,6 +413,7 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
 
   assert on_run.call_args_list == [
     mocker.call(
+      audit_name='first',
       url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_small',
@@ -469,6 +493,7 @@ def test_run_audits_skips_audit_when_page_fails_to_load(
   # expect only two of the audits to have been run
   assert on_run.call_args_list == [
     mocker.call(
+      audit_name='first',
       url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_small',
@@ -476,6 +501,7 @@ def test_run_audits_skips_audit_when_page_fails_to_load(
       viewport={'width': 320, 'height': 450},
     ),
     mocker.call(
+      audit_name='third',
       url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_small',
@@ -533,6 +559,7 @@ def test_run_audits_restarts_browser_and_continues_when_an_audit_raises(
   # expect the audit to have been called three times with the right data
   assert on_run.call_args_list == [
     mocker.call(
+      audit_name='first',
       url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_small',
@@ -540,6 +567,7 @@ def test_run_audits_restarts_browser_and_continues_when_an_audit_raises(
       viewport={'width': 320, 'height': 450},
     ),
     mocker.call(
+      audit_name='second',
       url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_small',
@@ -547,6 +575,7 @@ def test_run_audits_restarts_browser_and_continues_when_an_audit_raises(
       viewport={'width': 320, 'height': 450},
     ),
     mocker.call(
+      audit_name='third',
       url='https://bnl.com/',
       site_data=site_data,
       audit_id='1_small',
