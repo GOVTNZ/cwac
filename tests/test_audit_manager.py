@@ -85,7 +85,13 @@ def test_run_audits_single_page_single_viewport_single_audit(
     },
   )
 
+  browser_get = mocker.spy(manager.browser, 'get')
+
   assert manager.run_audits() is True
+
+  assert browser_get.call_args_list == [
+    mocker.call('https://bnl.com/news'),
+  ]
 
 
 def test_run_audits_multiple_sites_pages_viewports_and_audits(
@@ -134,7 +140,14 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
         site_data=site_data,
       )
 
+      browser_get = mocker.spy(manager.browser, 'get')
+
       assert manager.run_audits() is True
+
+      assert browser_get.call_args_list == [
+        mocker.call(url),
+        mocker.call(url),
+      ]
 
 
 def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
@@ -177,7 +190,14 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
 
   mocker.patch.object(manager, 'test_for_anti_bot', side_effect=['Pass', 'Cloudflare'])
 
+  browser_get = mocker.spy(manager.browser, 'get')
+
   assert manager.run_audits() is True
+
+  assert browser_get.call_args_list == [
+    mocker.call('https://example.govt.nz/ok'),
+    mocker.call('https://example.govt.nz/blocked'),
+  ]
 
 
 def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
@@ -204,4 +224,10 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
 
   mocker.patch.object(manager, 'test_for_anti_bot', return_value='Cloudflare')
 
+  browser_get = mocker.spy(manager.browser, 'get')
+
   assert manager.run_audits() is False
+
+  assert browser_get.call_args_list == [
+    mocker.call('https://example.govt.nz/blocked'),
+  ]
