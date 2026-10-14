@@ -3,6 +3,7 @@
 import json
 from collections.abc import Callable
 from typing import Any, cast
+from unittest.mock import Mock
 
 import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
@@ -38,15 +39,15 @@ def modify_default_config(modifications: dict[str, Any]) -> None:
 
 
 class FakeAudit(DefaultAudit):
-  """An audit that reports the conditions it was run under via on_run."""
+  """An audit that reports the conditions it was run under via on_run, and uses its return value as the audit result."""
 
-  on_run: Callable[..., None] = staticmethod(lambda **_: None)
+  on_run: Callable[..., list[dict[str, str]] | bool] = staticmethod(lambda **_: [{}])
 
   audit_name = ''
 
-  def run(self) -> list[dict[str, str]]:
-    """Report the current url, site data, ids, and browser viewport to on_run."""
-    self.on_run(
+  def run(self) -> list[dict[str, str]] | bool:
+    """Report the current url, site data, ids, and browser viewport to on_run, and return what it returns."""
+    return self.on_run(
       audit_name=self.audit_name,
       url=self.url,
       site_data=self.site_data,
@@ -54,15 +55,32 @@ class FakeAudit(DefaultAudit):
       page_id=self.page_id,
       viewport=dict(self.browser.viewport_size),
     )
-    return [{}]
 
 
-def make_audit_manager(
+def create_event_tracker(mocker: MockerFixture, manager: AuditManager, on_run: Mock) -> Mock:
+  """Create a mock which captures various call "events" that can be asserted on later."""
+  events = Mock()
+
+  events.attach_mock(mocker.spy(manager.browser, 'get'), 'get')
+  events.attach_mock(mocker.spy(manager.browser, 'safe_restart'), 'restart')
+  events.attach_mock(on_run, 'run')
+
+  return events
+
+
+def event_log(events: Mock) -> list[tuple[Any, ...]]:
+  """Create an "event log" based on the calls made to the events mock."""
+  return [('run', kwargs['audit_name']) if name == 'run' else (name, *args) for name, args, kwargs in events.mock_calls]
+
+
+def setup_manager_and_mocks(
   mocker: MockerFixture,
   audit_plugins: dict[str, Any],
   config_changes: dict[str, Any] | None = None,
-) -> AuditManager:
-  """Create an AuditManager using a real Config and Browser, but a stubbed webdriver."""
+) -> tuple[AuditManager, Mock, Mock]:
+  """Create an AuditManager and related mocks for testing, with on_run returning a successful result by default."""
+  on_run = mocker.patch.object(FakeAudit, 'on_run', return_value=[{}])
+
   modify_default_config(
     {
       'viewport_sizes': {'small': {'width': 320, 'height': 450}},
@@ -90,7 +108,9 @@ def make_audit_manager(
   mocker.patch.object(manager, '_check_for_closed_details_elements')
   mocker.patch.object(manager, 'test_for_anti_bot', return_value='Pass')
 
-  return manager
+  events = create_event_tracker(mocker, manager, on_run)
+
+  return manager, events, on_run
 
 
 def test_run_audits_single_page_single_viewport_single_audit(
@@ -98,14 +118,9 @@ def test_run_audits_single_page_single_viewport_single_audit(
   mocker: MockerFixture,
 ) -> None:
   """Runs the audit against a single page at a single viewport."""
-  on_run = mocker.patch.object(FakeAudit, 'on_run')
-
   setup_filesystem(fs)
 
-  manager = make_audit_manager(mocker, {'first': {}})
-
-  browser_get = mocker.spy(manager.browser, 'get')
-  browser_restart = mocker.spy(manager.browser, 'safe_restart')
+  manager, events, on_run = setup_manager_and_mocks(mocker, {'first': {}})
 
   site_data: SiteData = {
     'url': 'https://bnl.com/',
@@ -115,9 +130,9 @@ def test_run_audits_single_page_single_viewport_single_audit(
 
   assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
 
-  assert browser_restart.call_count == 0
-  assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/news'),
+  assert event_log(events) == [
+    ('get', 'https://bnl.com/news'),
+    ('run', 'first'),
   ]
 
   assert on_run.call_args_list == [
@@ -137,8 +152,6 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
   mocker: MockerFixture,
 ) -> None:
   """Runs the audit against multiple pages across multiple sites at multiple viewports."""
-  on_run = mocker.patch.object(FakeAudit, 'on_run')
-
   setup_filesystem(fs)
 
   viewport_sizes = {
@@ -146,7 +159,7 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
     'medium': {'width': 1280, 'height': 800},
   }
 
-  manager = make_audit_manager(
+  manager, events, on_run = setup_manager_and_mocks(
     mocker,
     {'first': {}, 'second': {}},
     {'viewport_sizes': viewport_sizes},
@@ -187,28 +200,76 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
     ],
   }
 
-  browser_get = mocker.spy(manager.browser, 'get')
-  browser_restart = mocker.spy(manager.browser, 'safe_restart')
-
   for base_url, urls in sites.items():
     for url in urls:
       assert manager.run_audits(url=url, site_data=site_datas[base_url]) is True
 
   # expect the page to be fetched for each audit at each viewport
-  assert browser_restart.call_count == 0
-  assert browser_get.call_args_list == [
-    mocker.call(url)
-    for url in [
-      'https://bnl.com/',
-      'https://bnl.com/news',
-      'https://acme.com/',
-      'https://acme.com/contact',
-      'https://acme.com/legal',
-      'https://wayne.com/',
-      'https://wayne.com/security',
-      'https://wayne.com/legal',
-    ]
-    for _ in range(4)
+  assert event_log(events) == [
+    ('get', 'https://bnl.com/'),
+    ('run', 'first'),
+    ('get', 'https://bnl.com/'),
+    ('run', 'second'),
+    ('get', 'https://bnl.com/'),
+    ('run', 'first'),
+    ('get', 'https://bnl.com/'),
+    ('run', 'second'),
+    ('get', 'https://bnl.com/news'),
+    ('run', 'first'),
+    ('get', 'https://bnl.com/news'),
+    ('run', 'second'),
+    ('get', 'https://bnl.com/news'),
+    ('run', 'first'),
+    ('get', 'https://bnl.com/news'),
+    ('run', 'second'),
+    ('get', 'https://acme.com/'),
+    ('run', 'first'),
+    ('get', 'https://acme.com/'),
+    ('run', 'second'),
+    ('get', 'https://acme.com/'),
+    ('run', 'first'),
+    ('get', 'https://acme.com/'),
+    ('run', 'second'),
+    ('get', 'https://acme.com/contact'),
+    ('run', 'first'),
+    ('get', 'https://acme.com/contact'),
+    ('run', 'second'),
+    ('get', 'https://acme.com/contact'),
+    ('run', 'first'),
+    ('get', 'https://acme.com/contact'),
+    ('run', 'second'),
+    ('get', 'https://acme.com/legal'),
+    ('run', 'first'),
+    ('get', 'https://acme.com/legal'),
+    ('run', 'second'),
+    ('get', 'https://acme.com/legal'),
+    ('run', 'first'),
+    ('get', 'https://acme.com/legal'),
+    ('run', 'second'),
+    ('get', 'https://wayne.com/'),
+    ('run', 'first'),
+    ('get', 'https://wayne.com/'),
+    ('run', 'second'),
+    ('get', 'https://wayne.com/'),
+    ('run', 'first'),
+    ('get', 'https://wayne.com/'),
+    ('run', 'second'),
+    ('get', 'https://wayne.com/security'),
+    ('run', 'first'),
+    ('get', 'https://wayne.com/security'),
+    ('run', 'second'),
+    ('get', 'https://wayne.com/security'),
+    ('run', 'first'),
+    ('get', 'https://wayne.com/security'),
+    ('run', 'second'),
+    ('get', 'https://wayne.com/legal'),
+    ('run', 'first'),
+    ('get', 'https://wayne.com/legal'),
+    ('run', 'second'),
+    ('get', 'https://wayne.com/legal'),
+    ('run', 'first'),
+    ('get', 'https://wayne.com/legal'),
+    ('run', 'second'),
   ]
 
   # expect each audit to be run once at each viewport for each page
@@ -317,11 +378,9 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
   mocker: MockerFixture,
 ) -> None:
   """Skips an audit at any viewport other than its configured viewport_to_test."""
-  on_run = mocker.patch.object(FakeAudit, 'on_run')
-
   setup_filesystem(fs)
 
-  manager = make_audit_manager(
+  manager, events, on_run = setup_manager_and_mocks(
     mocker,
     {
       'first': {},
@@ -341,16 +400,15 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  browser_get = mocker.spy(manager.browser, 'get')
-  browser_restart = mocker.spy(manager.browser, 'safe_restart')
-
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
-  assert browser_restart.call_count == 0
-  assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/'),
-    mocker.call('https://bnl.com/'),
-    mocker.call('https://bnl.com/'),
+  assert event_log(events) == [
+    ('get', 'https://bnl.com/'),
+    ('run', 'first'),
+    ('get', 'https://bnl.com/'),
+    ('run', 'second'),
+    ('get', 'https://bnl.com/'),
+    ('run', 'first'),
   ]
 
   assert on_run.call_args_list == [
@@ -386,16 +444,11 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   mocker: MockerFixture,
 ) -> None:
   """Returns True when anti-bot blocking happens after an earlier audit succeeded."""
-  on_run = mocker.patch.object(FakeAudit, 'on_run')
-
   setup_filesystem(fs)
 
-  manager = make_audit_manager(mocker, {'first': {}, 'second': {}})
+  manager, events, on_run = setup_manager_and_mocks(mocker, {'first': {}, 'second': {}})
 
   mocker.patch.object(manager, 'test_for_anti_bot', side_effect=['Pass', 'Cloudflare'])
-
-  browser_get = mocker.spy(manager.browser, 'get')
-  browser_restart = mocker.spy(manager.browser, 'safe_restart')
 
   site_data: SiteData = {
     'url': 'https://bnl.com/',
@@ -405,10 +458,12 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
 
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
-  assert browser_restart.call_count == 0
-  assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/'),
-    mocker.call('https://bnl.com/'),
+  assert event_log(events) == [
+    # first "get" is not blocked, so we run the audit
+    ('get', 'https://bnl.com/'),
+    ('run', 'first'),
+    # second "get" is blocked, so we stop entirely
+    ('get', 'https://bnl.com/'),
   ]
 
   assert on_run.call_args_list == [
@@ -428,16 +483,11 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   mocker: MockerFixture,
 ) -> None:
   """Returns False when anti-bot blocking happens before any audit succeeded."""
-  on_run = mocker.patch.object(FakeAudit, 'on_run')
-
   setup_filesystem(fs)
 
-  manager = make_audit_manager(mocker, {'first': {}})
+  manager, events, on_run = setup_manager_and_mocks(mocker, {'first': {}})
 
   mocker.patch.object(manager, 'test_for_anti_bot', return_value='Cloudflare')
-
-  browser_get = mocker.spy(manager.browser, 'get')
-  browser_restart = mocker.spy(manager.browser, 'safe_restart')
 
   site_data: SiteData = {
     'url': 'https://bnl.com/',
@@ -447,9 +497,8 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
 
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
 
-  assert browser_restart.call_count == 0
-  assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/'),
+  assert event_log(events) == [
+    ('get', 'https://bnl.com/'),
   ]
 
   assert on_run.call_args_list == []
@@ -460,11 +509,9 @@ def test_run_audits_skips_audit_when_page_fails_to_load(
   mocker: MockerFixture,
 ) -> None:
   """Skips an audit when the page fails to load, but still runs the remaining audits."""
-  on_run = mocker.patch.object(FakeAudit, 'on_run')
-
   setup_filesystem(fs)
 
-  manager = make_audit_manager(
+  manager, events, on_run = setup_manager_and_mocks(
     mocker,
     {'first': {}, 'second': {}, 'third': {}},
   )
@@ -475,19 +522,18 @@ def test_run_audits_skips_audit_when_page_fails_to_load(
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  browser_get = mocker.spy(manager.browser, 'get')
-  browser_restart = mocker.spy(manager.browser, 'safe_restart')
-
   # have the second "get" fail via having the driver time out (twice, since the browser does a retry)
   manager.browser.driver.get.side_effect = [None, TimeoutException(), TimeoutException(), None]
 
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
-  assert browser_restart.call_count == 0
-  assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/'),
-    mocker.call('https://bnl.com/'),
-    mocker.call('https://bnl.com/'),
+  assert event_log(events) == [
+    ('get', 'https://bnl.com/'),
+    ('run', 'first'),
+    ('get', 'https://bnl.com/'),
+    # second audit is not run since the page failed to load
+    ('get', 'https://bnl.com/'),
+    ('run', 'third'),
   ]
 
   # expect only two of the audits to have been run
@@ -516,17 +562,15 @@ def test_run_audits_restarts_browser_and_continues_when_an_audit_raises(
   mocker: MockerFixture,
 ) -> None:
   """Restarts the browser and restores the viewport when an audit raises, then runs the remaining audits."""
-  on_run = mocker.patch.object(FakeAudit, 'on_run')
-
-  # have the second audit run error
-  on_run.side_effect = [None, Exception('oh noes'), None]
-
   setup_filesystem(fs)
 
-  manager = make_audit_manager(
+  manager, events, on_run = setup_manager_and_mocks(
     mocker,
     {'first': {}, 'second': {}, 'third': {}},
   )
+
+  # have the second audit run error, with the others returning the default successful result
+  on_run.side_effect = [mocker.DEFAULT, Exception('oh noes'), mocker.DEFAULT]
 
   site_data: SiteData = {
     'url': 'https://bnl.com/',
@@ -534,26 +578,24 @@ def test_run_audits_restarts_browser_and_continues_when_an_audit_raises(
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  browser_get = mocker.spy(manager.browser, 'get')
-  browser_restart = mocker.spy(manager.browser, 'safe_restart')
   browser_set_window_size = mocker.spy(manager.browser, 'set_window_size')
 
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
-  # expect that the browser was restarted once, since an audit failed
-  assert browser_restart.call_count == 1
+  assert event_log(events) == [
+    ('get', 'https://bnl.com/'),
+    ('run', 'first'),
+    ('get', 'https://bnl.com/'),
+    ('run', 'second'),
+    ('restart',),
+    ('get', 'https://bnl.com/'),
+    ('run', 'third'),
+  ]
 
   # expect the viewport to be set at the start, and then restored after the restart
   assert browser_set_window_size.call_args_list == [
     mocker.call(320, 450),
     mocker.call(320, 450),
-  ]
-
-  # expect the page was fetched three times, since that happens before the audit runs
-  assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/'),
-    mocker.call('https://bnl.com/'),
-    mocker.call('https://bnl.com/'),
   ]
 
   # expect the audit to have been called three times with the right data
@@ -592,14 +634,11 @@ def test_run_audits_does_not_count_audits_without_results_as_success(
   audit_result: bool | list[dict[str, str]],
 ) -> None:
   """Does not treat an audit that is not applicable (True), failed (False), or gave no results ([]) as a success."""
-  mocker.patch.object(FakeAudit, 'run', return_value=audit_result)
-
   setup_filesystem(fs)
 
-  manager = make_audit_manager(mocker, {'first': {}})
+  manager, events, on_run = setup_manager_and_mocks(mocker, {'first': {}})
 
-  browser_get = mocker.spy(manager.browser, 'get')
-  browser_restart = mocker.spy(manager.browser, 'safe_restart')
+  on_run.return_value = audit_result
 
   site_data: SiteData = {
     'url': 'https://bnl.com/',
@@ -609,7 +648,7 @@ def test_run_audits_does_not_count_audits_without_results_as_success(
 
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
 
-  assert browser_restart.call_count == 0
-  assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/'),
+  assert event_log(events) == [
+    ('get', 'https://bnl.com/'),
+    ('run', 'first'),
   ]
