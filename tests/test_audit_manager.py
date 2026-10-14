@@ -53,7 +53,7 @@ class FakeAudit(DefaultAudit):
 
 
 def make_audit_manager(mocker: MockerFixture, config_changes: dict[str, Any] | None = None) -> AuditManager:
-  """Create an AuditManager with mocked dependencies for unit tests."""
+  """Create an AuditManager using a real Config and Browser, but a stubbed webdriver."""
   modify_default_config(
     {
       'viewport_sizes': {'small': {'width': 320, 'height': 450}},
@@ -70,6 +70,7 @@ def make_audit_manager(mocker: MockerFixture, config_changes: dict[str, Any] | N
 
   manager = AuditManager(config, browser)
   mocker.patch.object(manager, '_check_for_closed_details_elements')
+  mocker.patch.object(manager, 'test_for_anti_bot', return_value='Pass')
 
   return manager
 
@@ -253,9 +254,9 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
   )
 
   site_data: SiteData = {
-    'url': 'https://bnl.com',
+    'url': 'https://bnl.com/',
     'supports_head': True,
-    'columns': {'url': 'https://bnl.com'},
+    'columns': {'url': 'https://bnl.com/'},
   }
 
   manager.register_audit(
@@ -319,29 +320,21 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   manager.register_audit(
     'first',
     FakeAudit,
-    url='https://example.govt.nz/ok',
+    url='https://bnl.com/ok',
     site_data={
       'url': 'https://bnl.com/',
       'supports_head': True,
-      'columns': {
-        'organisation': "Buy 'n' Large",
-        'url': 'https://bnl.com/',
-        'sector': 'Sales',
-        'region': 'Overseas',
-        'priority': 'Medium',
-      },
+      'columns': {'url': 'https://bnl.com/'},
     },
   )
   manager.register_audit(
     'second',
     FakeAudit,
-    url='https://example.govt.nz/blocked',
+    url='https://bnl.com/blocked',
     site_data={
       'url': 'https://bnl.com/',
       'supports_head': True,
-      'columns': {
-        'url': 'https://bnl.com/',
-      },
+      'columns': {'url': 'https://bnl.com/'},
     },
   )
 
@@ -352,8 +345,8 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   assert manager.run_audits() is True
 
   assert browser_get.call_args_list == [
-    mocker.call('https://example.govt.nz/ok'),
-    mocker.call('https://example.govt.nz/blocked'),
+    mocker.call('https://bnl.com/ok'),
+    mocker.call('https://bnl.com/blocked'),
   ]
 
 
@@ -369,13 +362,11 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   manager.register_audit(
     'first',
     FakeAudit,
-    url='https://example.govt.nz/blocked',
+    url='https://bnl.com/blocked',
     site_data={
       'url': 'https://bnl.com/',
       'supports_head': True,
-      'columns': {
-        'url': 'https://bnl.com/',
-      },
+      'columns': {'url': 'https://bnl.com/'},
     },
   )
 
@@ -386,5 +377,5 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   assert manager.run_audits() is False
 
   assert browser_get.call_args_list == [
-    mocker.call('https://example.govt.nz/blocked'),
+    mocker.call('https://bnl.com/blocked'),
   ]
