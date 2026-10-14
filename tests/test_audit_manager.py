@@ -262,14 +262,14 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
   manager.register_audit(
     'first',
     FakeAudit,
-    url='https://bnl.com/news',
+    url='https://bnl.com/first',
     site_data=site_data,
   )
 
   manager.register_audit(
     'second',
     FakeAudit,
-    url='https://bnl.com/news',
+    url='https://bnl.com/second',
     site_data=site_data,
   )
 
@@ -278,28 +278,28 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
   assert manager.run_audits() is True
 
   assert browser_get.call_args_list == [
-    mocker.call('https://bnl.com/news'),
-    mocker.call('https://bnl.com/news'),
-    mocker.call('https://bnl.com/news'),
+    mocker.call('https://bnl.com/first'),
+    mocker.call('https://bnl.com/second'),
+    mocker.call('https://bnl.com/first'),
   ]
 
   assert on_run.call_args_list == [
     mocker.call(
-      url='https://bnl.com/news',
+      url='https://bnl.com/first',
       site_data=site_data,
       audit_id='1_small',
       page_id='1',
       viewport={'width': 320, 'height': 450},
     ),
     mocker.call(
-      url='https://bnl.com/news',
+      url='https://bnl.com/second',
       site_data=site_data,
       audit_id='1_small',
       page_id='1',
       viewport={'width': 320, 'height': 450},
     ),
     mocker.call(
-      url='https://bnl.com/news',
+      url='https://bnl.com/first',
       site_data=site_data,
       audit_id='1_medium',
       page_id='1',
@@ -313,6 +313,8 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   mocker: MockerFixture,
 ) -> None:
   """Returns True when anti-bot blocking happens after an earlier audit succeeded."""
+  on_run = mocker.patch.object(FakeAudit, 'on_run')
+
   setup_filesystem(fs)
 
   manager = make_audit_manager(mocker)
@@ -349,12 +351,28 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
     mocker.call('https://bnl.com/blocked'),
   ]
 
+  assert on_run.call_args_list == [
+    mocker.call(
+      url='https://bnl.com/ok',
+      site_data={
+        'url': 'https://bnl.com/',
+        'supports_head': True,
+        'columns': {'url': 'https://bnl.com/'},
+      },
+      audit_id='1_small',
+      page_id='1',
+      viewport={'width': 320, 'height': 450},
+    ),
+  ]
+
 
 def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
   """Returns False when anti-bot blocking happens before any audit succeeded."""
+  on_run = mocker.patch.object(FakeAudit, 'on_run')
+
   setup_filesystem(fs)
 
   manager = make_audit_manager(mocker)
@@ -379,3 +397,5 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   assert browser_get.call_args_list == [
     mocker.call('https://bnl.com/blocked'),
   ]
+
+  assert on_run.call_args_list == []
