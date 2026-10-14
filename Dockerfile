@@ -20,7 +20,7 @@ FROM --platform=linux/amd64 ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2b
 # Chrome itself since that gets managed using @puppeteer/browsers as part of the npm install
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends wget python3.12-venv && \
+    apt-get install -y --no-install-recommends wget python3.15-venv && \
     wget -nv https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     apt-get satisfy -y --no-install-recommends "$(dpkg-deb -f google-chrome-stable_current_amd64.deb Depends | tr '\n' ' ')" && \
     apt-get clean && \
@@ -31,7 +31,7 @@ RUN apt-get update && \
 WORKDIR /cwac
 
 # create .venv
-RUN python3.12 -m venv .venv
+RUN python3.15 -m venv .venv
 
 ENV VIRTUAL_ENV=".venv" \
     PATH=".venv/bin:$PATH"
@@ -46,7 +46,7 @@ COPY requirements.txt .
 
 # install dependencies, and then remove stuff we don't need when running the tool,
 # along with test files as they can be quite large for dependencies like pandas
-RUN python3.12 -m pip install --no-cache-dir -r requirements.txt && \
+RUN python3.15 -m pip install --no-cache-dir -r requirements.txt && \
     python3 -m pip uninstall -y ruff mypy pyfakefs pytest pytest-mock pip && \
     find .venv/lib -depth -type d \( -name tests -o -name test \) -exec rm -rf -- {} +
 
