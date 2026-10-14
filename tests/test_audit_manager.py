@@ -52,12 +52,13 @@ class FakeAudit(DefaultAudit):
     return [{}]
 
 
-def make_audit_manager(mocker: MockerFixture) -> AuditManager:
+def make_audit_manager(mocker: MockerFixture, config_changes: dict[str, Any] | None = None) -> AuditManager:
   """Create an AuditManager with mocked dependencies for unit tests."""
   modify_default_config(
     {
       'viewport_sizes': {'small': {'width': 320, 'height': 450}},
       'audit_plugins': {'first': {}, 'second': {}},
+      **(config_changes or {}),
       'delay_after_page_load': 0,
     }
   )
@@ -128,7 +129,15 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
   setup_filesystem(fs)
 
   # the config and browser are shared across the whole run, like in the tool
-  base_manager = make_audit_manager(mocker)
+  base_manager = make_audit_manager(
+    mocker,
+    {
+      'viewport_sizes': {
+        'small': {'width': 320, 'height': 450},
+        'medium': {'width': 1280, 'height': 800},
+      },
+    },
+  )
   config, browser = base_manager.config, base_manager.browser
   browser_get = mocker.spy(browser, 'get')
 
@@ -184,6 +193,8 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
       assert browser_get.call_args_list == [
         mocker.call(url),
         mocker.call(url),
+        mocker.call(url),
+        mocker.call(url),
       ]
 
       assert on_run.call_args_list == [
@@ -200,6 +211,20 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
           audit_id=f'{page_id}_small',
           page_id=f'{page_id}',
           viewport={'width': 320, 'height': 450},
+        ),
+        mocker.call(
+          url=url,
+          site_data=site_data,
+          audit_id=f'{page_id}_medium',
+          page_id=f'{page_id}',
+          viewport={'width': 1280, 'height': 800},
+        ),
+        mocker.call(
+          url=url,
+          site_data=site_data,
+          audit_id=f'{page_id}_medium',
+          page_id=f'{page_id}',
+          viewport={'width': 1280, 'height': 800},
         ),
       ]
 
