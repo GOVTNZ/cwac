@@ -4,30 +4,31 @@ This plugin returns basic page information.
 """
 
 import urllib.parse
-from typing import Any
+from typing import Any, TypedDict, Unpack
 
 from config import Config, SiteData
 from src.browser import Browser
 
-# Audit classes for use with AuditManager
-# Audit classes are registered with register_test
-# Audit classes MUST implement:
-# def __init__(self, browser: Browser, **kwargs) -> None
-#   - accepts a browser, and kwargs
-# run(self) -> list[dict[str, Any]] | bool
-#   - runs the actual audit
-#   - if audit is successful, returns a list of dictionaries
-#       which form CSV data rows
-#   - if the audit fails, returns False
+
+class AuditKwargs(TypedDict):
+  """Arguments that get passed to all audits."""
+
+  url: str
+  site_data: SiteData
+  audit_id: str
+  page_id: str
 
 
 class DefaultAudit:
   """An audit that returns basic page info.
 
   It retrieves things such as the page title, viewport size, and base url.
+
+  All audit plugins must subclass this, and are loaded by
+  Crawler.load_audit_plugins().
   """
 
-  def __init__(self, config: Config, browser: Browser, **kwargs: Any):
+  def __init__(self, config: Config, browser: Browser, **kwargs: Unpack[AuditKwargs]):
     """Init variables."""
     self.config = config
     self.browser = browser
@@ -61,6 +62,7 @@ class DefaultAudit:
     """Run the audit.
 
     Returns:
-        list[dict[Any, Any]]: a list of audit result dicts
+        list[dict[Any, Any]]: a list of audit result dicts, which form CSV data rows
+        bool: True if the audit is not applicable to the page, False if the audit failed
     """
     return [self._default_audit_row]

@@ -3,57 +3,38 @@
 import logging
 import os
 import urllib.parse
-from typing import Any, TypedDict
+from typing import Any
 
 import selenium.common.exceptions
 import urllib3
 
 from config import Config, SiteData
+from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 from src.output import CSVWriter
 
 logger = logging.getLogger('cwac')
 
 
-class AuditData(TypedDict):
-  """Data for running an audit."""
-
-  audit_class: type[Any]
-  site_data: SiteData
-  kwargs: dict[str, Any]
-
-
 class AuditManager:
   """Runs tests on browsers."""
 
-  def __init__(self, config: Config, browser: Browser) -> None:
-    """Init variables."""
+  def __init__(self, config: Config, browser: Browser, audits: dict[str, type[DefaultAudit]]) -> None:
+    """Init variables.
+
+    Args:
+        config (Config): the config for this run
+        browser (Browser): the browser to run audits in
+        audits (dict[str, type[DefaultAudit]]): audit classes to run, keyed by audit name
+    """
     self.config = config
     self.browser = browser
-    self.audits: dict[str, AuditData] = {}
+    self.audits = audits
 
     # Stores URLs discarded as a key-value pair
     # of URL (str): reason (str). URLs are discarded
     # if they are blocked by anti-bot measures.
     self.discarded_urls: dict[str, str] = {}
-
-  def register_audit(self, audit_name: str, audit_class: type[Any], site_data: SiteData, **kwargs: Any) -> None:
-    """Register audits to be run by run_audits().
-
-    This can also be used to re-run a test with updated kwargs.
-
-    Args:
-        audit_name (str): Human-readable name for audit
-        audit_class (Type[Any]): Reference to a class that runs the audit
-        site_data (SiteData): Data about the site being audited
-        kwargs (Any): Arbitrary args to be passed to audit_class
-    """
-    # Register the audit (or update its kwargs)
-    self.audits[audit_name] = {
-      'audit_class': audit_class,
-      'site_data': site_data,
-      'kwargs': {**kwargs, 'site_data': site_data},
-    }
 
   def test_for_anti_bot(self, site_data: SiteData) -> str:
     """Inspect the currently loaded page for anti-bot blocking.
@@ -178,7 +159,7 @@ class AuditManager:
 
     logger.info('opened %i <details> element%s', num_of_details, plural)
 
-  def run_audits(self) -> bool:
+  def run_audits(self, url: str, site_data: SiteData) -> bool:
     """Iterate through registered audits and runs them.
 
     Main entry point for running audits. Iterates through all registered audits
@@ -198,6 +179,10 @@ class AuditManager:
 
     1. The browser is restarted.
     2. the viewport size is set again.
+
+    Args:
+        url (str): the URL of the page to audit
+        site_data (SiteData): data about the site the page belongs to
 
     Returns:
         bool: True if at least one audit successfully produced results, else False
@@ -220,7 +205,7 @@ class AuditManager:
         self.config.viewport_sizes[viewport]['height'],
       )
 
-      for audit_name, audit in self.audits.items():
+      for audit_name, audit_class in self.audits.items():
         # if viewport_to_test is set
         if (
           'viewport_to_test' in self.config.audit_plugins[audit_name]
@@ -230,60 +215,41 @@ class AuditManager:
           continue
 
         # Log the start of this audit
-        logger.info(
-          'Starting audit %s on %s',
-          audit_name,
-          audit['kwargs']['url'],
-        )
+        logger.info('Starting audit %s on %s', audit_name, url)
 
         # The first time through this loop, we load the page to ensure that the
         # page is loaded with the correct viewport size. On subsequent
         # iterations, we load the page again to ensure that any changes (e.g.
         # injected JS) made by a previous audit do not affect the next audit.
-        browser_status = self.browser.get(audit['kwargs']['url'])
+        browser_status = self.browser.get(url)
 
         # Test for anti-bot measures
-        if self.test_for_anti_bot(audit['site_data']) != 'Pass':
+        if self.test_for_anti_bot(site_data) != 'Pass':
           # If URL is blocked, skip this URL
-          logger.warning(
-            'Skipping test %s on %s due to anti-bot',
-            audit_name,
-            audit['kwargs']['url'],
-          )
+          logger.warning('Skipping test %s on %s due to anti-bot', audit_name, url)
           return any_audit_succeeded
 
         # If the browser fails to load the page, skip test
         if browser_status is False:
-          logger.warning(
-            'Skipping test %s on %s due to .get failure',
-            audit_name,
-            audit['kwargs']['url'],
-          )
+          logger.warning('Skipping test %s on %s due to .get failure', audit_name, url)
           continue
 
-        # Inject the audit ID
-        audit['kwargs']['audit_id'] = audit_id
-
-        # Inject the page ID
-        audit['kwargs']['page_id'] = page_id
-
-        # Inject the viewport size dict
-        audit['kwargs']['viewport_size'] = self.config.viewport_sizes[viewport]
-
         # Run the tests
-        test_instance = audit['audit_class'](config=self.config, browser=self.browser, **audit['kwargs'])
+        audit_instance = audit_class(
+          config=self.config,
+          browser=self.browser,
+          audit_id=audit_id,
+          page_id=page_id,
+          url=url,
+          site_data=site_data,
+        )
 
         try:
           self._check_for_closed_details_elements()
 
-          audit_result: list[dict[str, Any]] | bool = test_instance.run()
+          audit_result: list[dict[str, Any]] | bool = audit_instance.run()
         except Exception:  # pylint: disable=broad-exception-caught
-          logger.exception(
-            'test %s skipped on viewport %s for website %s',
-            audit_name,
-            viewport,
-            audit['kwargs']['url'],
-          )
+          logger.exception('test %s skipped on viewport %s for website %s', audit_name, viewport, url)
           # If the browser crashes, skip this test
           # and restart the browser
           self.browser.safe_restart()
@@ -296,36 +262,24 @@ class AuditManager:
 
           continue
 
-        logger.info('Test finished %s, %s', audit_name, audit['kwargs']['url'])
+        logger.info('Test finished %s, %s', audit_name, url)
 
         # If audit_result is the boolean value True
         # a 'True' from the audit means to skip the audit
         # because it is not applicable to the current page,
         # but the audit did not fail to execute
         if audit_result is True:
-          logger.info(
-            'Skipping audit %s, %s',
-            audit_name,
-            audit['kwargs']['url'],
-          )
+          logger.info('Skipping audit %s, %s', audit_name, url)
           continue
 
         # If a test fails, .run() returns False
         if audit_result is False:
-          logger.error(
-            'Test failed %s, %s',
-            audit_name,
-            audit['kwargs']['url'],
-          )
+          logger.error('Test failed %s, %s', audit_name, url)
           continue
 
         # If a test returns an empty result, log an error
         if audit_result == []:
-          logger.error(
-            'Test gave empty response %s, %s',
-            audit_name,
-            audit['kwargs']['url'],
-          )
+          logger.error('Test gave empty response %s, %s', audit_name, url)
           continue
 
         # Write results
