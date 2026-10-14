@@ -229,6 +229,84 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
       ]
 
 
+def test_run_audits_only_runs_audits_at_their_viewport_to_test(
+  fs: FakeFilesystem,
+  mocker: MockerFixture,
+) -> None:
+  """Skips an audit at any viewport other than its configured viewport_to_test."""
+  on_run = mocker.patch.object(FakeAudit, 'on_run')
+
+  setup_filesystem(fs)
+
+  manager = make_audit_manager(
+    mocker,
+    {
+      'viewport_sizes': {
+        'small': {'width': 320, 'height': 450},
+        'medium': {'width': 1280, 'height': 800},
+      },
+      'audit_plugins': {
+        'first': {},
+        'second': {'viewport_to_test': 'small'},
+      },
+    },
+  )
+
+  site_data: SiteData = {
+    'url': 'https://bnl.com',
+    'supports_head': True,
+    'columns': {'url': 'https://bnl.com'},
+  }
+
+  manager.register_audit(
+    'first',
+    FakeAudit,
+    url='https://bnl.com/news',
+    site_data=site_data,
+  )
+
+  manager.register_audit(
+    'second',
+    FakeAudit,
+    url='https://bnl.com/news',
+    site_data=site_data,
+  )
+
+  browser_get = mocker.spy(manager.browser, 'get')
+
+  assert manager.run_audits() is True
+
+  assert browser_get.call_args_list == [
+    mocker.call('https://bnl.com/news'),
+    mocker.call('https://bnl.com/news'),
+    mocker.call('https://bnl.com/news'),
+  ]
+
+  assert on_run.call_args_list == [
+    mocker.call(
+      url='https://bnl.com/news',
+      site_data=site_data,
+      audit_id='1_small',
+      page_id='1',
+      viewport={'width': 320, 'height': 450},
+    ),
+    mocker.call(
+      url='https://bnl.com/news',
+      site_data=site_data,
+      audit_id='1_small',
+      page_id='1',
+      viewport={'width': 320, 'height': 450},
+    ),
+    mocker.call(
+      url='https://bnl.com/news',
+      site_data=site_data,
+      audit_id='1_medium',
+      page_id='1',
+      viewport={'width': 1280, 'height': 800},
+    ),
+  ]
+
+
 def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   fs: FakeFilesystem,
   mocker: MockerFixture,
