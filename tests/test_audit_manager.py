@@ -66,8 +66,8 @@ def make_audit_manager(
   modify_default_config(
     {
       'viewport_sizes': {'small': {'width': 320, 'height': 450}},
-      # NOTE: source audit plugins from here once we can use extra_items=Any (Python 3.15+)
       'audit_plugins': audit_plugins,
+      # NOTE: source audit plugins from here once we can use extra_items=Any (Python 3.15+)
       **(config_changes or {}),
       'delay_after_page_load': 0,
     }
