@@ -2,7 +2,6 @@
 
 import logging
 import os
-import time
 import urllib.parse
 from typing import Any, TypedDict
 
@@ -271,8 +270,6 @@ class AuditManager:
         # Inject the viewport size dict
         audit['kwargs']['viewport_size'] = self.config.viewport_sizes[viewport]
 
-        start_time = time.perf_counter()
-
         # Run the tests
         test_instance = audit['audit_class'](config=self.config, browser=self.browser, **audit['kwargs'])
 
@@ -330,16 +327,6 @@ class AuditManager:
             audit['kwargs']['url'],
           )
           continue
-
-        # Performance measurement
-        end_time = time.perf_counter()
-        elapsed_time = end_time - start_time
-        logger.info(
-          'Test time %s %s %.5f',
-          audit_name,
-          audit['kwargs']['url'],
-          elapsed_time,
-        )
 
         # Write results
         csv_writer = CSVWriter()
