@@ -170,6 +170,7 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
     # each site gets its own audit manager, like in the crawler
     manager = AuditManager(config, browser)
     mocker.patch.object(manager, '_check_for_closed_details_elements')
+    mocker.patch.object(manager, 'test_for_anti_bot', return_value='Pass')
 
     for url in urls:
       page_id += 1
