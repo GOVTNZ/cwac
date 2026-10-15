@@ -135,7 +135,7 @@ def setup_manager_and_mocks(
   return manager, events, on_run
 
 
-def test_run_audits_single_page_single_viewport_single_audit(
+def test_run_audits_runs_an_audit_against_a_page(
   fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
@@ -171,70 +171,11 @@ def test_run_audits_single_page_single_viewport_single_audit(
   ]
 
 
-def test_run_audits_writes_the_results_of_each_audit_to_its_own_file(
+def test_run_audits_runs_every_audit_against_every_page_at_every_viewport(
   fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
-  """Writes the rows returned by each audit, unchanged, to a csv file named after that audit."""
-  setup_filesystem(fs)
-
-  manager, events, on_run = setup_manager_and_mocks(mocker, {'first': {}, 'second': {}})
-
-  on_run.side_effect = [
-    [{'issue': 'a'}, {'issue': 'b'}],
-    [{'issue': 'c'}],
-  ]
-
-  site_data: SiteData = {
-    'url': 'https://bnl.com/',
-    'supports_head': True,
-    'columns': {'url': 'https://bnl.com/'},
-  }
-
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
-
-  assert event_log(events) == [
-    ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/'),
-    ('run', 'first'),
-    ('write', 'first'),
-    ('get', 'https://bnl.com/'),
-    ('run', 'second'),
-    ('write', 'second'),
-  ]
-
-  # the first argument is the CSVWriter instance, as the spy is on the class
-  results_dir = f'./results/{manager.config.audit_name}'
-  assert events.write.call_args_list == [
-    mocker.call(mocker.ANY, f'{results_dir}/first.csv', {'issue': 'a'}, {'issue': 'b'}),
-    mocker.call(mocker.ANY, f'{results_dir}/second.csv', {'issue': 'c'}),
-  ]
-
-  assert on_run.call_args_list == [
-    mocker.call(
-      audit_name='first',
-      url='https://bnl.com/',
-      site_data=site_data,
-      audit_id='1_small',
-      page_id='1',
-      viewport={'width': 320, 'height': 450},
-    ),
-    mocker.call(
-      audit_name='second',
-      url='https://bnl.com/',
-      site_data=site_data,
-      audit_id='1_small',
-      page_id='1',
-      viewport={'width': 320, 'height': 450},
-    ),
-  ]
-
-
-def test_run_audits_multiple_sites_pages_viewports_and_audits(
-  fs: FakeFilesystem,
-  mocker: MockerFixture,
-) -> None:
-  """Runs the audit against multiple pages across multiple sites at multiple viewports."""
+  """Runs each audit against multiple pages across multiple sites at multiple viewports."""
   setup_filesystem(fs)
 
   viewport_sizes = {
@@ -575,6 +516,114 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
   ]
 
 
+def test_run_audits_writes_the_results_of_each_audit_to_its_own_file(
+  fs: FakeFilesystem,
+  mocker: MockerFixture,
+) -> None:
+  """Writes the rows returned by each audit, unchanged, to a csv file named after that audit."""
+  setup_filesystem(fs)
+
+  manager, events, on_run = setup_manager_and_mocks(mocker, {'first': {}, 'second': {}})
+
+  on_run.side_effect = [
+    [{'issue': 'a'}, {'issue': 'b'}],
+    [{'issue': 'c'}],
+  ]
+
+  site_data: SiteData = {
+    'url': 'https://bnl.com/',
+    'supports_head': True,
+    'columns': {'url': 'https://bnl.com/'},
+  }
+
+  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+
+  assert event_log(events) == [
+    ('set_window_size', 320, 450),
+    ('get', 'https://bnl.com/'),
+    ('run', 'first'),
+    ('write', 'first'),
+    ('get', 'https://bnl.com/'),
+    ('run', 'second'),
+    ('write', 'second'),
+  ]
+
+  # the first argument is the CSVWriter instance, as the spy is on the class
+  results_dir = f'./results/{manager.config.audit_name}'
+  assert events.write.call_args_list == [
+    mocker.call(mocker.ANY, f'{results_dir}/first.csv', {'issue': 'a'}, {'issue': 'b'}),
+    mocker.call(mocker.ANY, f'{results_dir}/second.csv', {'issue': 'c'}),
+  ]
+
+  assert on_run.call_args_list == [
+    mocker.call(
+      audit_name='first',
+      url='https://bnl.com/',
+      site_data=site_data,
+      audit_id='1_small',
+      page_id='1',
+      viewport={'width': 320, 'height': 450},
+    ),
+    mocker.call(
+      audit_name='second',
+      url='https://bnl.com/',
+      site_data=site_data,
+      audit_id='1_small',
+      page_id='1',
+      viewport={'width': 320, 'height': 450},
+    ),
+  ]
+
+
+def test_run_audits_stops_auditing_entirely_when_anti_bot_happens(
+  fs: FakeFilesystem,
+  mocker: MockerFixture,
+) -> None:
+  """Stops running audits entirely when anti-bot blocking happens, including at any remaining viewports."""
+  setup_filesystem(fs)
+
+  manager, events, on_run = setup_manager_and_mocks(
+    mocker,
+    {'first': {}, 'second': {}},
+    {
+      'viewport_sizes': {
+        'small': {'width': 320, 'height': 450},
+        'medium': {'width': 1280, 'height': 800},
+      },
+    },
+  )
+
+  mocker.patch.object(manager, 'test_for_anti_bot', side_effect=['Pass', 'Cloudflare'])
+
+  site_data: SiteData = {
+    'url': 'https://bnl.com/',
+    'supports_head': True,
+    'columns': {'url': 'https://bnl.com/'},
+  }
+
+  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+
+  assert event_log(events) == [
+    ('set_window_size', 320, 450),
+    ('get', 'https://bnl.com/'),
+    ('run', 'first'),
+    ('write', 'first'),
+    # the page is blocked, so the medium viewport is never audited
+    ('get', 'https://bnl.com/'),
+  ]
+
+  assert on_run.call_args_list == [
+    mocker.call(
+      audit_name='first',
+      url='https://bnl.com/',
+      site_data=site_data,
+      audit_id='1_small',
+      page_id='1',
+      viewport={'width': 320, 'height': 450},
+    ),
+  ]
+
+
 def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   fs: FakeFilesystem,
   mocker: MockerFixture,
@@ -644,56 +693,7 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   assert on_run.call_args_list == []
 
 
-def test_run_audits_stops_at_all_viewports_when_anti_bot_happens(
-  fs: FakeFilesystem,
-  mocker: MockerFixture,
-) -> None:
-  """Stops running audits entirely when anti-bot blocking happens, including at any remaining viewports."""
-  setup_filesystem(fs)
-
-  manager, events, on_run = setup_manager_and_mocks(
-    mocker,
-    {'first': {}, 'second': {}},
-    {
-      'viewport_sizes': {
-        'small': {'width': 320, 'height': 450},
-        'medium': {'width': 1280, 'height': 800},
-      },
-    },
-  )
-
-  mocker.patch.object(manager, 'test_for_anti_bot', side_effect=['Pass', 'Cloudflare'])
-
-  site_data: SiteData = {
-    'url': 'https://bnl.com/',
-    'supports_head': True,
-    'columns': {'url': 'https://bnl.com/'},
-  }
-
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
-
-  assert event_log(events) == [
-    ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/'),
-    ('run', 'first'),
-    ('write', 'first'),
-    # the page is blocked, so the medium viewport is never audited
-    ('get', 'https://bnl.com/'),
-  ]
-
-  assert on_run.call_args_list == [
-    mocker.call(
-      audit_name='first',
-      url='https://bnl.com/',
-      site_data=site_data,
-      audit_id='1_small',
-      page_id='1',
-      viewport={'width': 320, 'height': 450},
-    ),
-  ]
-
-
-def test_run_audits_skips_audit_when_page_fails_to_load(
+def test_run_audits_skips_an_audit_when_the_page_fails_to_load(
   fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
@@ -749,7 +749,7 @@ def test_run_audits_skips_audit_when_page_fails_to_load(
   ]
 
 
-def test_run_audits_returns_false_when_the_page_never_loads(
+def test_run_audits_returns_false_when_the_page_fails_to_load_for_every_audit(
   fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
@@ -778,7 +778,7 @@ def test_run_audits_returns_false_when_the_page_never_loads(
   assert on_run.call_args_list == []
 
 
-def test_run_audits_restarts_browser_and_continues_when_an_audit_raises(
+def test_run_audits_restarts_the_browser_and_continues_when_an_audit_raises(
   fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
@@ -981,7 +981,7 @@ def test_run_audits_returns_false_when_every_audit_raises(
 
 
 @pytest.mark.parametrize('audit_result', [True, False, []])
-def test_run_audits_does_not_count_audits_without_results_as_success(
+def test_run_audits_returns_false_when_no_audit_produces_results(
   fs: FakeFilesystem,
   mocker: MockerFixture,
   audit_result: bool | list[dict[str, str]],
@@ -1009,7 +1009,7 @@ def test_run_audits_does_not_count_audits_without_results_as_success(
   ]
 
 
-def test_run_audits_counts_a_success_alongside_audits_without_results(
+def test_run_audits_returns_true_when_any_audit_produces_results(
   fs: FakeFilesystem,
   mocker: MockerFixture,
 ) -> None:
