@@ -17,6 +17,8 @@ from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 from src.output import CSVWriter
 
+# pylint: disable=too-many-lines
+
 
 def setup_filesystem(fs: FakeFilesystem) -> None:
   """Set up the fake filesystem with the config, package.json, and base urls needed by Config."""
