@@ -29,7 +29,14 @@ class AuditManager:
     """
     self.config = config
     self.browser = browser
-    self.audits = audits
+
+    # put the audits that don't modify the page first so they can share the initial page load
+    self.audits = dict(
+      sorted(
+        audits.items(),
+        key=lambda item: item[1].modifies_page,
+      )
+    )
 
     # Stores URLs discarded as a key-value pair
     # of URL (str): reason (str). URLs are discarded

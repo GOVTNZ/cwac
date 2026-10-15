@@ -592,9 +592,8 @@ def test_run_audits_reuses_the_page_after_an_audit_that_does_not_modify_it(
   manager, events, on_run = setup_manager_and_mocks(
     mocker,
     {
-      'modifies_a': {},
       'reads': {'modifies_page': False},
-      'modifies_b': {},
+      'modifies': {},
     },
   )
 
@@ -609,14 +608,11 @@ def test_run_audits_reuses_the_page_after_an_audit_that_does_not_modify_it(
   assert event_log(events) == [
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/news'),
-    ('run', 'modifies_a'),
-    ('write', 'modifies_a'),
-    ('get', 'https://bnl.com/news'),
     ('run', 'reads'),
     ('write', 'reads'),
     # no "get" since "reads" didn't modify the page
-    ('run', 'modifies_b'),
-    ('write', 'modifies_b'),
+    ('run', 'modifies'),
+    ('write', 'modifies'),
   ]
 
   assert on_run.call_args_list == [
@@ -628,7 +624,7 @@ def test_run_audits_reuses_the_page_after_an_audit_that_does_not_modify_it(
       page_id='1',
       viewport={'width': 320, 'height': 450},
     )
-    for audit_name in ['modifies_a', 'reads', 'modifies_b']
+    for audit_name in ['reads', 'modifies']
   ]
 
 
@@ -751,9 +747,9 @@ def test_run_audits_reuses_the_page_across_an_audit_skipped_for_its_viewport_to_
   manager, events, on_run = setup_manager_and_mocks(
     mocker,
     {
-      'reads_a': {'modifies_page': False},
+      'reads': {'modifies_page': False},
       'modifies_small_only': {'viewport_to_test': 'small'},
-      'reads_b': {'modifies_page': False},
+      'modifies': {},
     },
     {
       'viewport_sizes': {
@@ -773,25 +769,25 @@ def test_run_audits_reuses_the_page_across_an_audit_skipped_for_its_viewport_to_
 
   # "modifies_small_only" sits between two audits but only runs on
   # the "small" viewport, so at the "medium" viewport we should only
-  # make a single "get" as the "reads_a" audit didn't modify the page
+  # make a single "get" as the "reads" audit didn't modify the page
   assert event_log(events) == [
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/news'),
-    ('run', 'reads_a'),
-    ('write', 'reads_a'),
-    # no "get" since "reads_a" didn't modify the page
+    ('run', 'reads'),
+    ('write', 'reads'),
+    # no "get" since "reads" didn't modify the page
     ('run', 'modifies_small_only'),
     ('write', 'modifies_small_only'),
     ('get', 'https://bnl.com/news'),
-    ('run', 'reads_b'),
-    ('write', 'reads_b'),
+    ('run', 'modifies'),
+    ('write', 'modifies'),
     ('set_window_size', 1280, 800),
     ('get', 'https://bnl.com/news'),
-    ('run', 'reads_a'),
-    ('write', 'reads_a'),
-    # no "get" since "reads_a" didn't modify the page, and "modifies_small_only" is skipped
-    ('run', 'reads_b'),
-    ('write', 'reads_b'),
+    ('run', 'reads'),
+    ('write', 'reads'),
+    # no "get" since "reads" didn't modify the page, and "modifies_small_only" is skipped
+    ('run', 'modifies'),
+    ('write', 'modifies'),
   ]
 
   assert on_run.call_args_list == [
@@ -804,7 +800,7 @@ def test_run_audits_reuses_the_page_across_an_audit_skipped_for_its_viewport_to_
         page_id='1',
         viewport={'width': 320, 'height': 450},
       )
-      for audit_name in ['reads_a', 'modifies_small_only', 'reads_b']
+      for audit_name in ['reads', 'modifies_small_only', 'modifies']
     ],
     *[
       mocker.call(
@@ -815,7 +811,145 @@ def test_run_audits_reuses_the_page_across_an_audit_skipped_for_its_viewport_to_
         page_id='1',
         viewport={'width': 1280, 'height': 800},
       )
-      for audit_name in ['reads_a', 'reads_b']
+      for audit_name in ['reads', 'modifies']
+    ],
+  ]
+
+
+def test_run_audits_runs_audits_that_do_not_modify_the_page_first(
+  fs: FakeFilesystem,
+  mocker: MockerFixture,
+) -> None:
+  """Runs audits that do not modify the page before those that do, so the page is loaded as few times as possible."""
+  setup_filesystem(fs)
+
+  manager, events, on_run = setup_manager_and_mocks(
+    mocker,
+    {
+      'modifies_a': {},
+      'reads_a': {'modifies_page': False},
+      'modifies_b': {},
+      'reads_b': {'modifies_page': False},
+      'reads_c': {'modifies_page': False},
+    },
+  )
+
+  site_data: SiteData = {
+    'url': 'https://bnl.com/',
+    'supports_head': True,
+    'columns': {'url': 'https://bnl.com/'},
+  }
+
+  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+
+  # we should run all audits that don't modify the page first with a single "get",
+  # and then run the remaining page-modifying audits, with a "get" between each
+  assert event_log(events) == [
+    ('set_window_size', 320, 450),
+    ('get', 'https://bnl.com/news'),
+    ('run', 'reads_a'),
+    ('write', 'reads_a'),
+    ('run', 'reads_b'),
+    ('write', 'reads_b'),
+    ('run', 'reads_c'),
+    ('write', 'reads_c'),
+    ('run', 'modifies_a'),
+    ('write', 'modifies_a'),
+    ('get', 'https://bnl.com/news'),
+    ('run', 'modifies_b'),
+    ('write', 'modifies_b'),
+  ]
+
+  assert on_run.call_args_list == [
+    mocker.call(
+      audit_name=audit_name,
+      url='https://bnl.com/news',
+      site_data=site_data,
+      audit_id='1_small',
+      page_id='1',
+      viewport={'width': 320, 'height': 450},
+    )
+    for audit_name in [
+      'reads_a',
+      'reads_b',
+      'reads_c',
+      'modifies_a',
+      'modifies_b',
+    ]
+  ]
+
+
+def test_run_audits_runs_audits_that_do_not_modify_the_page_first_at_each_viewport(
+  fs: FakeFilesystem,
+  mocker: MockerFixture,
+) -> None:
+  """Runs audits that do not modify the page first at each viewport, including when some only run at certain viewports."""
+  setup_filesystem(fs)
+
+  manager, events, on_run = setup_manager_and_mocks(
+    mocker,
+    {
+      'modifies': {},
+      'reads_small_only': {'modifies_page': False, 'viewport_to_test': 'small'},
+      'reads': {'modifies_page': False},
+    },
+    {
+      'viewport_sizes': {
+        'small': {'width': 320, 'height': 450},
+        'medium': {'width': 1280, 'height': 800},
+      },
+    },
+  )
+
+  site_data: SiteData = {
+    'url': 'https://bnl.com/',
+    'supports_head': True,
+    'columns': {'url': 'https://bnl.com/'},
+  }
+
+  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+
+  # modifies_page and viewport_to_test should be independent of each other, so at the "medium"
+  # viewport the audits should run as if "reads_small_only" wasn't configured at all
+  assert event_log(events) == [
+    ('set_window_size', 320, 450),
+    ('get', 'https://bnl.com/news'),
+    ('run', 'reads_small_only'),
+    ('write', 'reads_small_only'),
+    ('run', 'reads'),
+    ('write', 'reads'),
+    ('run', 'modifies'),
+    ('write', 'modifies'),
+    ('set_window_size', 1280, 800),
+    ('get', 'https://bnl.com/news'),
+    ('run', 'reads'),
+    ('write', 'reads'),
+    ('run', 'modifies'),
+    ('write', 'modifies'),
+  ]
+
+  assert on_run.call_args_list == [
+    *[
+      mocker.call(
+        audit_name=audit_name,
+        url='https://bnl.com/news',
+        site_data=site_data,
+        audit_id='1_small',
+        page_id='1',
+        viewport={'width': 320, 'height': 450},
+      )
+      for audit_name in ['reads_small_only', 'reads', 'modifies']
+    ],
+    *[
+      mocker.call(
+        audit_name=audit_name,
+        url='https://bnl.com/news',
+        site_data=site_data,
+        audit_id='1_medium',
+        page_id='1',
+        viewport={'width': 1280, 'height': 800},
+      )
+      for audit_name in ['reads', 'modifies']
     ],
   ]
 
@@ -1085,9 +1219,9 @@ def test_run_audits_loads_the_page_for_an_audit_that_does_not_modify_it_after_a_
   manager, events, on_run = setup_manager_and_mocks(
     mocker,
     {
-      'modifies': {},
       'reads_a': {'modifies_page': False},
       'reads_b': {'modifies_page': False},
+      'modifies': {},
     },
   )
 
@@ -1097,8 +1231,8 @@ def test_run_audits_loads_the_page_for_an_audit_that_does_not_modify_it_after_a_
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  # have the second "get" fail via having the driver time out (twice, since the browser does a retry)
-  manager.browser.driver.get.side_effect = [None, TimeoutException(), TimeoutException(), None]
+  # have the first "get" fail via having the driver time out (twice, since the browser does a retry)
+  manager.browser.driver.get.side_effect = [TimeoutException(), TimeoutException(), None]
 
   assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
 
@@ -1107,14 +1241,13 @@ def test_run_audits_loads_the_page_for_an_audit_that_does_not_modify_it_after_a_
   assert event_log(events) == [
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/news'),
-    ('run', 'modifies'),
-    ('write', 'modifies'),
-    ('get', 'https://bnl.com/news'),
     # "reads_a" is not run since the page failed to load,
-    # so the page is loaded again for the next audit
+    # so the page is loaded again for the next two audits
     ('get', 'https://bnl.com/news'),
     ('run', 'reads_b'),
     ('write', 'reads_b'),
+    ('run', 'modifies'),
+    ('write', 'modifies'),
   ]
 
   assert on_run.call_args_list == [
@@ -1126,7 +1259,7 @@ def test_run_audits_loads_the_page_for_an_audit_that_does_not_modify_it_after_a_
       page_id='1',
       viewport={'width': 320, 'height': 450},
     )
-    for audit_name in ['modifies', 'reads_b']
+    for audit_name in ['reads_b', 'modifies']
   ]
 
 
