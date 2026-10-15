@@ -607,12 +607,14 @@ def test_run_audits_reuses_the_page_after_an_audit_that_does_not_modify_it(
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'reads'),
-    ('write', 'reads'),
-    # no "get" since "reads" didn't modify the page
-    ('run', 'modifies'),
-    ('write', 'modifies'),
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'reads'),
+      ('write', 'reads'),
+      # no "get" since "reads" didn't modify the page
+      ('run', 'modifies'),
+      ('write', 'modifies'),
+    ],
   ]
 
   assert on_run.call_args_list == [
@@ -654,15 +656,17 @@ def test_run_audits_reuses_the_page_across_consecutive_audits_that_do_not_modify
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'reads_a'),
-    ('write', 'reads_a'),
-    # no "get" since "reads_a" didn't modify the page
-    ('run', 'reads_b'),
-    ('write', 'reads_b'),
-    # no "get" since "reads_b" didn't modify the page
-    ('run', 'reads_c'),
-    ('write', 'reads_c'),
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'reads_a'),
+      ('write', 'reads_a'),
+      # no "get" since "reads_a" didn't modify the page
+      ('run', 'reads_b'),
+      ('write', 'reads_b'),
+      # no "get" since "reads_b" didn't modify the page
+      ('run', 'reads_c'),
+      ('write', 'reads_c'),
+    ],
   ]
 
   assert on_run.call_args_list == [
@@ -772,22 +776,28 @@ def test_run_audits_reuses_the_page_across_an_audit_skipped_for_its_viewport_to_
   # make a single "get" as the "reads" audit didn't modify the page
   assert event_log(events) == [
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'reads'),
-    ('write', 'reads'),
-    # no "get" since "reads" didn't modify the page
-    ('run', 'modifies_small_only'),
-    ('write', 'modifies_small_only'),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'modifies'),
-    ('write', 'modifies'),
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'reads'),
+      ('write', 'reads'),
+      # no "get" since "reads" didn't modify the page
+      ('run', 'modifies_small_only'),
+      ('write', 'modifies_small_only'),
+    ],
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'modifies'),
+      ('write', 'modifies'),
+    ],
     ('set_window_size', 1280, 800),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'reads'),
-    ('write', 'reads'),
-    # no "get" since "reads" didn't modify the page, and "modifies_small_only" is skipped
-    ('run', 'modifies'),
-    ('write', 'modifies'),
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'reads'),
+      ('write', 'reads'),
+      # no "get" since "reads" didn't modify the page, and "modifies_small_only" is skipped
+      ('run', 'modifies'),
+      ('write', 'modifies'),
+    ],
   ]
 
   assert on_run.call_args_list == [
@@ -846,18 +856,22 @@ def test_run_audits_runs_audits_that_do_not_modify_the_page_first(
   # and then run the remaining page-modifying audits, with a "get" between each
   assert event_log(events) == [
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'reads_a'),
-    ('write', 'reads_a'),
-    ('run', 'reads_b'),
-    ('write', 'reads_b'),
-    ('run', 'reads_c'),
-    ('write', 'reads_c'),
-    ('run', 'modifies_a'),
-    ('write', 'modifies_a'),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'modifies_b'),
-    ('write', 'modifies_b'),
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'reads_a'),
+      ('write', 'reads_a'),
+      ('run', 'reads_b'),
+      ('write', 'reads_b'),
+      ('run', 'reads_c'),
+      ('write', 'reads_c'),
+      ('run', 'modifies_a'),
+      ('write', 'modifies_a'),
+    ],
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'modifies_b'),
+      ('write', 'modifies_b'),
+    ],
   ]
 
   assert on_run.call_args_list == [
@@ -913,19 +927,23 @@ def test_run_audits_runs_audits_that_do_not_modify_the_page_first_at_each_viewpo
   # viewport the audits should run as if "reads_small_only" wasn't configured at all
   assert event_log(events) == [
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'reads_small_only'),
-    ('write', 'reads_small_only'),
-    ('run', 'reads'),
-    ('write', 'reads'),
-    ('run', 'modifies'),
-    ('write', 'modifies'),
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'reads_small_only'),
+      ('write', 'reads_small_only'),
+      ('run', 'reads'),
+      ('write', 'reads'),
+      ('run', 'modifies'),
+      ('write', 'modifies'),
+    ],
     ('set_window_size', 1280, 800),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'reads'),
-    ('write', 'reads'),
-    ('run', 'modifies'),
-    ('write', 'modifies'),
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'reads'),
+      ('write', 'reads'),
+      ('run', 'modifies'),
+      ('write', 'modifies'),
+    ],
   ]
 
   assert on_run.call_args_list == [
@@ -1102,14 +1120,18 @@ def test_run_audits_only_checks_for_anti_bot_when_the_page_is_loaded(
   # be blocked since it can reuse the unmodified page after running the "reads" audit
   assert event_log(events) == [
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/'),
-    ('run', 'reads'),
-    ('write', 'reads'),
-    # no "get" since "reads" didn't modify the page, so no anti-bot check either
-    ('run', 'modifies_a'),
-    ('write', 'modifies_a'),
+    *[
+      ('get', 'https://bnl.com/'),
+      ('run', 'reads'),
+      ('write', 'reads'),
+      # no "get" since "reads" didn't modify the page, so no anti-bot check either
+      ('run', 'modifies_a'),
+      ('write', 'modifies_a'),
+    ],
     # this "get" is blocked, so we stop entirely
-    ('get', 'https://bnl.com/'),
+    *[
+      ('get', 'https://bnl.com/'),
+    ],
   ]
 
   assert on_run.call_args_list == [
@@ -1240,14 +1262,18 @@ def test_run_audits_loads_the_page_for_an_audit_that_does_not_modify_it_after_a_
   # regardless of whether the audit we tried to run modifies the page or not
   assert event_log(events) == [
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/news'),
+    *[
+      ('get', 'https://bnl.com/news'),
+    ],
     # "reads_a" is not run since the page failed to load,
     # so the page is loaded again for the next two audits
-    ('get', 'https://bnl.com/news'),
-    ('run', 'reads_b'),
-    ('write', 'reads_b'),
-    ('run', 'modifies'),
-    ('write', 'modifies'),
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'reads_b'),
+      ('write', 'reads_b'),
+      ('run', 'modifies'),
+      ('write', 'modifies'),
+    ],
   ]
 
   assert on_run.call_args_list == [
@@ -1495,17 +1521,21 @@ def test_run_audits_reloads_the_page_after_an_audit_that_does_not_modify_it_rais
   # "get" since the browser is restarted due to "reads_b" raising an error
   assert event_log(events) == [
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'reads_a'),
-    ('write', 'reads_a'),
-    # no "get" since "reads_a" didn't modify the page
-    ('run', 'reads_b'),
-    # "reads_b" raised, so the browser is restarted and the page reloaded
-    ('restart',),
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'reads_a'),
+      ('write', 'reads_a'),
+      # no "get" since "reads_a" didn't modify the page
+      ('run', 'reads_b'),
+      # "reads_b" raised, so the browser is restarted and the page reloaded
+      ('restart',),
+    ],
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/news'),
-    ('run', 'reads_c'),
-    ('write', 'reads_c'),
+    *[
+      ('get', 'https://bnl.com/news'),
+      ('run', 'reads_c'),
+      ('write', 'reads_c'),
+    ],
   ]
 
   assert on_run.call_args_list == [
@@ -1572,12 +1602,16 @@ def test_run_audits_returns_true_when_any_audit_produces_results(
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/'),
-    ('run', 'first'),
+    *[
+      ('get', 'https://bnl.com/'),
+      ('run', 'first'),
+    ],
     # the first audit gave no results, so nothing is written for it
-    ('get', 'https://bnl.com/'),
-    ('run', 'second'),
-    ('write', 'second'),
+    *[
+      ('get', 'https://bnl.com/'),
+      ('run', 'second'),
+      ('write', 'second'),
+    ],
   ]
 
   assert on_run.call_args_list == [
@@ -1629,9 +1663,11 @@ def test_run_audits_reuses_the_page_after_an_audit_that_does_not_modify_it_produ
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
-    ('get', 'https://bnl.com/'),
-    ('run', 'reads'),
-    # no "get" since "reads" didn't modify the page, even though it gave no results
-    ('run', 'modifies'),
-    # neither audit gave results, so nothing is written
+    *[
+      ('get', 'https://bnl.com/'),
+      ('run', 'reads'),
+      # no "get" since "reads" didn't modify the page, even though it gave no results
+      ('run', 'modifies'),
+      # neither audit gave results, so nothing is written
+    ],
   ]
