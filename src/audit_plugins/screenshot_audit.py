@@ -18,6 +18,8 @@ class ScreenshotAudit(DefaultAudit):
 
   audit_type = 'ScreenshotAudit'
 
+  modifies_page = False
+
   def screenshot(self) -> Any:
     """Take a screenshot of the page that's loaded in the browser.
 

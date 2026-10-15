@@ -14,6 +14,8 @@ class TitleAudit(DefaultAudit):
 
   audit_type = 'TitleAudit'
 
+  modifies_page = False
+
   def run(self) -> list[dict[str, Any]] | bool:
     """Run a title audit on a specified URL.
 
