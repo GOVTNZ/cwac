@@ -58,7 +58,7 @@ class FakeAudit(DefaultAudit):
 
 
 def create_event_tracker(mocker: MockerFixture, manager: AuditManager, on_run: Mock) -> Mock:
-  """Create a mock which captures various call "events" that can be asserted on later."""
+  """Create a mock that records page loads, browser restarts, viewport changes, and audit runs in the order they happen."""
   events = Mock()
 
   events.attach_mock(mocker.spy(manager.browser, 'get'), 'get')
@@ -70,7 +70,7 @@ def create_event_tracker(mocker: MockerFixture, manager: AuditManager, on_run: M
 
 
 def event_log(events: Mock) -> list[tuple[Any, ...]]:
-  """Create an "event log" based on the calls made to the events mock."""
+  """Summarise the recorded events as (name, *args) tuples, with audit runs reduced to ('run', audit_name)."""
   return [('run', kwargs['audit_name']) if name == 'run' else (name, *args) for name, args, kwargs in events.mock_calls]
 
 
@@ -79,7 +79,10 @@ def setup_manager_and_mocks(
   audit_plugins: dict[str, Any],
   config_changes: dict[str, Any] | None = None,
 ) -> tuple[AuditManager, Mock, Mock]:
-  """Create an AuditManager and related mocks for testing, with on_run returning a successful result by default."""
+  """Create an AuditManager running a FakeAudit for each audit plugin, along with the events and on_run mocks.
+
+  on_run returns a successful result by default, so tests only need to set up the failures they care about.
+  """
   on_run = mocker.patch.object(FakeAudit, 'on_run', return_value=[{}])
 
   modify_default_config(
@@ -206,7 +209,7 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
     for url in urls:
       assert manager.run_audits(url=url, site_data=site_datas[base_url]) is True
 
-  # expect the page to be fetched for each audit at each viewport
+  # the page is reloaded before each audit, so no audit sees changes made by another
   assert event_log(events) == [
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
@@ -290,7 +293,7 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
     ('run', 'second'),
   ]
 
-  # expect each audit to be run once at each viewport for each page
+  # check each audit was given the right page, site, ids, and viewport
   assert on_run.call_args_list == [
     *[
       mocker.call(
@@ -479,8 +482,8 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
   assert event_log(events) == [
-    # first "get" is not blocked, so we run the audit
     ('set_window_size', 320, 450),
+    # first "get" is not blocked, so we run the audit
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
     # second "get" is blocked, so we stop entirely
@@ -520,6 +523,7 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
+    # the page is blocked, so no audits are run
     ('get', 'https://bnl.com/'),
   ]
 
@@ -609,6 +613,7 @@ def test_run_audits_restarts_browser_and_continues_when_an_audit_raises(
     ('run', 'first'),
     ('get', 'https://bnl.com/'),
     ('run', 'second'),
+    # second audit raised, so the browser is restarted and the viewport restored
     ('restart',),
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
