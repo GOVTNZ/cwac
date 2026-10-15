@@ -2,6 +2,7 @@
 
 import json
 from collections.abc import Callable
+from pathlib import PurePath
 from typing import Any, cast
 from unittest.mock import Mock
 
@@ -14,6 +15,7 @@ from config import Config, SiteData
 from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
+from src.output import CSVWriter
 
 
 def setup_filesystem(fs: FakeFilesystem) -> None:
@@ -58,20 +60,34 @@ class FakeAudit(DefaultAudit):
 
 
 def create_event_tracker(mocker: MockerFixture, manager: AuditManager, on_run: Mock) -> Mock:
-  """Create a mock that records page loads, browser restarts, viewport changes, and audit runs in the order they happen."""
+  """Create a mock that records page loads, browser restarts, viewport changes, audit runs, and result writes in the order they happen."""
   events = Mock()
 
   events.attach_mock(mocker.spy(manager.browser, 'get'), 'get')
   events.attach_mock(mocker.spy(manager.browser, 'safe_restart'), 'restart')
   events.attach_mock(mocker.spy(manager.browser, 'set_window_size'), 'set_window_size')
   events.attach_mock(on_run, 'run')
+  events.attach_mock(mocker.spy(CSVWriter, 'append_rows'), 'write')
 
   return events
 
 
 def event_log(events: Mock) -> list[tuple[Any, ...]]:
-  """Summarise the recorded events as (name, *args) tuples, with audit runs reduced to ('run', audit_name)."""
-  return [('run', kwargs['audit_name']) if name == 'run' else (name, *args) for name, args, kwargs in events.mock_calls]
+  """Summarise the recorded events as (name, *args) tuples, with audit runs and result writes reduced to the audit name."""
+  log: list[tuple[Any, ...]] = []
+
+  for name, args, kwargs in events.mock_calls:
+    match name:
+      case 'run':
+        log.append(('run', kwargs['audit_name']))
+      case 'write':
+        # results are written to a csv file named after the audit
+        # (args[0] is the CSVWriter, as the spy is on the class)
+        log.append(('write', PurePath(args[1]).stem))
+      case _:
+        log.append((name, *args))
+
+  return log
 
 
 def setup_manager_and_mocks(
@@ -138,6 +154,7 @@ def test_run_audits_single_page_single_viewport_single_audit(
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/news'),
     ('run', 'first'),
+    ('write', 'first'),
   ]
 
   assert on_run.call_args_list == [
@@ -214,83 +231,115 @@ def test_run_audits_multiple_sites_pages_viewports_and_audits(
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://bnl.com/'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 1280, 800),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://bnl.com/'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/news'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://bnl.com/news'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 1280, 800),
     ('get', 'https://bnl.com/news'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://bnl.com/news'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 320, 450),
     ('get', 'https://acme.com/'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://acme.com/'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 1280, 800),
     ('get', 'https://acme.com/'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://acme.com/'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 320, 450),
     ('get', 'https://acme.com/contact'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://acme.com/contact'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 1280, 800),
     ('get', 'https://acme.com/contact'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://acme.com/contact'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 320, 450),
     ('get', 'https://acme.com/legal'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://acme.com/legal'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 1280, 800),
     ('get', 'https://acme.com/legal'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://acme.com/legal'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 320, 450),
     ('get', 'https://wayne.com/'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://wayne.com/'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 1280, 800),
     ('get', 'https://wayne.com/'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://wayne.com/'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 320, 450),
     ('get', 'https://wayne.com/security'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://wayne.com/security'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 1280, 800),
     ('get', 'https://wayne.com/security'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://wayne.com/security'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 320, 450),
     ('get', 'https://wayne.com/legal'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://wayne.com/legal'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 1280, 800),
     ('get', 'https://wayne.com/legal'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://wayne.com/legal'),
     ('run', 'second'),
+    ('write', 'second'),
   ]
 
   # check each audit was given the right page, site, ids, and viewport
@@ -427,11 +476,14 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://bnl.com/'),
     ('run', 'second'),
+    ('write', 'second'),
     ('set_window_size', 1280, 800),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
+    ('write', 'first'),
   ]
 
   assert on_run.call_args_list == [
@@ -486,6 +538,7 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
     # first "get" is not blocked, so we run the audit
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
+    ('write', 'first'),
     # second "get" is blocked, so we stop entirely
     ('get', 'https://bnl.com/'),
   ]
@@ -557,10 +610,12 @@ def test_run_audits_skips_audit_when_page_fails_to_load(
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://bnl.com/'),
     # second audit is not run since the page failed to load
     ('get', 'https://bnl.com/'),
     ('run', 'third'),
+    ('write', 'third'),
   ]
 
   # expect only two of the audits to have been run
@@ -611,6 +666,7 @@ def test_run_audits_restarts_browser_and_continues_when_an_audit_raises(
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
+    ('write', 'first'),
     ('get', 'https://bnl.com/'),
     ('run', 'second'),
     # second audit raised, so the browser is restarted and the viewport restored
@@ -618,6 +674,7 @@ def test_run_audits_restarts_browser_and_continues_when_an_audit_raises(
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'third'),
+    ('write', 'third'),
   ]
 
   # expect the audit to have been called three times with the right data
@@ -674,4 +731,5 @@ def test_run_audits_does_not_count_audits_without_results_as_success(
     ('set_window_size', 320, 450),
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
+    # the audit gave no results, so nothing is written
   ]
