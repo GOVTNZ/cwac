@@ -1,5 +1,6 @@
 """Tests the behaviour of the Browser class."""
 
+import json
 from typing import Any, cast
 from unittest.mock import Mock
 
@@ -83,24 +84,22 @@ class TestEvaluate:
 
     assert browser.evaluate('...') is None
 
-  def test_raises_when_the_snippet_throws_an_error(self, browser: Browser) -> None:
-    """Raises a JavascriptException using the error's description and a 1-based position."""
-    mock_cdp_response(
-      browser,
-      {
-        'result': {
-          'type': 'object',
-          'subtype': 'error',
-          'className': 'Error',
-          'description': 'Error: boom\n    at <anonymous>:3:16\n    at <anonymous>:3:37',
-          'objectId': '1.1.2',
-        },
-        'exceptionDetails': {
+  @pytest.mark.parametrize(
+    'exception_details',
+    [
+      pytest.param(
+        {
           'exceptionId': 1,
           'text': 'Uncaught',
           'lineNumber': 2,
           'columnNumber': 9,
           'scriptId': '33',
+          'stackTrace': {
+            'callFrames': [
+              {'columnNumber': 15, 'functionName': '', 'lineNumber': 2, 'scriptId': '33', 'url': ''},
+              {'columnNumber': 36, 'functionName': '', 'lineNumber': 2, 'scriptId': '33', 'url': ''},
+            ]
+          },
           'exception': {
             'type': 'object',
             'subtype': 'error',
@@ -109,27 +108,30 @@ class TestEvaluate:
             'objectId': '1.1.3',
           },
         },
-      },
-    )
-
-    with pytest.raises(JavascriptException) as exc_info:
-      browser.evaluate('...')
-
-    assert exc_info.value.msg == 'Error: boom\n    at <anonymous>:3:16\n    at <anonymous>:3:37 (line 3, column 10)'
-
-  def test_raises_when_the_snippet_has_a_syntax_error(self, browser: Browser) -> None:
-    """Raises a JavascriptException using the syntax error's description and a 1-based position."""
-    mock_cdp_response(
-      browser,
-      {
-        'result': {
-          'type': 'object',
-          'subtype': 'error',
-          'className': 'SyntaxError',
-          'description': 'SyntaxError: Unexpected end of input',
-          'objectId': '1.1.4',
+        id='error',
+      ),
+      pytest.param(
+        {
+          'exceptionId': 1,
+          'text': 'Uncaught (in promise) Error: nope',
+          'lineNumber': 1,
+          'columnNumber': 16,
+          'scriptId': '32',
+          'stackTrace': {
+            'callFrames': [{'columnNumber': 15, 'functionName': '', 'lineNumber': 0, 'scriptId': '32', 'url': ''}]
+          },
+          'exception': {
+            'type': 'object',
+            'subtype': 'error',
+            'className': 'Error',
+            'description': 'Error: nope\n    at <anonymous>:1:16',
+            'objectId': '1.1.1',
+          },
         },
-        'exceptionDetails': {
+        id='rejected promise',
+      ),
+      pytest.param(
+        {
           'exceptionId': 1,
           'text': 'Uncaught',
           'lineNumber': 0,
@@ -143,52 +145,40 @@ class TestEvaluate:
             'objectId': '1.1.5',
           },
         },
-      },
-    )
-
-    with pytest.raises(JavascriptException) as exc_info:
-      browser.evaluate('...')
-
-    assert exc_info.value.msg == 'SyntaxError: Unexpected end of input (line 1, column 4)'
-
-  def test_raises_with_the_thrown_value_when_it_is_not_an_error(self, browser: Browser) -> None:
-    """Uses the thrown value when there is no description, such as when a string is thrown."""
-    mock_cdp_response(
-      browser,
-      {
-        'result': {'type': 'string', 'value': 'oops'},
-        'exceptionDetails': {
+        id='syntax error',
+      ),
+      pytest.param(
+        {
           'exceptionId': 1,
           'text': 'Uncaught',
           'lineNumber': 0,
           'columnNumber': 0,
           'scriptId': '34',
+          'stackTrace': {
+            'callFrames': [{'columnNumber': 0, 'functionName': '', 'lineNumber': 0, 'scriptId': '34', 'url': ''}]
+          },
           'exception': {'type': 'string', 'value': 'oops'},
         },
-      },
-    )
-
-    with pytest.raises(JavascriptException) as exc_info:
-      browser.evaluate('...')
-
-    assert exc_info.value.msg == 'oops (line 1, column 1)'
-
-  def test_raises_with_the_exception_text_when_there_is_no_exception(self, browser: Browser) -> None:
-    """Falls back to the exception text when no exception object is given, which CDP marks as optional."""
-    mock_cdp_response(
-      browser,
-      {
-        'result': {'type': 'undefined'},
-        'exceptionDetails': {
+        id='thrown string',
+      ),
+      pytest.param(
+        {
           'exceptionId': 1,
           'text': 'Uncaught',
           'lineNumber': 0,
           'columnNumber': 0,
         },
-      },
-    )
+        id='no exception',
+      ),
+    ],
+  )
+  def test_raises_with_the_exception_details_when_the_snippet_throws(
+    self, browser: Browser, exception_details: dict[str, Any]
+  ) -> None:
+    """Raises a JavascriptException including all of the exception details, whatever was thrown."""
+    mock_cdp_response(browser, {'result': {'type': 'object', 'value': {}}, 'exceptionDetails': exception_details})
 
     with pytest.raises(JavascriptException) as exc_info:
       browser.evaluate('...')
 
-    assert exc_info.value.msg == 'Uncaught (line 1, column 1)'
+    assert exc_info.value.msg == f'Runtime.evaluate threw: {json.dumps(exception_details)}'

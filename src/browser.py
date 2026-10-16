@@ -3,6 +3,7 @@
 Contains useful functions for managing browsers.
 """
 
+import json
 import logging
 import os
 import platform
@@ -114,11 +115,11 @@ class Browser:
     )
 
     if 'exceptionDetails' in response:
-      details = response['exceptionDetails']
-      exception = details.get('exception', {})
+      # exceptions here are effectively always bugs (ours or the page's), so rather
+      # than trying to pick out a message from whatever JS threw and CDP reported,
+      # we include everything to make debugging easier
       raise selenium.common.exceptions.JavascriptException(
-        f'{exception.get("description", exception.get("value", details["text"]))}'
-        f' (line {details["lineNumber"] + 1}, column {details["columnNumber"] + 1})'
+        f'Runtime.evaluate threw: {json.dumps(response["exceptionDetails"])}'
       )
 
     return response['result'].get('value')
