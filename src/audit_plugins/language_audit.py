@@ -175,12 +175,14 @@ class LanguageAudit(DefaultAudit):
       # JavaScript to execute Readability
       LanguageAudit.readability_js = f"""
         {readability_js}
-        const documentCopy = document.cloneNode(true);
-        if (isProbablyReaderable(documentCopy) === false) return false;
-        const reader = new Readability(documentCopy);
-        const article = reader.parse();
-        if (article === null) return false;
-        return [article.title, article.content];
+        (() => {{
+          const documentCopy = document.cloneNode(true);
+          if (isProbablyReaderable(documentCopy) === false) return false;
+          const reader = new Readability(documentCopy);
+          const article = reader.parse();
+          if (article === null) return false;
+          return [article.title, article.content];
+        }})();
       """
 
   def scrape_main_content(self) -> str:
@@ -193,8 +195,7 @@ class LanguageAudit(DefaultAudit):
     """
     self._load_readability()
 
-    # Execute JavaScript
-    content = self.browser.driver.execute_script(LanguageAudit.readability_js)
+    content = self.browser.evaluate(LanguageAudit.readability_js)
 
     if content is False:
       logger.info(
@@ -223,7 +224,7 @@ class LanguageAudit(DefaultAudit):
     return str(flat_output)
 
   def __get_document_lang(self) -> str:
-    return cast(str, self.browser.driver.execute_script('return document.documentElement.lang')).lower()
+    return cast(str, self.browser.evaluate('document.documentElement.lang')).lower()
 
   def count_syllables(self, word: str) -> int:
     """Count num of syllables in a word.
