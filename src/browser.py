@@ -94,7 +94,8 @@ class Browser:
         js (str): the JavaScript snippet to evaluate
 
     Returns:
-        Any: the JSON-serializable result
+        Any: the result as JSON; values that aren't JSON-serializable
+            (DOM nodes, functions, NaN) come back as `{}` or None
 
     Raises:
         selenium.common.exceptions.JavascriptException: if the snippet throws
@@ -120,7 +121,7 @@ class Browser:
         f' (line {details["lineNumber"] + 1}, column {details["columnNumber"] + 1})'
       )
 
-    return response['result']['value']
+    return response['result'].get('value')
 
   def safe_restart(self) -> None:
     """Restart the webdriver."""
