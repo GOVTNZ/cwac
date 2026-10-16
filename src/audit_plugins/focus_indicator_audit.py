@@ -77,7 +77,7 @@ class FocusIndicatorAudit(DefaultAudit):
     This is to prevent the page from scrolling
     when the Tab key is pressed.
     """
-    scroll_height = self.browser.driver.execute_script('return document.documentElement.scrollHeight;')
+    scroll_height = self.browser.evaluate('document.documentElement.scrollHeight')
     # Limit the scroll height to 10000px
     scroll_height = min(scroll_height, 10000)
     logger.info('Setting browser height to %i', scroll_height)
@@ -96,7 +96,7 @@ class FocusIndicatorAudit(DefaultAudit):
     Returns:
         bool: if the page has focus
     """
-    return bool(self.browser.driver.execute_script('return document.hasFocus()'))
+    return bool(self.browser.evaluate('document.hasFocus()'))
 
   def screenshot(self) -> Any:
     """Take a screenshot of the page that's loaded in the browser.
@@ -209,7 +209,7 @@ class FocusIndicatorAudit(DefaultAudit):
       if num_different_pixels == 0:
         # No focus indicator was seen
         # Get the html of the element that has focus
-        html = self.browser.driver.execute_script('return document.activeElement.outerHTML')
+        html = self.browser.evaluate('document.activeElement.outerHTML')
         result_list.append({'html': html[:100], 'tab_press': i + 1})
 
     # If result_list is empty, return a success result

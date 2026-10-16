@@ -1,5 +1,6 @@
 """AuditManager - runs tests on a Browser."""
 
+import json
 import logging
 import os
 import urllib.parse
@@ -142,15 +143,14 @@ class AuditManager:
 
   def _check_for_closed_details_elements(self) -> None:
     """Check for closed <details> elements on current page, and open them if force_open_details_elements is True."""
-    num_of_details = self.browser.driver.execute_script(
+    num_of_details = self.browser.evaluate(
+      f"""
+        const details = document.querySelectorAll('details:not([open])');
+        if({json.dumps(self.config.force_open_details_elements)}) {{
+          details.forEach(d => d.open = true);
+        }}
+        details.length;
       """
-      const details = document.querySelectorAll('details:not([open])');
-      if(arguments[0]) {
-        details.forEach(d => d.open = true);
-      }
-      return details.length;
-    """,
-      self.config.force_open_details_elements,
     )
 
     if num_of_details == 0:

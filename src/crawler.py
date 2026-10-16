@@ -91,7 +91,7 @@ class Crawler:
     try:
       return cast(
         list[str],
-        self.browser.driver.execute_script('return [...new Set(Array.from(document.links, a => a.href))]'),
+        self.browser.evaluate('[...new Set(Array.from(document.links, a => a.href))]'),
       )
     except (
       selenium.common.exceptions.WebDriverException,

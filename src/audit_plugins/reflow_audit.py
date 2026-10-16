@@ -72,11 +72,11 @@ class ReflowAudit(DefaultAudit):
       return False
 
     # record the original x and y so we can restore the scroll position later
-    original_x, original_y = self.browser.driver.execute_script('return [window.scrollX, window.scrollY]')
+    original_x, original_y = self.browser.evaluate('[window.scrollX, window.scrollY]')
 
     # Determine if there is a horizontal overflow
-    self.browser.driver.execute_script('window.scrollTo(100, 0);')
-    overflow_amount = self.browser.driver.execute_script('return window.scrollX;')
+    self.browser.evaluate('window.scrollTo(100, 0);')
+    overflow_amount = self.browser.evaluate('window.scrollX;')
 
     # Run a ScreenshotAudit if the page overflows
     if self.config.audit_plugins['reflow_audit']['screenshot_failures'] and overflow_amount > 0:
@@ -94,9 +94,7 @@ class ReflowAudit(DefaultAudit):
       screenshot_audit.run()
 
     # reset the scrolling so that we've left the page unmodified
-    self.browser.driver.execute_script(
-      f'window.scrollTo({{ left: {original_x}, top: {original_y}, behavior: "instant" }} )'
-    )
+    self.browser.evaluate(f'window.scrollTo({{ left: {original_x}, top: {original_y}, behavior: "instant" }} )')
 
     return [
       {
