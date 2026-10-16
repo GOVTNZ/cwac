@@ -8,7 +8,7 @@ import logging
 import os
 import platform
 import time
-from typing import Any
+from typing import Any, cast
 
 import selenium.common.exceptions
 import urllib3
@@ -85,9 +85,12 @@ class Browser:
     The snippet is run with Runtime.evaluate, so it behaves like `eval`:
     https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-Runtime-evaluate
 
-    The snippet is run in the global scope but wrapped in a block so that lexical
-    declarations (`let`, `const`, and `class`) are scoped to each call, preventing
-    redeclaration errors across calls that use the same names.
+    To guard against pages that patch built-ins, the snippet is run in an isolated
+    world, meaning it shares the page's DOM but not its JavaScript globals.
+
+    The snippet is also wrapped in a block so that lexical declarations (`let`,
+    `const`, and `class`) are scoped to each call rather than the world's global
+    scope, preventing redeclaration errors across calls that use the same names.
 
     The value of the last statement is returned; if it's a Promise, it's awaited
     and the resolved value is returned instead.
@@ -109,6 +112,7 @@ class Browser:
     response = self.driver.execute_cdp_cmd(
       'Runtime.evaluate',
       {
+        'contextId': self._get_js_execution_context_id(),
         # wrap the snippet in a block to scope locals
         'expression': f'{{\n{js}\n}}',
         'returnByValue': True,
@@ -128,6 +132,20 @@ class Browser:
       )
 
     return response['result'].get('value')
+
+  def _get_js_execution_context_id(self) -> int:
+    """Get the id of the execution context to evaluate snippets in: an isolated world for the page's main frame."""
+    frame_id = self.driver.execute_cdp_cmd(
+      'Page.getFrameTree',
+      {},
+    )['frameTree']['frame']['id']
+
+    execution_context_id = self.driver.execute_cdp_cmd(
+      'Page.createIsolatedWorld',
+      {'frameId': frame_id, 'worldName': 'CWAC'},
+    )['executionContextId']
+
+    return cast(int, execution_context_id)
 
   def safe_restart(self) -> None:
     """Restart the webdriver."""

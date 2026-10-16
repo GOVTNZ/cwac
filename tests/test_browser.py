@@ -2,7 +2,7 @@
 
 import json
 from typing import Any, cast
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
@@ -28,9 +28,15 @@ def fixture_browser(fs: FakeFilesystem, mocker: MockerFixture) -> Browser:
 
 
 def mock_cdp_response(browser: Browser, response: dict[str, Any]) -> Mock:
-  """Make the browser's driver return the given response for any CDP command."""
+  """Make the browser's driver return the given response for Runtime.evaluate, with an isolated world to run it in."""
+  responses: dict[str, dict[str, Any]] = {
+    'Page.getFrameTree': {'frameTree': {'frame': {'id': 'MAIN_FRAME', 'url': 'https://example.com/'}}},
+    'Page.createIsolatedWorld': {'executionContextId': 7},
+    'Runtime.evaluate': response,
+  }
+
   execute_cdp_cmd = cast(Mock, browser.driver.execute_cdp_cmd)
-  execute_cdp_cmd.return_value = response
+  execute_cdp_cmd.side_effect = lambda cmd, _: responses[cmd]
   return execute_cdp_cmd
 
 
@@ -38,20 +44,25 @@ class TestEvaluate:
   """Tests Browser.evaluate."""
 
   def test_evaluates_the_snippet_with_runtime_evaluate(self, browser: Browser) -> None:
-    """Sends the snippet to Runtime.evaluate wrapped in a block, awaiting promises and returning by value."""
+    """Sends the snippet to Runtime.evaluate in an isolated world for the main frame, wrapped in a block, awaiting promises and returning by value."""
     execute_cdp_cmd = mock_cdp_response(browser, {'result': {'type': 'number', 'value': 2}})
 
     browser.evaluate('1 + 1')
 
-    execute_cdp_cmd.assert_called_once_with(
-      'Runtime.evaluate',
-      {
-        'expression': '{\n1 + 1\n}',
-        'returnByValue': True,
-        'awaitPromise': True,
-        'timeout': browser.config.script_timeout * 1000,
-      },
-    )
+    assert execute_cdp_cmd.call_args_list == [
+      call('Page.getFrameTree', {}),
+      call('Page.createIsolatedWorld', {'frameId': 'MAIN_FRAME', 'worldName': 'CWAC'}),
+      call(
+        'Runtime.evaluate',
+        {
+          'contextId': 7,
+          'expression': '{\n1 + 1\n}',
+          'returnByValue': True,
+          'awaitPromise': True,
+          'timeout': browser.config.script_timeout * 1000,
+        },
+      ),
+    ]
 
   @pytest.mark.parametrize(
     ('result', 'expected'),
