@@ -1,5 +1,6 @@
 """Tests the behaviour of the Browser class."""
 
+import itertools
 import json
 from typing import Any, cast
 from unittest.mock import Mock, call
@@ -7,7 +8,7 @@ from unittest.mock import Mock, call
 import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
-from selenium.common.exceptions import JavascriptException
+from selenium.common.exceptions import JavascriptException, TimeoutException
 
 from config import Config
 from src.browser import Browser
@@ -29,15 +30,28 @@ def fixture_browser(fs: FakeFilesystem, mocker: MockerFixture) -> Browser:
 
 def mock_cdp_response(browser: Browser, response: dict[str, Any]) -> Mock:
   """Make the browser's driver return the given response for Runtime.evaluate, with an isolated world to run it in."""
-  responses: dict[str, dict[str, Any]] = {
-    'Page.getFrameTree': {'frameTree': {'frame': {'id': 'MAIN_FRAME', 'url': 'https://example.com/'}}},
-    'Page.createIsolatedWorld': {'executionContextId': 7},
-    'Runtime.evaluate': response,
-  }
+  context_ids = itertools.count(1)
+
+  def respond(cmd: str, _: dict[str, Any]) -> dict[str, Any]:
+    # https://chromedevtools.github.io/devtools-protocol/#/stable/Page.getFrameTree
+    if cmd == 'Page.getFrameTree':
+      return {'frameTree': {'frame': {'id': 'MAIN_FRAME', 'url': 'https://example.com/'}}}
+
+    # https://chromedevtools.github.io/devtools-protocol/#/stable/Page.createIsolatedWorld
+    if cmd == 'Page.createIsolatedWorld':
+      return {'executionContextId': next(context_ids)}
+
+    assert cmd == 'Runtime.evaluate'
+    return response
 
   execute_cdp_cmd = cast(Mock, browser.driver.execute_cdp_cmd)
-  execute_cdp_cmd.side_effect = lambda cmd, _: responses[cmd]
+  execute_cdp_cmd.side_effect = respond
   return execute_cdp_cmd
+
+
+def evaluated_context_ids(execute_cdp_cmd: Mock) -> list[int]:
+  """Get the context id that each Runtime.evaluate call was run in."""
+  return [c.args[1]['contextId'] for c in execute_cdp_cmd.call_args_list if c.args[0] == 'Runtime.evaluate']
 
 
 class TestEvaluate:
@@ -55,7 +69,7 @@ class TestEvaluate:
       call(
         'Runtime.evaluate',
         {
-          'contextId': 7,
+          'contextId': 1,
           'expression': '{\n1 + 1\n}',
           'returnByValue': True,
           'awaitPromise': True,
@@ -63,6 +77,53 @@ class TestEvaluate:
         },
       ),
     ]
+
+  def test_reuses_the_isolated_world_across_evaluations(self, browser: Browser) -> None:
+    """Creates the isolated world once, and evaluates every snippet in it."""
+    execute_cdp_cmd = mock_cdp_response(browser, {'result': {'type': 'undefined'}})
+
+    browser.evaluate('1')
+    browser.evaluate('2')
+    browser.evaluate('3')
+
+    assert evaluated_context_ids(execute_cdp_cmd) == [1, 1, 1]
+
+  def test_creates_a_new_isolated_world_after_loading_a_page(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Creates a new isolated world on the first evaluation after a page is loaded, and reuses it for that page."""
+    mocker.patch('src.browser.time.sleep')
+    execute_cdp_cmd = mock_cdp_response(browser, {'result': {'type': 'undefined'}})
+
+    browser.evaluate('1')
+    browser.evaluate('2')
+    assert browser.get('https://example.com/news') is True
+    assert browser.get('https://example.com/contact') is True
+    browser.evaluate('3')
+    browser.evaluate('4')
+    assert browser.get('https://example.com/blog') is True
+    browser.evaluate('5')
+
+    assert evaluated_context_ids(execute_cdp_cmd) == [1, 1, 2, 2, 3]
+
+  def test_creates_a_new_isolated_world_after_failing_to_load_a_page(self, browser: Browser) -> None:
+    """Creates a new isolated world after a failed page load, since the browser may have still navigated away."""
+    execute_cdp_cmd = mock_cdp_response(browser, {'result': {'type': 'undefined'}})
+    cast(Mock, browser.driver.get).side_effect = TimeoutException()
+
+    browser.evaluate('1')
+    assert browser.get('https://example.com/') is False
+    browser.evaluate('2')
+
+    assert evaluated_context_ids(execute_cdp_cmd) == [1, 2]
+
+  def test_creates_a_new_isolated_world_after_the_browser_restarts(self, browser: Browser) -> None:
+    """Creates a new isolated world after the browser is restarted, since the old one no longer exists."""
+    execute_cdp_cmd = mock_cdp_response(browser, {'result': {'type': 'undefined'}})
+
+    browser.evaluate('1')
+    browser.safe_restart()
+    browser.evaluate('2')
+
+    assert evaluated_context_ids(execute_cdp_cmd) == [1, 2]
 
   @pytest.mark.parametrize(
     ('result', 'expected'),
