@@ -37,6 +37,7 @@ class Browser:
     self.viewport_size = next(iter(self.config.viewport_sizes.values()))
     self.driver: WebDriverType = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.requested_url = ''
+    self._js_execution_context_id: int | None = None
 
   def get(self, url: str) -> bool:
     """Load a URL in the webdriver.
@@ -51,6 +52,7 @@ class Browser:
     for attempts in range(self.num_retries):
       try:
         logger.info('Running .get: %s', url)
+        self._js_execution_context_id = None
         self.driver.get(url)
         logger.info('.get successful')
         self.requested_url = url
@@ -131,18 +133,30 @@ class Browser:
     return response['result'].get('value')
 
   def _get_js_execution_context_id(self) -> int:
-    """Get the id of the execution context to evaluate snippets in: an isolated world for the page's main frame."""
+    """Get the id of the execution context to evaluate JavaScript snippets in.
+
+    This is an isolated world for the page's main frame, created on first use and
+    reused until the page changes through a get or restart.
+    """
+    if self._js_execution_context_id is not None:
+      return self._js_execution_context_id
+
     frame_id = self.driver.execute_cdp_cmd(
       'Page.getFrameTree',
       {},
     )['frameTree']['frame']['id']
 
-    execution_context_id = self.driver.execute_cdp_cmd(
-      'Page.createIsolatedWorld',
-      {'frameId': frame_id, 'worldName': 'CWAC'},
-    )['executionContextId']
+    execution_context_id = cast(
+      int,
+      self.driver.execute_cdp_cmd(
+        'Page.createIsolatedWorld',
+        {'frameId': frame_id, 'worldName': 'CWAC'},
+      )['executionContextId'],
+    )
 
-    return cast(int, execution_context_id)
+    self._js_execution_context_id = execution_context_id
+
+    return execution_context_id
 
   def safe_restart(self) -> None:
     """Restart the webdriver."""
@@ -161,6 +175,7 @@ class Browser:
       logger.exception('urllib3 HTTPError, browser probably hung %s', self.requested_url)
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.requested_url = ''
+    self._js_execution_context_id = None
 
   def close(self) -> None:
     """Close the browser."""
@@ -171,6 +186,7 @@ class Browser:
       logger.exception('Failed to quit browser')
     self._remove_chrome_tmp_dir()
     self.requested_url = ''
+    self._js_execution_context_id = None
 
   def _remove_chrome_tmp_dir(self) -> None:
     if self._chrome_tmp_dir is None:
