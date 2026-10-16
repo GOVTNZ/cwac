@@ -78,6 +78,50 @@ class Browser:
     time.sleep(self.config.delay_after_page_load)
     return True
 
+  def evaluate(self, js: str) -> Any:
+    """Evaluate a JavaScript snippet on the current page using CDP.
+
+    The snippet is run with Runtime.evaluate, so it behaves like `eval`:
+    https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-Runtime-evaluate
+
+    The value of the last statement is returned; if it's a Promise, it's awaited
+    and the resolved value is returned instead.
+
+    Snippets involving promises should use `Promise.race` against `config.script_timeout`
+    to ensure they don't hang, as CDP only supports timing out for synchronous execution.
+
+    Args:
+        js (str): the JavaScript snippet to evaluate
+
+    Returns:
+        Any: the JSON-serializable result
+
+    Raises:
+        selenium.common.exceptions.JavascriptException: if the snippet throws
+        selenium.common.exceptions.WebDriverException: if synchronous execution times out
+    """
+    response = self.driver.execute_cdp_cmd(
+      'Runtime.evaluate',
+      {
+        'expression': js,
+        'returnByValue': True,
+        'awaitPromise': True,
+        # this only applies to synchronous evaluations, and will surface as a generic
+        # WebDriverException; asynchronous evaluations should include a Promise.race
+        'timeout': self.config.script_timeout * 1000,
+      },
+    )
+
+    if 'exceptionDetails' in response:
+      details = response['exceptionDetails']
+      exception = details.get('exception', {})
+      raise selenium.common.exceptions.JavascriptException(
+        f'{exception.get("description", exception.get("value", details["text"]))}'
+        f' (line {details["lineNumber"] + 1}, column {details["columnNumber"] + 1})'
+      )
+
+    return response['result']['value']
+
   def safe_restart(self) -> None:
     """Restart the webdriver."""
     try:
