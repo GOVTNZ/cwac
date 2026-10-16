@@ -29,6 +29,8 @@ class ReflowAudit(DefaultAudit):
 
   audit_type = 'ReflowAudit'
 
+  modifies_page = False
+
   def __init__(self, config: Config, browser: Browser, **kwargs: Unpack[AuditKwargs]) -> None:
     """Init variables."""
     super().__init__(config, browser, **kwargs)
@@ -69,6 +71,9 @@ class ReflowAudit(DefaultAudit):
       print(msg)
       return False
 
+    # record the original x and y so we can restore the scroll position later
+    original_x, original_y = self.browser.driver.execute_script('return [window.scrollX, window.scrollY]')
+
     # Determine if there is a horizontal overflow
     self.browser.driver.execute_script('window.scrollTo(100, 0);')
     overflow_amount = self.browser.driver.execute_script('return window.scrollX;')
@@ -87,6 +92,11 @@ class ReflowAudit(DefaultAudit):
         page_id=self.page_id,
       )
       screenshot_audit.run()
+
+    # reset the scrolling so that we've left the page unmodified
+    self.browser.driver.execute_script(
+      f'window.scrollTo({{ left: {original_x}, top: {original_y}, behavior: "instant" }} )'
+    )
 
     return [
       {
