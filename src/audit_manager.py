@@ -29,7 +29,14 @@ class AuditManager:
     """
     self.config = config
     self.browser = browser
-    self.audits = audits
+
+    # put the audits that don't modify the page first so they can share the initial page load
+    self.audits = dict(
+      sorted(
+        audits.items(),
+        key=lambda item: item[1].modifies_page,
+      )
+    )
 
     # Stores URLs discarded as a key-value pair
     # of URL (str): reason (str). URLs are discarded
@@ -169,10 +176,12 @@ class AuditManager:
 
     1. The browser window is resized to the specified dimensions.
     2. For each audit configured to run at the current viewport size:
-      1. The page is (re)loaded.
-      2. The antibot check is run. If the page is blocked, the audit is skipped.
-      3. if force_open_details_elements is True, any closed <details> elements on the page are opened.
-      4. The audit is run and the results are written to a CSV file.
+      1. If needed, the page is (re)loaded and the antibot check is run. If the
+         page is blocked, no further audits are run. The page is loaded at the
+         start of each viewport, and reloaded after an audit that modifies the
+         page or raises an exception.
+      2. if force_open_details_elements is True, any closed <details> elements on the page are opened.
+      3. The audit is run and the results are written to a CSV file.
 
     If an exception is raised during the execution of an audit, then the browser
     state is reset for the next audit:
@@ -200,6 +209,11 @@ class AuditManager:
       # Generate a unique audit ID
       audit_id = page_id + '_' + viewport
 
+      # start every viewport with a fresh page to ensure the page layout is
+      # set up correctly for the new size, which is sometimes different to
+      # the layout when the page is resized after loading
+      needs_fresh_page = True
+
       self.browser.set_window_size(
         self.config.viewport_sizes[viewport]['width'],
         self.config.viewport_sizes[viewport]['height'],
@@ -215,24 +229,21 @@ class AuditManager:
           continue
 
         # Log the start of this audit
-        logger.info('Starting audit %s on %s', audit_name, url)
+        logger.info('Starting audit %s on %s (needs_fresh_page=%s)', audit_name, url, needs_fresh_page)
 
-        # The first time through this loop, we load the page to ensure that the
-        # page is loaded with the correct viewport size. On subsequent
-        # iterations, we load the page again to ensure that any changes (e.g.
-        # injected JS) made by a previous audit do not affect the next audit.
-        browser_status = self.browser.get(url)
+        if needs_fresh_page:
+          browser_status = self.browser.get(url)
 
-        # Test for anti-bot measures
-        if self.test_for_anti_bot(site_data) != 'Pass':
-          # If URL is blocked, skip this URL
-          logger.warning('Skipping test %s on %s due to anti-bot', audit_name, url)
-          return any_audit_succeeded
+          # Test for anti-bot measures
+          if self.test_for_anti_bot(site_data) != 'Pass':
+            # If URL is blocked, skip this URL
+            logger.warning('Skipping test %s on %s due to anti-bot', audit_name, url)
+            return any_audit_succeeded
 
-        # If the browser fails to load the page, skip test
-        if browser_status is False:
-          logger.warning('Skipping test %s on %s due to .get failure', audit_name, url)
-          continue
+          # If the browser fails to load the page, skip test
+          if browser_status is False:
+            logger.warning('Skipping test %s on %s due to .get failure', audit_name, url)
+            continue
 
         # Run the tests
         audit_instance = audit_class(
@@ -244,12 +255,19 @@ class AuditManager:
           site_data=site_data,
         )
 
+        # assume the next audit will need a fresh page, unless the current
+        # audit completes successfully and says it didn't modify the page
+        needs_fresh_page = True
+
         try:
           self._check_for_closed_details_elements()
 
           audit_result: list[dict[str, Any]] | bool = audit_instance.run()
+
+          needs_fresh_page = audit_class.modifies_page
         except Exception:  # pylint: disable=broad-exception-caught
           logger.exception('test %s skipped on viewport %s for website %s', audit_name, viewport, url)
+
           # If the browser crashes, skip this test
           # and restart the browser
           self.browser.safe_restart()
