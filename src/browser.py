@@ -82,6 +82,10 @@ class Browser:
     The snippet is run with Runtime.evaluate, so it behaves like `eval`:
     https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-Runtime-evaluate
 
+    The snippet is run in the global scope but wrapped in a block so that lexical
+    declarations (`let`, `const`, and `class`) are scoped to each call, preventing
+    redeclaration errors across calls that use the same names.
+
     The value of the last statement is returned; if it's a Promise, it's awaited
     and the resolved value is returned instead.
 
@@ -102,7 +106,8 @@ class Browser:
     response = self.driver.execute_cdp_cmd(
       'Runtime.evaluate',
       {
-        'expression': js,
+        # wrap the snippet in a block to scope locals
+        'expression': f'{{\n{js}\n}}',
         'returnByValue': True,
         'awaitPromise': True,
         # this only applies to synchronous evaluations, and will surface as a generic

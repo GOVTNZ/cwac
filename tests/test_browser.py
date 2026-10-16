@@ -38,7 +38,7 @@ class TestEvaluate:
   """Tests Browser.evaluate."""
 
   def test_evaluates_the_snippet_with_runtime_evaluate(self, browser: Browser) -> None:
-    """Sends the snippet to Runtime.evaluate, awaiting promises and returning by value."""
+    """Sends the snippet to Runtime.evaluate wrapped in a block, awaiting promises and returning by value."""
     execute_cdp_cmd = mock_cdp_response(browser, {'result': {'type': 'number', 'value': 2}})
 
     browser.evaluate('1 + 1')
@@ -46,7 +46,7 @@ class TestEvaluate:
     execute_cdp_cmd.assert_called_once_with(
       'Runtime.evaluate',
       {
-        'expression': '1 + 1',
+        'expression': '{\n1 + 1\n}',
         'returnByValue': True,
         'awaitPromise': True,
         'timeout': browser.config.script_timeout * 1000,
