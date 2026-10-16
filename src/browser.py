@@ -91,8 +91,8 @@ class Browser:
         js (str): the JavaScript snippet to evaluate
 
     Returns:
-        Any: the result as JSON; values that aren't JSON-serializable
-            (DOM nodes, functions, NaN) come back as `{}` or None
+        Any: the result as JSON; values that aren't JSON-serializable don't round-trip
+            (functions come back as `{}`, NaN as None, and DOM nodes as junk)
 
     Raises:
         selenium.common.exceptions.JavascriptException: if the snippet throws
