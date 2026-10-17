@@ -141,6 +141,54 @@ class TestChromeLocationsAutoResolution:
     assert config.chrome_binary_location == '/home/user/.cache/selenium/chrome/linux64/139.0.7258.68'
     assert config.chrome_driver_location == '/home/user/.cache/selenium/chromedriver/linux64/139.0.7258.68'
 
+  def test_only_binary_location_auto_is_fine(self, fs: FakeFilesystem, mocker: MockerFixture) -> None:
+    """Resolves chrome_binary_location automatically while preserving the manually configured chrome_driver_location."""
+    fs.add_real_file('config/config_default.json', read_only=False)
+
+    mock_platform(mocker, 'Linux', 'x86_64')
+
+    with open('config/config_default.json', 'r+', encoding='utf-8') as f:
+      c = {
+        **json.load(f),
+        'chrome_binary_location': 'auto',
+        'chrome_driver_location': '/home/user/.cache/selenium/chromedriver/linux64/139.0.7258.68',
+      }
+      f.seek(0)
+      json.dump(c, f)
+      f.truncate()
+
+    with open('package.json', 'w+', encoding='utf-8') as f:
+      f.write(json.dumps({'config': {'chromeVersion': '123-abc'}}))
+
+    config = Config('config_default.json')
+
+    assert config.chrome_binary_location == './chrome/linux-123-abc/chrome-linux64/chrome'
+    assert config.chrome_driver_location == '/home/user/.cache/selenium/chromedriver/linux64/139.0.7258.68'
+
+  def test_only_driver_location_auto_is_fine(self, fs: FakeFilesystem, mocker: MockerFixture) -> None:
+    """Resolves chrome_driver_location automatically while preserving the manually configured chrome_binary_location."""
+    fs.add_real_file('config/config_default.json', read_only=False)
+
+    mock_platform(mocker, 'Linux', 'x86_64')
+
+    with open('config/config_default.json', 'r+', encoding='utf-8') as f:
+      c = {
+        **json.load(f),
+        'chrome_binary_location': '/home/user/.cache/selenium/chrome/linux64/139.0.7258.68',
+        'chrome_driver_location': 'auto',
+      }
+      f.seek(0)
+      json.dump(c, f)
+      f.truncate()
+
+    with open('package.json', 'w+', encoding='utf-8') as f:
+      f.write(json.dumps({'config': {'chromeVersion': '123-abc'}}))
+
+    config = Config('config_default.json')
+
+    assert config.chrome_binary_location == '/home/user/.cache/selenium/chrome/linux64/139.0.7258.68'
+    assert config.chrome_driver_location == './chromedriver/linux-123-abc/chromedriver-linux64/chromedriver'
+
 
 class TestUrlLoading:
   """Tests the loading of urls from csv files."""
