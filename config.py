@@ -292,8 +292,10 @@ class Config:
     """
     info = platform.uname()
 
+    chrome_version = None
+
     if self.chrome_binary_location == 'auto':
-      chrome_version = self.__determine_chrome_version()
+      chrome_version = self._determine_chrome_version()
 
       if info.system == 'Linux' and info.machine == 'x86_64':
         self.chrome_binary_location = f'./chrome/linux-{chrome_version}/chrome-linux64/chrome'
@@ -307,6 +309,9 @@ class Config:
         )
 
     if self.chrome_driver_location == 'auto':
+      if chrome_version is None:
+        chrome_version = self._determine_chrome_version()
+
       if info.system == 'Linux' and info.machine == 'x86_64':
         self.chrome_driver_location = f'./chromedriver/linux-{chrome_version}/chromedriver-linux64/chromedriver'
       elif info.system == 'Darwin' and info.machine == 'arm64':
@@ -317,7 +322,7 @@ class Config:
           f'- please set chrome_driver_location manually'
         )
 
-  def __determine_chrome_version(self) -> str:
+  def _determine_chrome_version(self) -> str:
     with open('package.json', encoding='utf-8-sig') as file:
       package_json = json.load(file)
 
