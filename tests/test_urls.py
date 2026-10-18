@@ -43,6 +43,20 @@ def test_normalize_url_converts_internationalized_domain_names_to_punycode(url: 
   assert normalize_url(url) == expected
 
 
+@pytest.mark.parametrize(
+  ('url', 'expected'),
+  [
+    ('https://example.com/a#', 'https://example.com/a'),
+    ('https://example.com/a#top', 'https://example.com/a'),
+    ('https://example.com/a?q=1#top', 'https://example.com/a?q=1'),
+    ('https://example.com/#/route', 'https://example.com/'),
+  ],
+)
+def test_normalize_url_removes_fragments(url: str, expected: str) -> None:
+  """Removes the fragment, including an empty one, since it refers to the same document."""
+  assert normalize_url(url) == expected
+
+
 @pytest.mark.parametrize('url', ['', 'example.com', 'https://exa mple.com/', 'https://[::1/'])
 def test_normalize_url_raises_on_invalid_url(url: str) -> None:
   """Raises a ValueError when the URL is not valid."""

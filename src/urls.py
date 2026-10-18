@@ -16,7 +16,11 @@ def normalize_url(url: str) -> str:
   Additionally, percent-escapes in the path are uppercased (as recommended by
   RFC 3986), since the WHATWG URL Standard leaves them as they were written.
 
-  E.g. HTTPS://Māori.NZ:443/a/../caf%c3%a9 -> https://xn--mori-qsa.nz/caf%C3%A9
+  The fragment (including an empty one, e.g. https://example.com/#) is also
+  removed, since it is never sent to the server and so refers to the same
+  document, matching the URL Standard's "exclude fragments" equality.
+
+  E.g. HTTPS://Māori.NZ:443/a/../caf%c3%a9#top -> https://xn--mori-qsa.nz/caf%C3%A9
 
   Args:
       url (str): URL to normalize
@@ -29,5 +33,6 @@ def normalize_url(url: str) -> str:
   """
   parsed = ada_url.URL(url)
   parsed.pathname = re.sub(r'%[0-9a-fA-F]{2}', lambda m: m.group(0).upper(), parsed.pathname)
+  parsed.hash = ''
 
   return parsed.href
