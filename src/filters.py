@@ -125,7 +125,11 @@ def url_filter_by_header_content_type(url: str, headers: dict[Any, Any]) -> bool
       )
       return False
   except KeyError:
-    logger.error('KeyError was encountered %s %s', url, headers)
+    logger.info(
+      'URL filtered due to not being able to determine content type %s: %s',
+      url,
+      headers,
+    )
     return False
 
   return True
@@ -191,7 +195,7 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
     except Exception:  # pylint: disable=broad-exception-caught
       logger.exception('Failed to get headers; attempt: %d, %s', i + 1, url)
       if i == 2:
-        logger.error('Giving up on headers check; attempt: %d, %s', i + 1, url)
+        logger.warning('Giving up on headers check; attempt: %d, %s', i + 1, url)
         return {'status_code': -1, 'final_url': url, 'headers': {}}
 
   return {
