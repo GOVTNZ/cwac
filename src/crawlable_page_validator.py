@@ -157,18 +157,14 @@ class CrawlablePageValidator:
         At least 1 HTTP request; redirects may cause additional requests.
     """
     # Fetch the robots.txt file
-    try:
-      logger.info('Fetching robots.txt %s', robots_txt_url)
-      response = requests.get(robots_txt_url, headers={'User-Agent': self.config.user_agent}, timeout=10)
-      response.raise_for_status()
+    logger.info('Fetching robots.txt %s', robots_txt_url)
+    response = requests.get(robots_txt_url, headers={'User-Agent': self.config.user_agent}, timeout=10)
+    response.raise_for_status()
 
-      # Check Content-Type is text/plain (in a safe way)
-      is_content_type_set = 'Content-Type' in response.headers
-      if is_content_type_set and not re.search('^text/plain(?:;|$)', response.headers['Content-Type'], re.IGNORECASE):
-        raise ValueError(f'robots.txt has invalid Content-Type {robots_txt_url} {response.headers["Content-Type"]}')
-    except requests.exceptions.RequestException:
-      logger.error('Failed to fetch robots.txt %s', robots_txt_url)
-      raise
+    # Check Content-Type is text/plain (in a safe way)
+    is_content_type_set = 'Content-Type' in response.headers
+    if is_content_type_set and not re.search('^text/plain(?:;|$)', response.headers['Content-Type'], re.IGNORECASE):
+      raise ValueError(f'robots.txt has invalid Content-Type {robots_txt_url} {response.headers["Content-Type"]}')
 
     logger.info('Fetched robots.txt %s', robots_txt_url)
 
@@ -176,7 +172,6 @@ class CrawlablePageValidator:
 
     # If the response is > 500 KB
     if len(robots_txt_content) > 1024 * 500:
-      logger.warning('robots.txt file is too large (>500 KB) on %s', robots_txt_url)
       raise ValueError(f'robots.txt file is too large (>500 KB) on {robots_txt_url}')
 
     # Remove any non-UTF-8 characters
