@@ -66,8 +66,6 @@ class Crawler:
       with self.config.lock:
         site_data = self.url_queue.get()
 
-      logger.info('Starting test %s', site_data['url'])
-
       # Crawl the url (the crawler also initiates tests)
       self.crawl(site_data, site_data['url'])
 
@@ -97,7 +95,7 @@ class Crawler:
       selenium.common.exceptions.WebDriverException,
       urllib3.exceptions.HTTPError,
     ) as e:
-      logger.error('%s when getting links on %s', type(e).__name__, url)
+      logger.warning('%s when getting links on %s', type(e).__name__, url)
       return []
 
   def load_audit_plugins(self) -> dict[str, type[DefaultAudit]]:
@@ -173,7 +171,7 @@ class Crawler:
     # Filter and sanitise the initial URL
     if not self.url_filter.run_url_filters(base_url):
       self.record_pages_scanned(site_data, pages_scanned)
-      logger.error('base_url was filtered out! %s', base_url)
+      logger.warning('base_url was filtered out! %s', base_url)
       return
 
     has_crawled_sitemap = not self.config.crawl_sitemaps
@@ -213,7 +211,7 @@ class Crawler:
         if test_failures >= 3:
           self.analytics.record_test_failure(base_url)
           self.record_pages_scanned(site_data, pages_scanned)
-          logger.error('Too many sequential test failures, skipping %s', url)
+          logger.warning('Too many sequential test failures, skipping %s', url)
           return
 
       # don't bother getting links if we are only scanning one link per base url

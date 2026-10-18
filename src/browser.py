@@ -47,7 +47,7 @@ class Browser:
     """
     # If only_allow_https is set, check that the URL is HTTPS
     if self.config.only_allow_https and not url.startswith('https://'):
-      logger.info('Skipping %s as only_allow_https is set', url)
+      logger.warning('Skipping %s as only_allow_https is set', url)
       return False
 
     for attempts in range(self.num_retries):
@@ -60,18 +60,18 @@ class Browser:
       except selenium.common.exceptions.TimeoutException:
         logger.exception('Timeout exception: %s, attempt:%i', url, attempts)
         if attempts == self.num_retries - 1:
-          logger.info('%i attempts failed to .get: %s', attempts + 1, url)
+          logger.error('%i attempts failed to .get: %s', attempts + 1, url)
           return False
       except selenium.common.exceptions.WebDriverException:
         logger.exception('WebDriverException')
         if attempts == self.num_retries - 1:
-          logger.info('%i attempts failed to .get: %s', attempts + 1, url)
+          logger.error('%i attempts failed to .get: %s', attempts + 1, url)
           return False
         self.safe_restart()
       except Exception:  # pylint: disable=broad-exception-caught
         logger.exception('Unhandled exception')
         if attempts == self.num_retries - 1:
-          logger.info('%i attempts failed to .get: %s', attempts + 1, url)
+          logger.error('%i attempts failed to .get: %s', attempts + 1, url)
           return False
 
     # Delay to allow page to load more

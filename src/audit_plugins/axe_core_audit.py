@@ -137,9 +137,7 @@ class AxeCoreAudit(DefaultAudit):
     """
     self.load_axe_core()
 
-    logger.info('Injecting axe %s', self.url)
     axe_core_results = self.browser.driver.execute_async_script(AxeCoreAudit.axe_core_js)
-    logger.info('axe-core has returned results %s', self.url)
 
     # Get page information from DefaultAudit
     default_audit_row = self._default_audit_row

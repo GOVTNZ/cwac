@@ -164,7 +164,7 @@ class Config:
             try:
               dict_row['url'] = src.urls.normalize_url(dict_row['url'])
             except ValueError:
-              logger.error('URL is not valid, skipping %s', dict_row['url'])
+              logger.warning('URL is not valid, skipping %s', dict_row['url'])
               continue
 
             base_urls.add(dict_row['url'])
@@ -246,13 +246,13 @@ class Config:
             parsed_url = parse.urlparse(subject['url'])
 
             if parsed_url.scheme not in ('http', 'https'):
-              logger.error('URL missing or unsupported scheme, skipping %s', subject['url'])
+              logger.warning('URL missing or unsupported scheme, skipping %s', subject['url'])
               continue
 
             # If only_allow_https is True, then only add
             # URLs that start with https://
             if self.only_allow_https and parsed_url.scheme != 'https':
-              logger.error(
+              logger.warning(
                 'only_allow_https is True, skipping %s',
                 subject['url'],
               )
@@ -264,7 +264,7 @@ class Config:
             try:
               subject['url'] = src.urls.normalize_url(subject['url'])
             except ValueError:
-              logger.error('URL is not valid, skipping %s', subject['url'])
+              logger.warning('URL is not valid, skipping %s', subject['url'])
               continue
 
             subject['columns']['url'] = subject['url']
