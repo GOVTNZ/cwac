@@ -5,7 +5,7 @@
 This audit provides an indicative check only for
 [WCAG 1.4.10 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html).
 For each URL included in the scan, the page is opened in a 320px wide browser
-window. If the page can be scrolled horizontally then the audit fails.
+window. If the page is wider than the window then the audit fails.
 
 > [!WARNING]
 >
@@ -49,12 +49,12 @@ The reflow audit requires the following scan configuration:
 
 1. Verify viewport is 320px wide.
 2. Re-load the page.
-3. Scroll to position x=100, y=0 using JS
-4. Measure `window.scrollX;` using JS.
-5. `window.scrollX` returns the number of pixels by which the document is
-   currently scrolled horizontally. If scrollX is greater than 0 then the page
-   is wider than the viewport so we report a failure.
-6. Reset the scroll position on the page.
+3. Measure how much wider the page is than the viewport using JS, by subtracting
+   `document.scrollingElement.clientWidth` (the width of the viewport) from
+   `document.scrollingElement.scrollWidth` (the width of the page, including any
+   parts outside the viewport).
+4. If the difference is greater than 0 then the page is wider than the viewport
+   so we report a failure.
 
 ## Interpreting results
 
@@ -100,11 +100,12 @@ reflow-specific result fields:
 To manually replicate a finding for a specific page:
 
 1. Open the page in a browser and set the viewport width to 320px.
-2. Scroll horizontally (or run `window.scrollTo(100, 0)` in DevTools console).
-3. Check `window.scrollX` in DevTools console.
-4. If `window.scrollX` is greater than 0 after horizontal scroll, the page
-   overflows horizontally and likely fails this check.
-5. Compare with `overflow_amount_px` and any related screenshot captured by
+2. Run
+   `document.scrollingElement.scrollWidth - document.scrollingElement.clientWidth`
+   in DevTools console.
+3. If the result is greater than 0, the page overflows horizontally and likely
+   fails this check.
+4. Compare with `overflow_amount_px` and any related screenshot captured by
    `screenshot_failures`.
 
 ## Fixing reflow issues

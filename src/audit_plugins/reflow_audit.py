@@ -70,8 +70,10 @@ class ReflowAudit(DefaultAudit):
       return False
 
     # Determine if there is a horizontal overflow
-    self.browser.driver.execute_script('window.scrollTo(100, 0);')
-    overflow_amount = self.browser.driver.execute_script('return window.scrollX;')
+    overflow_amount = self.browser.driver.execute_script("""
+      const scrollingElement = document.scrollingElement ?? document.documentElement
+      return scrollingElement.scrollWidth - scrollingElement.clientWidth
+    """)
 
     # Run a ScreenshotAudit if the page overflows
     if self.config.audit_plugins['reflow_audit']['screenshot_failures'] and overflow_amount > 0:
