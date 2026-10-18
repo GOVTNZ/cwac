@@ -29,6 +29,8 @@ class ReflowAudit(DefaultAudit):
 
   audit_type = 'ReflowAudit'
 
+  modifies_page = False
+
   def __init__(self, config: Config, browser: Browser, **kwargs: Unpack[AuditKwargs]) -> None:
     """Init variables."""
     super().__init__(config, browser, **kwargs)

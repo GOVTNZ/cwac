@@ -28,6 +28,9 @@ class DefaultAudit:
   Crawler.load_audit_plugins().
   """
 
+  modifies_page = True
+  """Indicates that the audit modifies the page, meaning the page should be reloaded after running."""
+
   def __init__(self, config: Config, browser: Browser, **kwargs: Unpack[AuditKwargs]):
     """Init variables."""
     self.config = config

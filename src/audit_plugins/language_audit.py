@@ -41,6 +41,8 @@ class LanguageAudit(DefaultAudit):
 
   audit_type = 'LanguageAudit'
 
+  modifies_page = False
+
   # Stores Readability.js and friends to prevent re-reading the files
   readability_js = ''
 
