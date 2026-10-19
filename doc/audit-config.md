@@ -67,9 +67,6 @@ The available configuration options are described below. See the
     running tests. This is helpful to allow any animations of JavaScript-based
     page changes to occur before running tests which may cause false positives
     i.e. fade-in animations can cause colour contrast false positives.
-- `only_allow_https`
-  - a boolean value that determines if CWAC will restrict to HTTPS-only URLs
-    (true: restrict to HTTPS)
 - `perform_header_check`
   - a boolean value that determines if CWAC will send a header-only request to
     each URL before loading the URL in a browser. This can prevent Chrome from

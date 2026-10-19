@@ -66,10 +66,6 @@
       "type": "number",
       "minimum": 0
     },
-    "only_allow_https": {
-      "description": "When true, non-HTTPS URLs are skipped and not audited",
-      "type": "boolean"
-    },
     "perform_header_check": {
       "description": "Whether to perform HTTP HEAD requests to pre-check URLs before auditing them",
       "type": "boolean"
@@ -308,7 +304,6 @@
     "script_timeout",
     "page_load_timeout",
     "delay_after_page_load",
-    "only_allow_https",
     "perform_header_check",
     "shuffle_base_urls",
     "base_urls_visit_path",
