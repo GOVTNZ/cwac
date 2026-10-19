@@ -109,8 +109,6 @@ def output_init_message(config: Config) -> None:
   print_log(f'Chrome binary location: {config.chrome_binary_location}')
   print_log(f'Chrome driver location: {config.chrome_driver_location}')
   print_log(f'User agent: {config.user_agent}')
-  print_log(f'User agent product token: {config.user_agent_product_token}')
-  print_log(f'Follow robots.txt: {config.follow_robots_txt}')
   print_log(f'Script timeout: {config.script_timeout} seconds')
   print_log(f'Page load timeout: {config.page_load_timeout} seconds')
   print_log(f'Delay after page load: {config.delay_after_page_load} seconds')

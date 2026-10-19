@@ -41,9 +41,8 @@ automatically-identifiable accessibility issues and store the results in an
 easy-to-read CSV file.
 
 CWAC can also crawl each page as it goes to determine additional pages to check
-(up to a set max number per URL), respecting `robots.txt` and server signals
-when doing so. This makes it easy to check entire sites without knowing all the
-paths beforehand.
+(up to a set max number per URL). This makes it easy to check entire sites
+without knowing all the paths beforehand.
 
 CWAC is designed to be extensible, so new forms of web testing can be added over
 time. For instance, CWAC could also run

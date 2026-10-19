@@ -7,8 +7,6 @@
   "chrome_binary_location": "auto",
   "chrome_driver_location": "auto",
   "user_agent": "Mozilla/5.0 (compatible; CWACbot/1.0; +https://www.digital.govt.nz/centralised-web-accessibility-checker/)",
-  "user_agent_product_token": "CWACbot",
-  "follow_robots_txt": true,
   "script_timeout": 15,
   "page_load_timeout": 10,
   "delay_after_page_load": 0.1,

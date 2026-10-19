@@ -7,7 +7,6 @@ from typing import cast
 from unittest.mock import Mock
 
 import pytest
-import requests
 import responses
 from pyfakefs.fake_filesystem import FakeFilesystem
 from responses import matchers
@@ -32,12 +31,9 @@ def fixture_config() -> SimpleNamespace:
   """Return the minimum configuration used by the validator."""
   return SimpleNamespace(
     audit_name='test-audit',
-    follow_robots_txt=False,
     perform_header_check=False,
-    robots_txt_cache={},
     url_lookup={'example.com'},
     user_agent='cwac-test',
-    user_agent_product_token='cwac-test',  # noqa: S106
   )
 
 
@@ -432,101 +428,3 @@ def test_validate_rejects_redirect_outside_scope(
   mocked_responses.head('https://other.example/final', content_type='text/html')
 
   assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/start') is None
-
-
-def test_robots_txt_is_cached_and_reused(
-  validator: CrawlablePageValidator,
-  config: SimpleNamespace,
-  mocked_responses: responses.RequestsMock,
-) -> None:
-  """Fetches robots.txt once per domain and reuses it for subsequent checks."""
-  config.follow_robots_txt = True
-  robots_txt = mocked_responses.get(
-    'https://example.com/robots.txt',
-    body='User-agent: *\nDisallow: /private',
-    content_type='text/plain',
-    match=[matchers.header_matcher({'User-Agent': 'cwac-test'})],
-  )
-
-  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
-  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/page') is None
-
-  assert robots_txt.call_count == 1
-
-
-@pytest.mark.parametrize(
-  'content_type',
-  [
-    pytest.param(None, id='missing'),
-    pytest.param('text/plain', id='plain'),
-    pytest.param('TEXT/PLAIN; charset=utf-8', id='with-charset'),
-  ],
-)
-def test_robots_txt_disallows_matching_url(
-  validator: CrawlablePageValidator,
-  config: SimpleNamespace,
-  mocked_responses: responses.RequestsMock,
-  content_type: str | None,
-) -> None:
-  """Honors a robots.txt disallow rule when the Content-Type is plain text or not set."""
-  config.follow_robots_txt = True
-  mocked_responses.get(
-    'https://example.com/robots.txt',
-    body='User-agent: *\nDisallow: /private',
-    content_type=content_type,
-  )
-
-  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/page') is None
-
-
-@pytest.mark.parametrize(
-  ('content_type', 'status', 'padding'),
-  [
-    pytest.param('text/html', 200, 0, id='invalid-content-type'),
-    pytest.param('text/plainish', 200, 0, id='similar-content-type'),
-    pytest.param('text/plain', 500, 0, id='http-error'),
-    pytest.param('text/plain', 200, 1024 * 500, id='too-large'),
-  ],
-)
-# pylint: disable-next=too-many-arguments,too-many-positional-arguments
-def test_robots_txt_defaults_to_allow_when_unusable(  # noqa: PLR0913, PLR0917
-  validator: CrawlablePageValidator,
-  config: SimpleNamespace,
-  mocked_responses: responses.RequestsMock,
-  content_type: str,
-  status: int,
-  padding: int,
-) -> None:
-  """Allows all URLs, and caches that result, when robots.txt cannot be used."""
-  config.follow_robots_txt = True
-  robots_txt = mocked_responses.get(
-    'https://example.com/robots.txt',
-    body='User-agent: *\nDisallow: /private\n' + '#' * padding,
-    content_type=content_type,
-    status=status,
-  )
-
-  assert (
-    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/page') == 'https://example.com/private/page'
-  )
-  assert (
-    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/other')
-    == 'https://example.com/private/other'
-  )
-
-  assert robots_txt.call_count == 1
-
-
-def test_robots_txt_defaults_to_allow_when_request_fails(
-  validator: CrawlablePageValidator,
-  config: SimpleNamespace,
-  mocked_responses: responses.RequestsMock,
-) -> None:
-  """Allows URLs when robots.txt cannot be fetched."""
-  config.follow_robots_txt = True
-  mocked_responses.get(
-    'https://example.com/robots.txt',
-    body=requests.exceptions.ConnectionError('connection refused'),
-  )
-
-  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
