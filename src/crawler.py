@@ -136,7 +136,6 @@ class Crawler:
     - Does the URL pass the URL filters?
     - Have we already scanned this URL?
     - Have we hit our maximum number of pages to scan for this domain?
-    - Is the URL allowed by robots.txt?
     - Is the URL within the scope of the base_url?
 
     If the URL passes all checks, it is passed to `AuditManager` for testing.

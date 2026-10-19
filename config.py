@@ -7,7 +7,6 @@ import os
 import platform
 import re
 import threading
-import urllib.robotparser
 from logging import INFO, FileHandler, Formatter, getLogger
 from typing import Any, TypedDict, cast
 from urllib import parse
@@ -41,8 +40,6 @@ class Config:
   chrome_binary_location: str
   chrome_driver_location: str
   user_agent: str
-  user_agent_product_token: str
-  follow_robots_txt: bool
   script_timeout: int
   page_load_timeout: int
   delay_after_page_load: int
@@ -101,11 +98,6 @@ class Config:
 
     # store a set of normalized domains
     self.url_lookup = {parse.urlparse(subject['url']).netloc.lower().strip() for subject in self.audit_subjects}
-
-    # global variable to store robots.txt data
-    # the Crawler queries this and populates it
-    # if no entry is found for a website.
-    self.robots_txt_cache: dict[str, urllib.robotparser.RobotFileParser] = {}
 
     self.config.setdefault('crawl_sitemaps', True)
 

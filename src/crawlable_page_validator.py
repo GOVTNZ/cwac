@@ -1,12 +1,9 @@
 """Validator for crawlable pages."""
 
 import logging
-import re
 import urllib
 import urllib.parse
 import urllib.robotparser
-
-import requests
 
 import src.filters
 import src.output
@@ -33,7 +30,6 @@ class CrawlablePageValidator:
 
     1. It passes URL filters
     2. Has not been scanned before
-    3. Is allowed by robots.txt
 
     If `config.perform_header_check` is enabled, then the HTTP headers are fetched
     and validated.
@@ -80,9 +76,6 @@ class CrawlablePageValidator:
   def _clean_and_fast_validate_url(self, base_url: str, url: str) -> str | None:
     """Cleans the URL and then runs all the validations that happen before fetching headers.
 
-    These are cheap checks, except for the robots.txt check which makes an HTTP
-    request the first time a domain is checked (after which it is cached).
-
     Return the cleaned version of the URL if it is eligible to be crawled, otherwise None.
     """
     try:
@@ -99,11 +92,6 @@ class CrawlablePageValidator:
     # Check if URL has been scanned before
     if self.analytics.is_url_in_pages_scanned(base_url, clean_url):
       logger.info('URL has been scanned before %s for %s', clean_url, base_url)
-      return None
-
-    # Check if URL is allowed by robots.txt
-    if not self._is_url_allowed_by_robots_txt(clean_url):
-      logger.info('URL disallowed by robots.txt %s', clean_url)
       return None
 
     return clean_url
@@ -139,95 +127,6 @@ class CrawlablePageValidator:
 
       return False
     return src.filters.url_filter_by_header_content_type(url_data['final_url'], url_data['headers'])
-
-  def _fetch_robots_txt(self, robots_txt_url: str) -> str:
-    """Fetches a robots.txt file from a domain.
-
-    This is a custom implementation as the standard library's
-    urllib.robotparser.RobotFileParser does not appear to handle
-    large file problems, non-UTF-8 chars, or Content-Type checks.
-
-    Args:
-        robots_txt_url (str): URL to fetch robots.txt from
-
-    Returns:
-        str: robots.txt file
-
-    Performance:
-        At least 1 HTTP request; redirects may cause additional requests.
-    """
-    # Fetch the robots.txt file
-    logger.info('Fetching robots.txt %s', robots_txt_url)
-    response = requests.get(robots_txt_url, headers={'User-Agent': self.config.user_agent}, timeout=10)
-    response.raise_for_status()
-
-    # Check Content-Type is text/plain (in a safe way)
-    is_content_type_set = 'Content-Type' in response.headers
-    if is_content_type_set and not re.search('^text/plain(?:;|$)', response.headers['Content-Type'], re.IGNORECASE):
-      raise ValueError(f'robots.txt has invalid Content-Type {robots_txt_url} {response.headers["Content-Type"]}')
-
-    logger.info('Fetched robots.txt %s', robots_txt_url)
-
-    robots_txt_content = response.text
-
-    # If the response is > 500 KB
-    if len(robots_txt_content) > 1024 * 500:
-      raise ValueError(f'robots.txt file is too large (>500 KB) on {robots_txt_url}')
-
-    # Remove any non-UTF-8 characters
-    file = robots_txt_content.encode('utf-8', errors='ignore').decode('utf-8')
-
-    return file
-
-  def _is_url_allowed_by_robots_txt(self, url: str) -> bool:
-    """Checks if a URL's robots.txt allows CWAC.
-
-    Args:
-        url (str): URL to check
-
-    Returns:
-        bool: True if URL is allowed by robots.txt, else False (True if config disables robots.txt checks)
-
-    Performance:
-        1 HTTP request if robots.txt not yet cached for the domain.
-    """
-    if not self.config.follow_robots_txt:
-      return True
-
-    # Get the protocol/domain of the URL
-    protocol, domain = urllib.parse.urlparse(url)[:2]
-
-    # If the domain is in config.robots_txt_cache, use that
-    if domain in self.config.robots_txt_cache:
-      robot_parser = self.config.robots_txt_cache[domain]
-      logger.info('Using cached robots.txt for %s', domain)
-      result = robot_parser.can_fetch(self.config.user_agent_product_token, url)
-      logger.info('robots.txt result for %s was %s', url, 'allow' if result else 'disallow')
-      return result
-
-    # Use urllib.robotparser to parse the robots.txt file
-    robot_parser = urllib.robotparser.RobotFileParser()
-
-    # Fetch the robots.txt file
-    try:
-      robots_txt = self._fetch_robots_txt(f'{protocol}://{domain}/robots.txt')
-      robot_parser.parse(robots_txt.splitlines())
-    except (requests.exceptions.RequestException, ValueError):
-      robot_parser.parse('')
-      self.config.robots_txt_cache[domain] = robot_parser
-      logger.exception('Failed to fetch or parse robots.txt - default to allow! %s', domain)
-      return True
-
-    # Cache the robotparser object
-    self.config.robots_txt_cache[domain] = robot_parser
-
-    # Check if the URL is allowed by robots.txt
-    result = robot_parser.can_fetch(self.config.user_agent_product_token, url)
-
-    # Log the outcome
-    logger.info('robots.txt result for %s was %s', url, 'allow' if result else 'disallow')
-
-    return result
 
   def _split_scope(self, url: str) -> tuple[tuple[str, str], list[str]]:
     """Split a normalized url into its origin and its path segments, ignoring leading and trailing slashes."""

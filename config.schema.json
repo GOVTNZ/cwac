@@ -41,16 +41,6 @@
       "type": "string",
       "minLength": 1
     },
-    "user_agent_product_token": {
-      "description": "The product token portion of the User-Agent, used for robots.txt identification. Must not contain whitespace",
-      "type": "string",
-      "minLength": 1,
-      "pattern": "^\\S+$"
-    },
-    "follow_robots_txt": {
-      "description": "Whether to respect robots.txt directives when crawling",
-      "type": "boolean"
-    },
     "script_timeout": {
       "description": "Timeout in seconds for JavaScript execution in the browser",
       "type": "number",
@@ -299,8 +289,6 @@
     "chrome_binary_location",
     "chrome_driver_location",
     "user_agent",
-    "user_agent_product_token",
-    "follow_robots_txt",
     "script_timeout",
     "page_load_timeout",
     "delay_after_page_load",
