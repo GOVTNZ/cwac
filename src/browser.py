@@ -119,12 +119,11 @@ class Browser:
       logger.exception('Failed to set window size')
       self.safe_restart()
 
-  def spawn_single_webdriver(self, window_size: dict[Any, Any], headless_override: bool = False) -> WebDriverType:
+  def spawn_single_webdriver(self, window_size: dict[Any, Any]) -> WebDriverType:
     """Spawn a single instance of a browser.
 
     Args:
         window_size (dict[Any, Any]): window dimensions of browser.
-        headless_override (bool, optional): override headless setting.
 
     Returns:
         WebDriverType: a webdriver object.
@@ -135,7 +134,7 @@ class Browser:
       null_path = 'NUL'
 
     chrome_options = webdriver.ChromeOptions()
-    if self.config.headless or headless_override:
+    if self.config.headless:
       chrome_options.add_argument('--headless')
     chrome_options.add_argument(f'--window-size={window_size["width"]},{window_size["height"]}')
     chrome_options.add_argument('--log-level=3')
