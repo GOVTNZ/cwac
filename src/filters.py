@@ -72,26 +72,6 @@ DISALLOWED_FILE_TYPES = (
 )
 
 
-def url_filter_whitelist(config: Config, url: urllib.parse.ParseResult) -> bool:
-  """Filter out URLs not in whitelist.
-
-  Args:
-      config (Config): The configuration to use
-      url (urllib.parse.ParseResult): A URL to filter
-
-  Returns:
-      bool: True if URL is valid, else False
-  """
-  netloc_without_www = url.netloc.removeprefix('www.').lower()
-
-  netloc_with_www = url.netloc.lower()
-
-  if not url.netloc.startswith('www.'):
-    netloc_with_www = 'www.' + url.netloc
-
-  return netloc_without_www in config.url_lookup or netloc_with_www in config.url_lookup
-
-
 def url_filter_filetype(_config: Config, url: urllib.parse.ParseResult) -> bool:
   """Filter out common file extensions in URLs.
 
@@ -216,7 +196,6 @@ class URLFilter:
 
     # Register URL filtration functions defined at the top of this file
     self.register_url_filter('Non-allowed file extension', url_filter_filetype)
-    self.register_url_filter('Whitelist', url_filter_whitelist)
 
   def register_url_filter(
     self,
