@@ -29,7 +29,7 @@ nltk.data.path.append(nltk_dir)
 # Map each word to the number of syllables in its first pronunciation; we only
 # need the counts, which take a fraction of the memory of the full dictionary
 syllables_by_word: dict[str, int] = {}
-for _word, _pronunciation in cmudict.entries():
+for _word, _pronunciation in cast(list[tuple[str, list[str]]], cmudict.entries()):
   if _word not in syllables_by_word:
     syllables_by_word[_word] = sum(1 for phoneme in _pronunciation if phoneme[-1].isdigit())
 
