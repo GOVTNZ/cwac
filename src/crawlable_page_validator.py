@@ -26,7 +26,7 @@ class CrawlablePageValidator:
     self.analytics = analytics
     self.url_filter = src.filters.URLFilter(config)
 
-  def validate(self, site_data: SiteData, base_url: str, parent_url: str, url: str) -> str | None:
+  def validate(self, site_data: SiteData, parent_url: str, url: str) -> str | None:
     """Validates that pages are crawlable.
 
     A page is considered crawlable if all of the following conditions are met:
@@ -41,7 +41,7 @@ class CrawlablePageValidator:
     If a redirect is encountered during header validation, the new (final) URL
     will be re-checked.
     """
-    match self._clean_and_fast_validate_url(base_url, url):
+    match self._clean_and_fast_validate_url(site_data['url'], url):
       case None:
         return None
       case clean_url:
@@ -60,7 +60,7 @@ class CrawlablePageValidator:
     )
 
     # Now that we have the headers, verify that they are acceptable
-    if not self._are_url_headers_acceptable(base_url=base_url, parent_url=parent_url, url_data=url_data):
+    if not self._are_url_headers_acceptable(base_url=site_data['url'], parent_url=parent_url, url_data=url_data):
       return None
 
     # If the URL has not changed after fetching headers (i.e. no redirects) then
@@ -69,7 +69,7 @@ class CrawlablePageValidator:
       return url
 
     # Otherwise we need to re-validate the new (post redirects) URL
-    match self._clean_and_fast_validate_url(base_url, url_data['final_url']):
+    match self._clean_and_fast_validate_url(site_data['url'], url_data['final_url']):
       case None:
         return None
       case new_clean_url:

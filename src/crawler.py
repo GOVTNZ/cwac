@@ -67,7 +67,7 @@ class Crawler:
         site_data = self.url_queue.get()
 
       # Crawl the url (the crawler also initiates tests)
-      self.crawl(site_data, site_data['url'])
+      self.crawl(site_data)
 
       # Restart the browser between each website
       self.browser.safe_restart()
@@ -128,7 +128,7 @@ class Crawler:
 
     return audit_plugins
 
-  def crawl(self, site_data: SiteData, base_url: str) -> None:  # noqa: PLR0912
+  def crawl(self, site_data: SiteData) -> None:  # noqa: PLR0912
     """Crawls a domain and executes the AuditManager.
 
     Sanitises the URL and checks if it should be crawled by checking:
@@ -149,8 +149,8 @@ class Crawler:
 
     Args:
         site_data (SiteData): contains info about the site
-        base_url (str): the first url to crawl
     """
+    base_url = site_data['url']
     action = 'crawl'
     if self.config.max_links_per_domain == 1:
       action = 'visit'
@@ -183,7 +183,7 @@ class Crawler:
         logger.info('Max pages scanned reached %s', base_url)
         break
 
-      match self.page_validator.validate(site_data=site_data, base_url=base_url, parent_url=parent_url, url=url):
+      match self.page_validator.validate(site_data=site_data, parent_url=parent_url, url=url):
         case None:
           continue
         case validated_url:
@@ -195,7 +195,7 @@ class Crawler:
         f'./results/{self.config.audit_name}/audit_log.csv',
         {
           **site_data['columns'],
-          'base_url': site_data['url'],
+          'base_url': base_url,
           'url': url,
         },
       )

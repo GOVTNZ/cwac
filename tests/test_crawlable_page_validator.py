@@ -66,14 +66,14 @@ def fixture_mocked_responses() -> Iterator[responses.RequestsMock]:
 def test_validate_returns_sanitised_url_without_header_check(validator: CrawlablePageValidator) -> None:
   """Returns a crawlable URL when header checks are disabled."""
   assert (
-    validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/a/../page') == 'https://example.com/page'
+    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/a/../page') == 'https://example.com/page'
   )
 
 
 def test_validate_does_not_double_encode_url(validator: CrawlablePageValidator) -> None:
   """Leaves already percent-encoded characters alone while encoding the rest."""
   assert (
-    validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/a%20b/café')
+    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/a%20b/café')
     == 'https://example.com/a%20b/caf%C3%A9'
   )
 
@@ -89,7 +89,7 @@ def test_validate_does_not_double_encode_url(validator: CrawlablePageValidator) 
 )
 def test_validate_uppercases_percent_escapes(validator: CrawlablePageValidator, url: str, expected: str) -> None:
   """Uppercases valid percent-escapes, leaving a standalone percent sign alone."""
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, url) == expected
+  assert validator.validate(SITE_DATA, PARENT_URL, url) == expected
 
 
 @pytest.mark.parametrize(
@@ -108,14 +108,14 @@ def test_validate_uppercases_percent_escapes(validator: CrawlablePageValidator, 
 )
 def test_validate_normalises_encoded_dot_segments(validator: CrawlablePageValidator, url: str, expected: str) -> None:
   """Treats percent-encoded dot segments as dots, leaving other escapes alone."""
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, url) == expected
+  assert validator.validate(SITE_DATA, PARENT_URL, url) == expected
 
 
 def test_validate_rejects_encoded_traversal_outside_base_url(validator: CrawlablePageValidator) -> None:
   """Rejects URLs that use percent-encoded dot segments to leave the base URL."""
   base_url = 'https://example.com/allowed/'
 
-  assert validator.validate(SITE_DATA, base_url, PARENT_URL, 'https://example.com/allowed/%2e%2e/private') is None
+  assert validator.validate({**SITE_DATA, 'url': base_url}, PARENT_URL, 'https://example.com/allowed/%2e%2e/private') is None
 
 
 @pytest.mark.parametrize('perform_header_check', [False, True])
@@ -128,7 +128,7 @@ def test_validate_rejects_url_outside_base_url(
   """Rejects URLs outside the configured crawl scope without making any requests."""
   config.perform_header_check = perform_header_check
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://other.example/page') is None
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://other.example/page') is None
   assert len(mocked_responses.calls) == 0
 
 
@@ -170,7 +170,7 @@ def test_validate_rejects_url_outside_base_url(
 )
 def test_validate_accepts_url_within_base_url(validator: CrawlablePageValidator, base_url: str, url: str) -> None:
   """Accepts URLs on the same origin whose path segments start with those of the base URL."""
-  assert validator.validate(SITE_DATA, base_url, PARENT_URL, url) == url
+  assert validator.validate({**SITE_DATA, 'url': base_url}, PARENT_URL, url) == url
 
 
 @pytest.mark.parametrize(
@@ -208,7 +208,7 @@ def test_validate_rejects_url_outside_base_url_path(
   url: str,
 ) -> None:
   """Rejects URLs whose path segments do not start with those of the base URL."""
-  assert validator.validate(SITE_DATA, base_url, PARENT_URL, url) is None
+  assert validator.validate({**SITE_DATA, 'url': base_url}, PARENT_URL, url) is None
 
 
 @pytest.mark.parametrize(
@@ -228,7 +228,7 @@ def test_validate_rejects_url_on_different_origin(
   """Rejects URLs whose scheme, host, or port differ from those of the base URL."""
   config.url_lookup = {'example.com', 'example.com.evil.org', 'example.com:8443'}
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, url) is None
+  assert validator.validate(SITE_DATA, PARENT_URL, url) is None
 
 
 @pytest.mark.parametrize(
@@ -254,7 +254,7 @@ def test_validate_rejects_url_within_more_specific_base_url(
   """Rejects URLs that are within another base URL which is more specific than the current one."""
   analytics.base_urls = {base_url, other_base_url}
 
-  assert validator.validate(SITE_DATA, base_url, PARENT_URL, url) is None
+  assert validator.validate({**SITE_DATA, 'url': base_url}, PARENT_URL, url) is None
 
 
 @pytest.mark.parametrize(
@@ -286,7 +286,7 @@ def test_validate_accepts_url_not_within_more_specific_base_url(
   """Accepts URLs that are not within another base URL which is more specific than the current one."""
   analytics.base_urls = {base_url, other_base_url}
 
-  assert validator.validate(SITE_DATA, base_url, PARENT_URL, url) == url
+  assert validator.validate({**SITE_DATA, 'url': base_url}, PARENT_URL, url) == url
 
 
 @pytest.mark.parametrize('perform_header_check', [False, True])
@@ -301,7 +301,7 @@ def test_validate_rejects_previously_scanned_url(
   config.perform_header_check = perform_header_check
   analytics.is_url_in_pages_scanned.return_value = True
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') is None
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/page') is None
   assert len(mocked_responses.calls) == 0
   analytics.is_url_in_pages_scanned.assert_called_once_with(BASE_URL, 'https://example.com/page')
 
@@ -311,7 +311,7 @@ def test_validate_skips_header_processing_when_disabled(
   mocked_responses: responses.RequestsMock,
 ) -> None:
   """Does not fetch headers when header checks are disabled."""
-  validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page')
+  validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/page')
 
   assert len(mocked_responses.calls) == 0
 
@@ -329,7 +329,7 @@ def test_validate_returns_url_with_acceptable_headers(
     match=[matchers.header_matcher({'User-Agent': 'cwac-test'})],
   )
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
   assert len(mocked_responses.calls) == 1
 
 
@@ -344,7 +344,6 @@ def test_validate_uses_get_when_site_does_not_support_head(
 
   result = validator.validate(
     {**SITE_DATA, 'supports_head': False},
-    BASE_URL,
     PARENT_URL,
     'https://example.com/page',
   )
@@ -363,7 +362,7 @@ def test_validate_rejects_unacceptable_status_code(
   config.perform_header_check = True
   mocked_responses.head('https://example.com/page', status=status, content_type='text/html')
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') is None
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/page') is None
 
   with open('results/test-audit/unexpected_response_codes.csv', encoding='utf-8-sig') as f:
     assert (
@@ -392,7 +391,7 @@ def test_validate_rejects_unacceptable_content_type(
   config.perform_header_check = True
   mocked_responses.head('https://example.com/page', content_type=content_type)
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') is None
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/page') is None
 
 
 def test_validate_revalidates_redirected_url(
@@ -405,7 +404,7 @@ def test_validate_revalidates_redirected_url(
   mocked_responses.head('https://example.com/start', status=301, headers={'Location': '/final'})
   mocked_responses.head('https://example.com/final', content_type='text/html')
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/start') == 'https://example.com/final'
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/start') == 'https://example.com/final'
 
 
 def test_validate_rejects_redirect_to_previously_scanned_url(
@@ -420,7 +419,7 @@ def test_validate_rejects_redirect_to_previously_scanned_url(
   mocked_responses.head('https://example.com/start', status=302, headers={'Location': '/final'})
   mocked_responses.head('https://example.com/final', content_type='text/html')
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/start') is None
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/start') is None
 
 
 def test_validate_rejects_redirect_outside_scope(
@@ -433,7 +432,7 @@ def test_validate_rejects_redirect_outside_scope(
   mocked_responses.head('https://example.com/start', status=302, headers={'Location': 'https://other.example/final'})
   mocked_responses.head('https://other.example/final', content_type='text/html')
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/start') is None
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/start') is None
 
 
 def test_robots_txt_is_cached_and_reused(
@@ -450,8 +449,8 @@ def test_robots_txt_is_cached_and_reused(
     match=[matchers.header_matcher({'User-Agent': 'cwac-test'})],
   )
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/private/page') is None
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/page') is None
 
   assert robots_txt.call_count == 1
 
@@ -478,7 +477,7 @@ def test_robots_txt_disallows_matching_url(
     content_type=content_type,
   )
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/private/page') is None
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/page') is None
 
 
 @pytest.mark.parametrize(
@@ -509,11 +508,11 @@ def test_robots_txt_defaults_to_allow_when_unusable(  # noqa: PLR0913, PLR0917
   )
 
   assert (
-    validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/private/page')
+    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/page')
     == 'https://example.com/private/page'
   )
   assert (
-    validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/private/other')
+    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/other')
     == 'https://example.com/private/other'
   )
 
@@ -532,4 +531,4 @@ def test_robots_txt_defaults_to_allow_when_request_fails(
     body=requests.exceptions.ConnectionError('connection refused'),
   )
 
-  assert validator.validate(SITE_DATA, BASE_URL, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/page') == 'https://example.com/page'
