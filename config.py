@@ -47,7 +47,6 @@ class Config:
   script_timeout: int
   page_load_timeout: int
   delay_after_page_load: int
-  only_allow_https: bool
   perform_header_check: bool
   shuffle_base_urls: bool
   base_urls_visit_path: str
@@ -247,15 +246,6 @@ class Config:
 
             if parsed_url.scheme not in ('http', 'https'):
               logger.warning('URL missing or unsupported scheme, skipping %s', subject['url'])
-              continue
-
-            # If only_allow_https is True, then only add
-            # URLs that start with https://
-            if self.only_allow_https and parsed_url.scheme != 'https':
-              logger.warning(
-                'only_allow_https is True, skipping %s',
-                subject['url'],
-              )
               continue
 
             if self.__should_skip_row(subject):

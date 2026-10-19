@@ -45,11 +45,6 @@ class Browser:
     Returns:
         bool: True if page loaded, False if something went wrong
     """
-    # If only_allow_https is set, check that the URL is HTTPS
-    if self.config.only_allow_https and not url.startswith('https://'):
-      logger.warning('Skipping %s as only_allow_https is set', url)
-      return False
-
     for attempts in range(self.num_retries):
       try:
         logger.info('Running .get: %s', url)

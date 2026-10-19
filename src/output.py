@@ -114,7 +114,6 @@ def output_init_message(config: Config) -> None:
   print_log(f'Script timeout: {config.script_timeout} seconds')
   print_log(f'Page load timeout: {config.page_load_timeout} seconds')
   print_log(f'Delay after page load: {config.delay_after_page_load} seconds')
-  print_log(f'Only allow HTTPS: {config.only_allow_https}')
   print_log(f'Perform header checks: {config.perform_header_check}')
   print_log(f'Shuffle base urls: {config.shuffle_base_urls}')
   print_log(f'Base urls visit path: {config.base_urls_visit_path}')
