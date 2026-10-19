@@ -65,16 +65,13 @@ def fixture_mocked_responses() -> Iterator[responses.RequestsMock]:
 
 def test_validate_returns_sanitised_url_without_header_check(validator: CrawlablePageValidator) -> None:
   """Returns a crawlable URL when header checks are disabled."""
-  assert (
-    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/a/../page') == 'https://example.com/page'
-  )
+  assert validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/a/../page') == 'https://example.com/page'
 
 
 def test_validate_does_not_double_encode_url(validator: CrawlablePageValidator) -> None:
   """Leaves already percent-encoded characters alone while encoding the rest."""
   assert (
-    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/a%20b/café')
-    == 'https://example.com/a%20b/caf%C3%A9'
+    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/a%20b/café') == 'https://example.com/a%20b/caf%C3%A9'
   )
 
 
@@ -115,7 +112,9 @@ def test_validate_rejects_encoded_traversal_outside_base_url(validator: Crawlabl
   """Rejects URLs that use percent-encoded dot segments to leave the base URL."""
   base_url = 'https://example.com/allowed/'
 
-  assert validator.validate({**SITE_DATA, 'url': base_url}, PARENT_URL, 'https://example.com/allowed/%2e%2e/private') is None
+  assert (
+    validator.validate({**SITE_DATA, 'url': base_url}, PARENT_URL, 'https://example.com/allowed/%2e%2e/private') is None
+  )
 
 
 @pytest.mark.parametrize('perform_header_check', [False, True])
@@ -508,8 +507,7 @@ def test_robots_txt_defaults_to_allow_when_unusable(  # noqa: PLR0913, PLR0917
   )
 
   assert (
-    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/page')
-    == 'https://example.com/private/page'
+    validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/page') == 'https://example.com/private/page'
   )
   assert (
     validator.validate(SITE_DATA, PARENT_URL, 'https://example.com/private/other')

@@ -128,7 +128,7 @@ class Crawler:
 
     return audit_plugins
 
-  def crawl(self, site_data: SiteData) -> None:  # noqa: PLR0912
+  def crawl(self, site_data: SiteData) -> None:  # noqa: PLR0912, PLR0915
     """Crawls a domain and executes the AuditManager.
 
     Sanitises the URL and checks if it should be crawled by checking:
