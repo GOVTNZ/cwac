@@ -72,15 +72,8 @@ class Crawler:
       # Restart the browser between each website
       self.browser.safe_restart()
 
-  def get_links(self, url: str) -> list[str]:
+  def get_links(self) -> list[str]:
     """Generate a list of the links on the page currently loaded in the browser.
-
-    This function depends on browser state! It does not navigate to the page. It
-    assumes the page HTML is already loaded in the browser and that the page
-    loaded in the browser is the same page as the one at `url`.
-
-    Args:
-        url (str): The URL currently loaded in the browser
 
     Returns:
         list[str]: a list of the links on the page, which are yet to be filtered
@@ -95,7 +88,7 @@ class Crawler:
       selenium.common.exceptions.WebDriverException,
       urllib3.exceptions.HTTPError,
     ) as e:
-      logger.warning('%s when getting links on %s', type(e).__name__, url)
+      logger.warning('%s when getting links on %s', type(e).__name__, self.browser.requested_url)
       return []
 
   def load_audit_plugins(self) -> dict[str, type[DefaultAudit]]:
@@ -228,7 +221,7 @@ class Crawler:
           queue.push(queued_page)
         has_crawled_sitemap = True
 
-      links = self.get_links(url)
+      links = self.get_links()
 
       for new_link in links:
         queue.push(QueuedPage(url, new_link))

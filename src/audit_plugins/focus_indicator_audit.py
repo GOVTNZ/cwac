@@ -46,20 +46,20 @@ class FocusIndicatorAudit(DefaultAudit):
     initial_time = time.time()
     for i in range(5):
       # Take a screenshot
-      logger.info('Taking initial screenshot %s #%i', self.url, i)
+      logger.info('Taking initial screenshot %s #%i', self.browser.requested_url, i)
       img_a_data = self.screenshot()
 
       # Wait to see if anything animates
       time.sleep(0.5)
 
       # Take a second screenshot 0.5s later
-      logger.info('Taking second screenshot %s #%i', self.url, i)
+      logger.info('Taking second screenshot %s #%i', self.browser.requested_url, i)
       img_b_data = self.screenshot()
 
       # If the two images are the same, the page is still
       if np.sum(img_a_data != img_b_data) == 0:
         # Pages are equal (0 differing pixels)
-        logger.info('Page stopped animating %s #%i', self.url, i)
+        logger.info('Page stopped animating %s #%i', self.browser.requested_url, i)
         return True
       logger.info('Page is still animating #%i', i)
 
@@ -68,7 +68,7 @@ class FocusIndicatorAudit(DefaultAudit):
       if time.time() - initial_time > 15:
         break
     # If page is still animating, return False to indicate a failure
-    logger.warning("Page didn't stop animating! %s", self.url)
+    logger.warning("Page didn't stop animating! %s", self.browser.requested_url)
     return False
 
   def expand_browser_to_page_height(self) -> None:

@@ -32,7 +32,7 @@ class Browser:
     self.num_retries = 2
     self.viewport_size = next(iter(self.config.viewport_sizes.values()))
     self.driver: WebDriverType = self.spawn_single_webdriver(window_size=self.viewport_size)
-    self.last_url_req = ''
+    self.requested_url = ''
 
   def get(self, url: str) -> bool:
     """Load a URL in the webdriver.
@@ -48,7 +48,7 @@ class Browser:
         logger.info('Running .get: %s', url)
         self.driver.get(url)
         logger.info('.get successful')
-        self.last_url_req = url
+        self.requested_url = url
         break
       except selenium.common.exceptions.TimeoutException:
         logger.exception('Timeout exception: %s, attempt:%i', url, attempts)
@@ -82,12 +82,12 @@ class Browser:
       if 'disconnected' in str(error):
         logger.exception(
           'WebDriverException, browser probably crashed %s',
-          self.last_url_req,
+          self.requested_url,
         )
     except urllib3.exceptions.HTTPError:
-      logger.exception('urllib3 HTTPError, browser probably hung %s', self.last_url_req)
+      logger.exception('urllib3 HTTPError, browser probably hung %s', self.requested_url)
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
-    self.last_url_req = ''
+    self.requested_url = ''
 
   def close(self) -> None:
     """Close the browser."""
@@ -96,7 +96,7 @@ class Browser:
       self.driver.quit()
     except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
       logger.exception('Failed to quit browser')
-    self.last_url_req = ''
+    self.requested_url = ''
 
   def set_window_size(self, width: int, height: int) -> None:
     """Set browser size.

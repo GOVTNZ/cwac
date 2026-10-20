@@ -56,7 +56,9 @@ class LanguageAudit(DefaultAudit):
     lang = self.__get_document_lang()
 
     if lang != 'en' and not lang.startswith('en-'):
-      logger.info('Test can only be run on English pages but lang for this page is %s: %s', lang, self.url)
+      logger.info(
+        'Test can only be run on English pages but lang for this page is %s: %s', lang, self.browser.requested_url
+      )
       return True
 
     # Scrape main content
@@ -70,7 +72,7 @@ class LanguageAudit(DefaultAudit):
 
     # Check if test is not applicable (i.e. not enough text)
     if self.is_test_not_applicable(sentences, words):
-      logger.info('Test is not applicable: %s', self.url)
+      logger.info('Test is not applicable: %s', self.browser.requested_url)
       return True
 
     # Calculate Flesch-Kincaid Grade Level
@@ -197,7 +199,7 @@ class LanguageAudit(DefaultAudit):
     if content is False:
       logger.info(
         'Readability rejected the page. %s',
-        self.url,
+        self.browser.requested_url,
       )
       return ''
 
