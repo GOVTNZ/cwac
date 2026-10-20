@@ -57,14 +57,7 @@ class AuditManager:
       str: 'Pass'|'Imperva'|'Cloudflare'|'Azure Front Door'|'Red Shield'|'Cloudfront'
     """
     # Get the current URL
-    try:
-      url = self.browser.driver.current_url
-    except (
-      selenium.common.exceptions.WebDriverException,
-      urllib3.exceptions.HTTPError,
-    ) as e:
-      logger.warning('%s when getting current URL', type(e).__name__)
-      return 'Pass'
+    url = self.browser.requested_url
 
     # If the URL is already discarded return its result
     if url in self.discarded_urls:
