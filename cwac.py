@@ -17,7 +17,7 @@ from config import Config
 from src.analytics import Analytics
 from src.browser import Browser
 from src.crawler import Crawler, SiteData
-from src.output import output_init_message
+from src.output import generate_axe_core_template_aware_results, output_init_message
 
 logger = logging.getLogger('cwac')
 
@@ -157,7 +157,7 @@ class CWAC:
     )
 
     try:
-      src.output.generate_axe_core_template_aware_results(self.config.audit_name)
+      generate_axe_core_template_aware_results(self.config.audit_name)
     except FileNotFoundError:
       logger.warning('Skipped generating axe-core template aware csv as axe-core results were not present')
 

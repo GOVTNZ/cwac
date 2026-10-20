@@ -8,7 +8,7 @@ import platform
 import re
 import threading
 from logging import INFO, FileHandler, Formatter, getLogger
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict
 from urllib import parse
 
 import src.urls
@@ -146,7 +146,7 @@ class Config:
           reader = csv.reader(file)
           header = next(reader)
           for row in reader:
-            dict_row = cast(dict[str, str], dict(zip(header, row, strict=True)))
+            dict_row = dict(zip(header, row, strict=True))
 
             # Strip whitespace from URL
             dict_row['url'] = dict_row['url'].strip()

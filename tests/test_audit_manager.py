@@ -1166,7 +1166,7 @@ def test_run_audits_skips_an_audit_when_the_page_fails_to_load(
   }
 
   # have the second "get" fail via having the driver time out (twice, since the browser does a retry)
-  manager.browser.driver.get.side_effect = [None, TimeoutException(), TimeoutException(), None]
+  mocker.patch.object(manager.browser.driver, 'get', side_effect=[None, TimeoutException(), TimeoutException(), None])
 
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
 
@@ -1218,7 +1218,7 @@ def test_run_audits_returns_false_when_the_page_fails_to_load_for_every_audit(
   }
 
   # have every "get" fail via having the driver time out
-  manager.browser.driver.get.side_effect = TimeoutException()
+  mocker.patch.object(manager.browser.driver, 'get', side_effect=TimeoutException())
 
   assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
 
@@ -1254,7 +1254,7 @@ def test_run_audits_loads_the_page_for_an_audit_that_does_not_modify_it_after_a_
   }
 
   # have the first "get" fail via having the driver time out (twice, since the browser does a retry)
-  manager.browser.driver.get.side_effect = [TimeoutException(), TimeoutException(), None]
+  mocker.patch.object(manager.browser.driver, 'get', side_effect=[TimeoutException(), TimeoutException(), None])
 
   assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
 
