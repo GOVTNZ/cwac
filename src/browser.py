@@ -25,7 +25,7 @@ WebDriverType = ChromeWebDriver
 logger = logging.getLogger('cwac')
 
 
-class Browser:
+class Browser:  # pylint: disable=too-many-instance-attributes
   """A wrapper class for selenium webdriver."""
 
   def __init__(self, config: Config, thread_id: int) -> None:
