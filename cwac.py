@@ -34,9 +34,11 @@ class CWAC:
     # Create the webdriver instance (wrapped in `Browser`) for this thread. This
     # instance is essentially shared mutable state for all code in the thread.
     browser = Browser(self.config, thread_id)
-    crawl = Crawler(config=self.config, browser=browser, url_queue=self.url_queue, analytics=self.analytics)
-    crawl.iterate_through_base_urls()
-    browser.close()
+    try:
+      crawl = Crawler(config=self.config, browser=browser, url_queue=self.url_queue, analytics=self.analytics)
+      crawl.iterate_through_base_urls()
+    finally:
+      browser.close()
 
   def spawn_threads(self) -> None:
     """Create a number of threads to speed up execution.
