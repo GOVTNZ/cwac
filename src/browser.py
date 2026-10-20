@@ -6,6 +6,8 @@ Contains useful functions for managing browsers.
 import logging
 import os
 import platform
+import shutil
+import tempfile
 import time
 from typing import Any
 
@@ -30,6 +32,7 @@ class Browser:
     self.config = config
     self.thread_id = thread_id
     self.num_retries = 2
+    self._chrome_tmp_dir: str | None = None
     self.viewport_size = next(iter(self.config.viewport_sizes.values()))
     self.driver: WebDriverType = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.requested_url = ''
@@ -97,7 +100,17 @@ class Browser:
       self.driver.quit()
     except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
       logger.exception('Failed to quit browser')
+    self._remove_chrome_tmp_dir()
     self.requested_url = ''
+
+  def _remove_chrome_tmp_dir(self) -> None:
+    if self._chrome_tmp_dir is None:
+      return
+    shutil.rmtree(
+      self._chrome_tmp_dir,
+      onexc=lambda func, path, exc: logger.warning('Failed to remove %s (%s): %s', path, func.__name__, exc),
+    )
+    self._chrome_tmp_dir = None
 
   def set_window_size(self, width: int, height: int) -> None:
     """Set browser size.
@@ -159,8 +172,14 @@ class Browser:
       },
     )
 
+    # set up a dedicated temp directory for this instance of chrome,
+    # so we can ensure it is removed later in case we have a crash
+    self._remove_chrome_tmp_dir()
+    self._chrome_tmp_dir = tempfile.mkdtemp(prefix='cwac-chrome-')
+
     chrome_service = Service(
       self.config.chrome_driver_location,
+      env={**os.environ, 'TMPDIR': self._chrome_tmp_dir},
       service_args=[
         '--verbose',
         '--log-path=./results/' + self.config.audit_name + '/chromedriver.log',
