@@ -13,7 +13,6 @@ from src.browser import Browser
 class AuditKwargs(TypedDict):
   """Arguments that get passed to all audits."""
 
-  url: str
   site_data: SiteData
   audit_id: str
   page_id: str
@@ -35,7 +34,6 @@ class DefaultAudit:
     """Init variables."""
     self.config = config
     self.browser = browser
-    self.url = kwargs['url']
     self.site_data: SiteData = kwargs['site_data']
     self.audit_id = kwargs['audit_id']
     self.page_id = kwargs['page_id']
@@ -55,7 +53,7 @@ class DefaultAudit:
       **self.site_data['columns'],
       'page_title': self.browser.driver.title,
       'base_url': base_url,
-      'url': self.url,
+      'url': self.browser.requested_url,
       'viewport_size': self.browser.driver.get_window_size(),
       'audit_id': self.audit_id,
       'page_id': self.page_id,

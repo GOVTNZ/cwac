@@ -251,7 +251,6 @@ class AuditManager:
           browser=self.browser,
           audit_id=audit_id,
           page_id=page_id,
-          url=url,
           site_data=site_data,
         )
 

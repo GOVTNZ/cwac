@@ -85,7 +85,6 @@ class ReflowAudit(DefaultAudit):
       screenshot_audit = ScreenshotAudit(
         config=self.config,
         browser=self.browser,
-        url=self.url,
         site_data=self.site_data,
         audit_id=self.audit_id,
         page_id=self.page_id,
@@ -96,7 +95,7 @@ class ReflowAudit(DefaultAudit):
       {
         **self._default_audit_row,
         'audit_type': ReflowAudit.audit_type,
-        'url': self.url,
+        'url': self.browser.requested_url,
         'overflows': overflow_amount > 0,
         'num_issues': 1 if overflow_amount > 0 else 0,
         'overflow_amount_px': overflow_amount,

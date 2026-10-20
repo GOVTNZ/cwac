@@ -53,7 +53,7 @@ class FakeAudit(DefaultAudit):
     """Report the current url, site data, ids, and browser viewport to on_run, and return what it returns."""
     return self.on_run(
       audit_name=self.audit_name,
-      url=self.url,
+      url=self.browser.requested_url,
       site_data=self.site_data,
       audit_id=self.audit_id,
       page_id=self.page_id,
