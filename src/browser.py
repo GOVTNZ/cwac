@@ -3,13 +3,14 @@
 Contains useful functions for managing browsers.
 """
 
+import json
 import logging
 import os
 import platform
 import shutil
 import tempfile
 import time
-from typing import Any
+from typing import Any, cast
 
 import selenium.common.exceptions
 import urllib3
@@ -24,7 +25,7 @@ WebDriverType = ChromeWebDriver
 logger = logging.getLogger('cwac')
 
 
-class Browser:
+class Browser:  # pylint: disable=too-many-instance-attributes
   """A wrapper class for selenium webdriver."""
 
   def __init__(self, config: Config, thread_id: int) -> None:
@@ -36,6 +37,7 @@ class Browser:
     self.viewport_size = next(iter(self.config.viewport_sizes.values()))
     self.driver: WebDriverType = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.requested_url = ''
+    self._js_execution_context_id: int | None = None
 
   def get(self, url: str) -> bool:
     """Load a URL in the webdriver.
@@ -50,6 +52,7 @@ class Browser:
     for attempts in range(self.num_retries):
       try:
         logger.info('Running .get: %s', url)
+        self._js_execution_context_id = None
         self.driver.get(url)
         logger.info('.get successful')
         self.requested_url = url
@@ -75,6 +78,86 @@ class Browser:
     time.sleep(self.config.delay_after_page_load)
     return True
 
+  def evaluate(self, js: str) -> Any:
+    """Evaluate a JavaScript snippet on the current page using CDP.
+
+    The snippet is run with Runtime.evaluate, so it behaves like `eval`:
+    https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-Runtime-evaluate
+
+    To guard against pages that patch built-ins, the snippet is run in an isolated
+    world, meaning it shares the page's DOM but not its JavaScript globals.
+
+    The snippet is also wrapped in a block so that lexical declarations (`let`,
+    `const`, and `class`) are scoped to each call rather than the world's global
+    scope, preventing redeclaration errors across calls that use the same names.
+
+    The value of the last statement is returned; if it's a Promise, it's awaited
+    and the resolved value is returned instead.
+
+    Snippets involving promises should use `Promise.race` against `config.script_timeout`
+    to ensure they don't hang, as CDP only supports timing out for synchronous execution.
+
+    Args:
+        js (str): the JavaScript snippet to evaluate
+
+    Returns:
+        Any: the result as JSON; values that aren't JSON-serializable don't round-trip
+            (functions come back as `{}`, NaN as None, and DOM nodes as junk)
+
+    Raises:
+        selenium.common.exceptions.JavascriptException: if the snippet throws
+        selenium.common.exceptions.WebDriverException: if synchronous execution times out
+    """
+    response = self.driver.execute_cdp_cmd(
+      'Runtime.evaluate',
+      {
+        'contextId': self._get_js_execution_context_id(),
+        # wrap the snippet in a block to scope locals
+        'expression': f'{{\n{js}\n}}',
+        'returnByValue': True,
+        'awaitPromise': True,
+        # this only applies to synchronous evaluations, and will surface as a generic
+        # WebDriverException; asynchronous evaluations should include a Promise.race
+        'timeout': self.config.script_timeout * 1000,
+      },
+    )
+
+    if 'exceptionDetails' in response:
+      # exceptions here are effectively always bugs (ours or the page's), so rather
+      # than trying to pick out a message from whatever JS threw and CDP reported,
+      # we include everything to make debugging easier
+      raise selenium.common.exceptions.JavascriptException(
+        f'Runtime.evaluate threw: {json.dumps(response["exceptionDetails"])}'
+      )
+
+    return response['result'].get('value')
+
+  def _get_js_execution_context_id(self) -> int:
+    """Get the id of the execution context to evaluate JavaScript snippets in.
+
+    This is an isolated world for the page's main frame, created on first use and
+    reused until the page changes through a get or restart.
+    """
+    if self._js_execution_context_id is not None:
+      return self._js_execution_context_id
+
+    frame_id = self.driver.execute_cdp_cmd(
+      'Page.getFrameTree',
+      {},
+    )['frameTree']['frame']['id']
+
+    execution_context_id = cast(
+      int,
+      self.driver.execute_cdp_cmd(
+        'Page.createIsolatedWorld',
+        {'frameId': frame_id, 'worldName': 'CWAC'},
+      )['executionContextId'],
+    )
+
+    self._js_execution_context_id = execution_context_id
+
+    return execution_context_id
+
   def safe_restart(self) -> None:
     """Restart the webdriver."""
     try:
@@ -92,6 +175,7 @@ class Browser:
       logger.exception('urllib3 HTTPError, browser probably hung %s', self.requested_url)
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.requested_url = ''
+    self._js_execution_context_id = None
 
   def close(self) -> None:
     """Close the browser."""
@@ -102,6 +186,7 @@ class Browser:
       logger.exception('Failed to quit browser')
     self._remove_chrome_tmp_dir()
     self.requested_url = ''
+    self._js_execution_context_id = None
 
   def _remove_chrome_tmp_dir(self) -> None:
     if self._chrome_tmp_dir is None:

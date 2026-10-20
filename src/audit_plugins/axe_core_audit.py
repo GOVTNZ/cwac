@@ -59,14 +59,22 @@ class AxeCoreAudit(DefaultAudit):
         # Being unable to load axe.min.js indicates a misconfigured environment
         # that we cannot recover from, so exit the program.
         sys.exit(1)
-      run_axe = (
-        'document.getAnimations().forEach(animation => animation.cancel());'
-        'var callback = arguments[arguments.length - 1];'
-        'axe.run({xpath: true, '
-        "resultTypes:['violations']"
-        '}).then((r)=> {callback(r)});'
-      )
-      AxeCoreAudit.axe_core_js = f'{axe_min_js}{run_axe}'
+
+      # set_script_timeout doesn't apply to CDP commands, and Runtime.evaluate has no async timeout, so we race explicitly
+      AxeCoreAudit.axe_core_js = f"""
+        {axe_min_js}
+        document.getAnimations().forEach(animation => animation.cancel());
+        Promise.race([
+          axe.run({{ xpath: true, resultTypes: ['violations'] }}),
+          new Promise((_, reject) => {{
+            const timeout = {self.config.script_timeout};
+            setTimeout(
+              () => {{ reject(new Error(`script timed out after ${{timeout}} seconds`)); }},
+              timeout * 1000
+            );
+          }})
+        ]);
+      """
 
   def run_generate_expanded_results(self, axe_core_results: dict[Any, Any]) -> list[dict[Any, Any]]:
     """Generate an expanded list of axe-core violations.
@@ -137,7 +145,7 @@ class AxeCoreAudit(DefaultAudit):
     """
     self.load_axe_core()
 
-    axe_core_results = self.browser.driver.execute_async_script(AxeCoreAudit.axe_core_js)
+    axe_core_results = self.browser.evaluate(AxeCoreAudit.axe_core_js)
 
     # Get page information from DefaultAudit
     default_audit_row = self._default_audit_row

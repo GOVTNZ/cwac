@@ -72,9 +72,9 @@ class ReflowAudit(DefaultAudit):
       return False
 
     # Determine if there is a horizontal overflow
-    overflow_amount = self.browser.driver.execute_script("""
-      const scrollingElement = document.scrollingElement ?? document.documentElement
-      return scrollingElement.scrollWidth - scrollingElement.clientWidth
+    overflow_amount = self.browser.evaluate("""
+      const scrollingElement = document.scrollingElement ?? document.documentElement;
+      scrollingElement.scrollWidth - scrollingElement.clientWidth;
     """)
 
     # Run a ScreenshotAudit if the page overflows
