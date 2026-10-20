@@ -43,6 +43,7 @@ class Browser:
     Returns:
         bool: True if page loaded, False if something went wrong
     """
+    self.requested_url = ''
     for attempts in range(self.num_retries):
       try:
         logger.info('Running .get: %s', url)
