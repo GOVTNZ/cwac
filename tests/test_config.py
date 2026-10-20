@@ -9,6 +9,7 @@ from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
 
 from config import Config, SiteData
+from tests.helpers.utils import normalized_url
 
 
 @pytest.fixture(autouse=True)
@@ -241,7 +242,7 @@ class TestUrlLoading:
 
     expected: list[SiteData] = [
       {
-        'url': 'https://bnl.com/',
+        'url': normalized_url('https://bnl.com/'),
         'supports_head': True,
         'columns': {
           'organisation': "Buy 'n' Large",
@@ -252,7 +253,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://bnl.com/finance',
+        'url': normalized_url('https://bnl.com/finance'),
         'supports_head': True,
         'columns': {
           'organisation': "Buy 'n' Large",
@@ -263,7 +264,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://cyberdyne.com/rd',
+        'url': normalized_url('https://cyberdyne.com/rd'),
         'supports_head': True,
         'columns': {
           'organisation': 'Cyberdyne Systems',
@@ -274,7 +275,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://cyberdyne.com/security',
+        'url': normalized_url('https://cyberdyne.com/security'),
         'supports_head': True,
         'columns': {
           'organisation': 'Cyberdyne Systems',
@@ -285,7 +286,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://umbrella.com/',
+        'url': normalized_url('https://umbrella.com/'),
         'supports_head': True,
         'columns': {
           'organisation': 'Umbrella Corp',
@@ -296,7 +297,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://umbrella.com/hr',
+        'url': normalized_url('https://umbrella.com/hr'),
         'supports_head': True,
         'columns': {
           'organisation': 'Umbrella Corp',
@@ -307,7 +308,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://umbrella.com/legal',
+        'url': normalized_url('https://umbrella.com/legal'),
         'supports_head': True,
         'columns': {
           'organisation': 'Umbrella Corp',
@@ -318,7 +319,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://wayne.com/finance',
+        'url': normalized_url('https://wayne.com/finance'),
         'supports_head': True,
         'columns': {
           'organisation': 'Wayne Enterprises',
@@ -329,7 +330,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://wayne.com/legal',
+        'url': normalized_url('https://wayne.com/legal'),
         'supports_head': True,
         'columns': {
           'organisation': 'Wayne Enterprises',
@@ -340,7 +341,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://wayne.com/security',
+        'url': normalized_url('https://wayne.com/security'),
         'supports_head': True,
         'columns': {
           'organisation': 'Wayne Enterprises',
@@ -419,7 +420,7 @@ class TestUrlLoading:
 
     expected: list[SiteData] = [
       {
-        'url': 'https://acme.com/finance',
+        'url': normalized_url('https://acme.com/finance'),
         'supports_head': True,
         'columns': {
           'organisation': 'ACME',
@@ -430,7 +431,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://acme.com/hr',
+        'url': normalized_url('https://acme.com/hr'),
         'supports_head': True,
         'columns': {
           'organisation': 'ACME',
@@ -441,7 +442,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://acme.com/legal',
+        'url': normalized_url('https://acme.com/legal'),
         'supports_head': True,
         'columns': {
           'organisation': 'ACME',
@@ -452,7 +453,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://bnl.com/',
+        'url': normalized_url('https://bnl.com/'),
         'supports_head': True,
         'columns': {
           'url': 'https://bnl.com/',
@@ -463,7 +464,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://bnl.com/finance',
+        'url': normalized_url('https://bnl.com/finance'),
         'supports_head': True,
         'columns': {
           'url': 'https://bnl.com/finance',
@@ -474,7 +475,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://cyberdyne.com/rd',
+        'url': normalized_url('https://cyberdyne.com/rd'),
         'supports_head': True,
         'columns': {
           'url': 'https://cyberdyne.com/rd',
@@ -485,7 +486,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://cyberdyne.com/security',
+        'url': normalized_url('https://cyberdyne.com/security'),
         'supports_head': True,
         'columns': {
           'url': 'https://cyberdyne.com/security',
@@ -496,7 +497,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://stark.com/finance',
+        'url': normalized_url('https://stark.com/finance'),
         'supports_head': True,
         'columns': {
           'organisation': 'Stark Industries',
@@ -507,7 +508,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://stark.com/rd',
+        'url': normalized_url('https://stark.com/rd'),
         'supports_head': True,
         'columns': {
           'organisation': 'Stark Industries',
@@ -518,7 +519,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://umbrella.com/',
+        'url': normalized_url('https://umbrella.com/'),
         'supports_head': True,
         'columns': {
           'url': 'https://umbrella.com/',
@@ -529,7 +530,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://umbrella.com/hr',
+        'url': normalized_url('https://umbrella.com/hr'),
         'supports_head': True,
         'columns': {
           'url': 'https://umbrella.com/hr',
@@ -540,7 +541,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://umbrella.com/legal',
+        'url': normalized_url('https://umbrella.com/legal'),
         'supports_head': True,
         'columns': {
           'url': 'https://umbrella.com/legal',
@@ -551,7 +552,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://wayne.com/finance',
+        'url': normalized_url('https://wayne.com/finance'),
         'supports_head': True,
         'columns': {
           'url': 'https://wayne.com/finance',
@@ -562,7 +563,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://wayne.com/legal',
+        'url': normalized_url('https://wayne.com/legal'),
         'supports_head': True,
         'columns': {
           'url': 'https://wayne.com/legal',
@@ -573,7 +574,7 @@ class TestUrlLoading:
         },
       },
       {
-        'url': 'https://wayne.com/security',
+        'url': normalized_url('https://wayne.com/security'),
         'supports_head': True,
         'columns': {
           'url': 'https://wayne.com/security',

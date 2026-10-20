@@ -21,7 +21,7 @@ getLogger('usp').parent = logger
 class SiteData(TypedDict):
   """Holds data for a site that should be crawled and audited."""
 
-  url: str
+  url: src.urls.NormalizedUrl
   supports_head: bool
   columns: dict[str, str]
 
@@ -127,14 +127,14 @@ class Config:
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-  def __import_base_urls_without_head_support(self) -> set[str]:
+  def __import_base_urls_without_head_support(self) -> set[src.urls.NormalizedUrl]:
     """Import base urls that don't support HEAD requests.
 
     Returns:
-        set[str]: a list of base urls that don't support HEAD requests
+        set[src.urls.NormalizedUrl]: a list of base urls that don't support HEAD requests
     """
     folder_path = self.base_urls_nohead_path
-    base_urls = set()
+    base_urls: set[src.urls.NormalizedUrl] = set()
 
     for filename in os.listdir(folder_path):
       if filename.endswith('.csv'):
@@ -152,12 +152,12 @@ class Config:
             dict_row['url'] = dict_row['url'].strip()
 
             try:
-              dict_row['url'] = src.urls.normalize_url(dict_row['url'])
+              url = src.urls.normalize_url(dict_row['url'])
             except ValueError:
               logger.warning('URL is not valid, skipping %s', dict_row['url'])
               continue
 
-            base_urls.add(dict_row['url'])
+            base_urls.add(url)
     return base_urls
 
   def __should_skip_row(self, row: SiteData) -> bool:
@@ -223,29 +223,20 @@ class Config:
             except ValueError as e:
               raise ValueError(f"{filename} has a row whose columns don't match the headers: {row}") from e
 
-            subject = SiteData(
-              url=columns['url'],
-              supports_head=True,
-              columns=columns,
-            )
-
-            if not subject['url']:
+            if not columns['url']:
               raise ValueError(f'{filename} has a row whose "url" column is blank: {row}')
 
-            # Parse the URL to get just the domain
-            parsed_url = parse.urlparse(subject['url'])
-
-            if parsed_url.scheme not in ('http', 'https'):
-              logger.warning('URL missing or unsupported scheme, skipping %s', subject['url'])
+            try:
+              subject = SiteData(
+                url=src.urls.normalize_url(columns['url']),
+                supports_head=True,
+                columns=columns,
+              )
+            except ValueError:
+              logger.warning('URL is not valid, skipping %s', columns['url'])
               continue
 
             if self.__should_skip_row(subject):
-              continue
-
-            try:
-              subject['url'] = src.urls.normalize_url(subject['url'])
-            except ValueError:
-              logger.warning('URL is not valid, skipping %s', subject['url'])
               continue
 
             subject['columns']['url'] = subject['url']

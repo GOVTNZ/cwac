@@ -8,14 +8,12 @@ from typing import NewType, cast
 import ada_url
 
 NormalizedUrl = NewType('NormalizedUrl', str)
-"""A URL in a canonical form, so two URLs are equal if and only if their strings are equal.
+"""An http(s) URL in a canonical form, so two URLs are equal if and only if their strings are equal.
 
 URLs are equal if the requests a browser would make for them (per the WHATWG
 URL Standard) are equivalent (per RFC 3986 and RFC 9110). Equivalences that
 depend on the server, such as `/abc` and `/abc/` (RFC 3986 §6.2.4), are not
 normalized, and are left to callers.
-
-Only http(s) URLs are covered; the normalized form of other URLs is undefined.
 
 These aspects do not affect equality, so are normalized as shown:
 
@@ -99,9 +97,13 @@ def normalize_url(url: str) -> NormalizedUrl:
       NormalizedUrl: normalized URL
 
   Raises:
-      ValueError: if the URL is not valid
+      ValueError: if the URL is not valid, or does not use http(s)
   """
   parsed = ada_url.URL(url)
+
+  if parsed.protocol not in ('http:', 'https:'):
+    raise ValueError(f'Unsupported scheme: {parsed.protocol}')
+
   parsed.hash = ''
 
   return cast(NormalizedUrl, _normalize_escapes(parsed.href))

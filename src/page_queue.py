@@ -6,11 +6,18 @@ import typing
 import src.urls
 
 
+class DiscoveredPage(typing.NamedTuple):
+  """A url that has not been normalized yet and might be queued to be crawled, along with the url of the page it was found on."""
+
+  parent_url: str
+  url: str
+
+
 class QueuedPage(typing.NamedTuple):
   """A url to be crawled, along with the url of the page it was found on."""
 
   parent_url: str
-  url: str
+  url: src.urls.NormalizedUrl
 
 
 class PageQueue:
@@ -19,7 +26,7 @@ class PageQueue:
   def __init__(self) -> None:
     """Initialise the queue."""
     self.items: list[QueuedPage] = []
-    self.seen = set[str]()
+    self.seen = set[src.urls.NormalizedUrl]()
 
   def __len__(self) -> int:
     """Return the number of items in the queue."""
@@ -29,24 +36,24 @@ class PageQueue:
     """Return the queue as a string."""
     return str(self.items)
 
-  def push(self, item: QueuedPage) -> None:
+  def push(self, item: DiscoveredPage) -> None:
     """Push an item onto the queue with its url normalized.
 
     The item is skipped if its url is invalid, does not use the http(s) scheme,
     or has been pushed before.
 
     Args:
-        item (QueuedPage): item to push onto the queue
+        item (DiscoveredPage): item to push onto the queue
     """
     try:
       url = src.urls.normalize_url(item.url)
     except ValueError:
       return
 
-    if url in self.seen or not url.startswith(('https:', 'http:')):
+    if url in self.seen:
       return
 
-    self.items.append(item._replace(url=url))
+    self.items.append(QueuedPage(item.parent_url, url))
     self.seen.add(url)
 
   def pop(self) -> QueuedPage:

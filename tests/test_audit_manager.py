@@ -16,6 +16,7 @@ from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 from src.output import CSVWriter
+from tests.helpers.utils import normalized_url
 
 # pylint: disable=too-many-lines
 
@@ -152,12 +153,12 @@ def test_run_audits_runs_an_audit_against_a_page(
   manager, events, on_run = setup_manager_and_mocks(mocker, {'first': {}})
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/news'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -198,17 +199,17 @@ def test_run_audits_runs_every_audit_against_every_page_at_every_viewport(
 
   site_datas: dict[str, SiteData] = {
     'https://bnl.com/': {
-      'url': 'https://bnl.com/',
+      'url': normalized_url('https://bnl.com/'),
       'supports_head': True,
       'columns': {'url': 'https://bnl.com/'},
     },
     'https://acme.com/': {
-      'url': 'https://acme.com/',
+      'url': normalized_url('https://acme.com/'),
       'supports_head': True,
       'columns': {'url': 'https://acme.com/'},
     },
     'https://wayne.com/': {
-      'url': 'https://wayne.com/',
+      'url': normalized_url('https://wayne.com/'),
       'supports_head': True,
       'columns': {'url': 'https://wayne.com/'},
     },
@@ -233,7 +234,7 @@ def test_run_audits_runs_every_audit_against_every_page_at_every_viewport(
 
   for base_url, urls in sites.items():
     for url in urls:
-      assert manager.run_audits(url=url, site_data=site_datas[base_url]) is True
+      assert manager.run_audits(url=normalized_url(url), site_data=site_datas[base_url]) is True
 
   # every audit modifies the page by default, so the page is reloaded before each one
   assert event_log(events) == [
@@ -474,12 +475,12 @@ def test_run_audits_only_runs_audits_at_their_viewport_to_test(
   )
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -538,12 +539,12 @@ def test_run_audits_writes_the_results_of_each_audit_to_its_own_file(
   ]
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -598,12 +599,12 @@ def test_run_audits_reuses_the_page_after_an_audit_that_does_not_modify_it(
   )
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/news'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -647,12 +648,12 @@ def test_run_audits_reuses_the_page_across_consecutive_audits_that_do_not_modify
   )
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/news'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -701,12 +702,12 @@ def test_run_audits_reloads_the_page_at_each_viewport_even_if_the_last_audit_did
   )
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/news'), site_data=site_data) is True
 
   # even though "reads" didn't modify the page, we should
   # still do a "get" as part of changing the window size
@@ -764,12 +765,12 @@ def test_run_audits_reuses_the_page_across_an_audit_skipped_for_its_viewport_to_
   )
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/news'), site_data=site_data) is True
 
   # "modifies_small_only" sits between two audits but only runs on
   # the "small" viewport, so at the "medium" viewport we should only
@@ -845,12 +846,12 @@ def test_run_audits_runs_audits_that_do_not_modify_the_page_first(
   )
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/news'), site_data=site_data) is True
 
   # we should run all audits that don't modify the page first with a single "get",
   # and then run the remaining page-modifying audits, with a "get" between each
@@ -916,12 +917,12 @@ def test_run_audits_runs_audits_that_do_not_modify_the_page_first_at_each_viewpo
   )
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/news'), site_data=site_data) is True
 
   # modifies_page and viewport_to_test should be independent of each other, so at the "medium"
   # viewport the audits should run as if "reads_small_only" wasn't configured at all
@@ -993,12 +994,12 @@ def test_run_audits_stops_auditing_entirely_when_anti_bot_happens(
   mocker.patch.object(manager, 'test_for_anti_bot', side_effect=['Pass', 'Cloudflare'])
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -1033,12 +1034,12 @@ def test_run_audits_returns_true_when_anti_bot_happens_after_a_success(
   mocker.patch.object(manager, 'test_for_anti_bot', side_effect=['Pass', 'Cloudflare'])
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -1074,12 +1075,12 @@ def test_run_audits_returns_false_when_anti_bot_happens_before_any_success(
   mocker.patch.object(manager, 'test_for_anti_bot', return_value='Cloudflare')
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is False
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -1109,12 +1110,12 @@ def test_run_audits_only_checks_for_anti_bot_when_the_page_is_loaded(
   mocker.patch.object(manager, 'test_for_anti_bot', side_effect=['Pass', 'Cloudflare'])
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is True
 
   # anti-bot checking should only be done after a "get", so "modifies_a" shouldn't
   # be blocked since it can reuse the unmodified page after running the "reads" audit
@@ -1160,7 +1161,7 @@ def test_run_audits_skips_an_audit_when_the_page_fails_to_load(
   )
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
@@ -1168,7 +1169,7 @@ def test_run_audits_skips_an_audit_when_the_page_fails_to_load(
   # have the second "get" fail via having the driver time out (twice, since the browser does a retry)
   mocker.patch.object(manager.browser.driver, 'get', side_effect=[None, TimeoutException(), TimeoutException(), None])
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -1212,7 +1213,7 @@ def test_run_audits_returns_false_when_the_page_fails_to_load_for_every_audit(
   manager, events, on_run = setup_manager_and_mocks(mocker, {'first': {}, 'second': {}})
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
@@ -1220,7 +1221,7 @@ def test_run_audits_returns_false_when_the_page_fails_to_load_for_every_audit(
   # have every "get" fail via having the driver time out
   mocker.patch.object(manager.browser.driver, 'get', side_effect=TimeoutException())
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is False
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -1248,7 +1249,7 @@ def test_run_audits_loads_the_page_for_an_audit_that_does_not_modify_it_after_a_
   )
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
@@ -1256,7 +1257,7 @@ def test_run_audits_loads_the_page_for_an_audit_that_does_not_modify_it_after_a_
   # have the first "get" fail via having the driver time out (twice, since the browser does a retry)
   mocker.patch.object(manager.browser.driver, 'get', side_effect=[TimeoutException(), TimeoutException(), None])
 
-  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/news'), site_data=site_data) is True
 
   # we should always do a "get" if the previous "get" was not successful,
   # regardless of whether the audit we tried to run modifies the page or not
@@ -1305,12 +1306,12 @@ def test_run_audits_restarts_the_browser_and_continues_when_an_audit_raises(
   on_run.side_effect = [mocker.DEFAULT, Exception('oh noes'), mocker.DEFAULT]
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -1377,12 +1378,12 @@ def test_run_audits_restores_the_current_viewport_when_an_audit_raises(
   on_run.side_effect = [mocker.DEFAULT, mocker.DEFAULT, Exception('oh noes'), mocker.DEFAULT]
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -1451,12 +1452,12 @@ def test_run_audits_returns_false_when_every_audit_raises(
   on_run.side_effect = Exception('oh noes')
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is False
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -1510,12 +1511,12 @@ def test_run_audits_reloads_the_page_after_an_audit_that_does_not_modify_it_rais
   on_run.side_effect = [mocker.DEFAULT, Exception('oh noes'), mocker.DEFAULT]
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/news', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/news'), site_data=site_data) is True
 
   # even though none of the audits modify the page, we should do a second
   # "get" since the browser is restarted due to "reads_b" raising an error
@@ -1565,12 +1566,12 @@ def test_run_audits_returns_false_when_no_audit_produces_results(
   on_run.return_value = audit_result
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is False
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -1593,12 +1594,12 @@ def test_run_audits_returns_true_when_any_audit_produces_results(
   on_run.side_effect = [[], mocker.DEFAULT]
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is True
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is True
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
@@ -1654,12 +1655,12 @@ def test_run_audits_reuses_the_page_after_an_audit_that_does_not_modify_it_produ
   on_run.return_value = audit_result
 
   site_data: SiteData = {
-    'url': 'https://bnl.com/',
+    'url': normalized_url('https://bnl.com/'),
     'supports_head': True,
     'columns': {'url': 'https://bnl.com/'},
   }
 
-  assert manager.run_audits(url='https://bnl.com/', site_data=site_data) is False
+  assert manager.run_audits(url=normalized_url('https://bnl.com/'), site_data=site_data) is False
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),

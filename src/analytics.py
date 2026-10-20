@@ -4,6 +4,7 @@ import time
 
 import src.output
 from config import Config
+from src.urls import NormalizedUrl
 
 
 class Analytics:
@@ -20,25 +21,25 @@ class Analytics:
     self.est_num_pages_in_test = 0
 
     # A dict of every URL scanned
-    self.pages_scanned: dict[str, set[str]] = {}
+    self.pages_scanned: dict[NormalizedUrl, set[NormalizedUrl]] = {}
 
     # Time script started
     self.start_time = time.time()
 
     # Store the full set of base_urls
-    self.base_urls: set[str] = set()
+    self.base_urls: set[NormalizedUrl] = set()
 
-  def add_base_url(self, base_url: str) -> None:
+  def add_base_url(self, base_url: NormalizedUrl) -> None:
     """Add base url in preparation of it being scanned."""
     self.pages_scanned[base_url] = set()
     self.base_urls.add(base_url)
 
-  def is_url_in_pages_scanned(self, base_url: str, url: str) -> bool:
+  def is_url_in_pages_scanned(self, base_url: NormalizedUrl, url: NormalizedUrl) -> bool:
     """Return True if the url has been scanned previously for the given base_url."""
     with self.config.lock:
       return url in self.pages_scanned[base_url]
 
-  def add_page_scanned(self, base_url: str, url: str) -> None:
+  def add_page_scanned(self, base_url: NormalizedUrl, url: NormalizedUrl) -> None:
     """Log that a page has been scanned.
 
     Args:
@@ -57,7 +58,7 @@ class Analytics:
         start_time=self.start_time,
       )
 
-  def record_test_failure(self, base_url: str) -> None:
+  def record_test_failure(self, base_url: NormalizedUrl) -> None:
     """Record a test failure.
 
     Used to adjust est_num_pages_in_test when tests fail.

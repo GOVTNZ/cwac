@@ -19,6 +19,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebDriver
 
 from config import Config
+from src.urls import NormalizedUrl
 
 WebDriverType = ChromeWebDriver
 
@@ -39,7 +40,7 @@ class Browser:  # pylint: disable=too-many-instance-attributes
     self.requested_url = ''
     self._js_execution_context_id: int | None = None
 
-  def get(self, url: str) -> bool:
+  def get(self, url: NormalizedUrl) -> bool:
     """Load a URL in the webdriver.
 
     Args:

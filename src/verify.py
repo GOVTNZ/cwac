@@ -2,10 +2,12 @@
 
 import logging
 
+from src.urls import NormalizedUrl
+
 logger = logging.getLogger('cwac')
 
 
-def verify_axe_results(max_links_per_domain: int, pages_scanned: dict[str, set[str]]) -> None:
+def verify_axe_results(max_links_per_domain: int, pages_scanned: dict[NormalizedUrl, set[NormalizedUrl]]) -> None:
   """Perform a series of checks on the output test.
 
   Ensures output data is free of obvious errors.

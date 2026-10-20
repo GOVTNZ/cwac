@@ -33,9 +33,13 @@ from src.urls import normalize_url
     # fragment
     pytest.param('https://example.com/a#top', 'https://example.com/a', id='fragment'),
     pytest.param('https://example.com/a#', 'https://example.com/a', id='empty fragment'),
-    # dot segments
+    # dot segments, which must always be resolved (including when escaped) to
+    # prevent urls from being used to traverse outside of their base url
     pytest.param('https://example.com/a/../b/./c', 'https://example.com/b/c', id='dot segments'),
     pytest.param('https://example.com/a/%2e%2E/b/%2E/c', 'https://example.com/b/c', id='escaped dot segments'),
+    pytest.param('https://example.com/a/.%2e/b/%2e./c', 'https://example.com/c', id='partly escaped dot segments'),
+    pytest.param('https://example.com/a/b/%2e%2e', 'https://example.com/a/', id='trailing escaped dot segment'),
+    pytest.param('https://example.com/a/file%2ehtml', 'https://example.com/a/file.html', id='escaped dot in a segment'),
     # backslashes
     pytest.param('https://example.com\\a\\b', 'https://example.com/a/b', id='backslash as a path separator'),
     # tabs, newlines, and leading or trailing spaces and control characters
@@ -46,6 +50,7 @@ from src.urls import normalize_url
     # escaped unreserved characters
     pytest.param('https://example.com/%41%7e', 'https://example.com/A~', id='escaped unreserved in path'),
     pytest.param('https://example.com/?q=%41%7e', 'https://example.com/?q=A~', id='escaped unreserved in query'),
+    pytest.param('https://example.com/a%zzb/100%', 'https://example.com/a%zzb/100%', id='bare %'),
     pytest.param('https://example.com/100%/%41%7e', 'https://example.com/100%/%41%7E', id='with a bare %'),
     pytest.param('https://example.com/%%341', 'https://example.com/%%341', id='forming an escape with a bare %'),
     # characters not allowed literally
@@ -137,4 +142,21 @@ def test_normalize_url_removes_fragments(url: str, expected: str) -> None:
 def test_normalize_url_raises_on_invalid_url(url: str) -> None:
   """Raises a ValueError when the URL is not valid."""
   with pytest.raises(ValueError, match='Invalid input'):
+    normalize_url(url)
+
+
+@pytest.mark.parametrize(
+  'url',
+  [
+    'ftp://example.com/',
+    'ws://example.com/',
+    'file:///tmp/a',
+    'mailto:a@example.com',
+    'javascript:void(0)',
+    'foo://a/',
+  ],
+)
+def test_normalize_url_raises_on_non_http_url(url: str) -> None:
+  """Raises a ValueError when the URL does not use http(s)."""
+  with pytest.raises(ValueError, match='Unsupported scheme'):
     normalize_url(url)
