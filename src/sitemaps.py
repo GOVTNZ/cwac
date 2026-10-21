@@ -5,6 +5,7 @@ import random
 
 from usp.objects.sitemap import AbstractIndexSitemap
 from usp.tree import sitemap_tree_for_homepage
+from usp.web_client.abstract_client import AbstractWebClient
 
 from src.page_queue import DiscoveredPage
 from src.urls import NormalizedUrl
@@ -12,7 +13,7 @@ from src.urls import NormalizedUrl
 logger = logging.getLogger('cwac')
 
 
-def crawl(url: NormalizedUrl, limit: int) -> list[DiscoveredPage]:
+def crawl(url: NormalizedUrl, limit: int, web_client: AbstractWebClient | None = None) -> list[DiscoveredPage]:
   """Crawls the urls sitemap, if there is one.
 
   Performance:
@@ -21,7 +22,7 @@ def crawl(url: NormalizedUrl, limit: int) -> list[DiscoveredPage]:
   logger.info('Fetching sitemap for %s', url)
 
   try:
-    tree = sitemap_tree_for_homepage(url)
+    tree = sitemap_tree_for_homepage(url, web_client=web_client)
   except Exception:
     logger.exception('Failed to get sitemap')
     return []
