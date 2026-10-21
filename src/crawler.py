@@ -5,19 +5,17 @@ Crawls specified websites and tests them using AuditManager
 
 import importlib
 import logging
-import random
 from queue import SimpleQueue
 from typing import cast
 
 import selenium.common.exceptions
 import urllib3
-from usp.objects.sitemap import AbstractIndexSitemap
-from usp.tree import sitemap_tree_for_homepage
 
 import src.filters
 import src.output
 from config import Config
 from config import SiteData as ConfigSiteData
+from src import sitemaps
 from src.analytics import Analytics
 from src.audit_manager import AuditManager
 from src.audit_plugins.default_audit import DefaultAudit
@@ -213,7 +211,7 @@ class Crawler:
       # we delay crawling the sitemap for urls until after the base_url has been
       # audited to ensure that has happened since the queue provides urls at random
       if len(queue) == 0 and not has_crawled_sitemap:
-        urls_from_sitemap = self.__crawl_sitemap(base_url)
+        urls_from_sitemap = sitemaps.crawl(base_url, self.config.max_links_per_domain * SITEMAP_URLS_PER_MAX_LINK)
 
         logger.info('Found %i url%s from sitemaps', len(urls_from_sitemap), '' if len(urls_from_sitemap) == 1 else 's')
 
@@ -230,51 +228,6 @@ class Crawler:
     self.record_pages_scanned(site_data, pages_scanned)
     if self.config.max_links_per_domain != 1:
       logger.info('Crawl exhausted all links %s', base_url)
-
-  def __crawl_sitemap(self, url: str) -> list[DiscoveredPage]:
-    """Crawls the urls sitemap, if there is one.
-
-    Performance:
-        1+ HTTP requests depending on the sitemap structure and discovery path.
-    """
-    logger.info('Fetching sitemap for %s', url)
-
-    try:
-      tree = sitemap_tree_for_homepage(url)
-    except Exception:
-      logger.exception('Failed to get sitemap')
-      return []
-
-    # cap how many urls we take from the sitemap, as some sites have millions of
-    # them, which makes the crawl queue very slow and memory hungry
-    limit = self.config.max_links_per_domain * SITEMAP_URLS_PER_MAX_LINK
-
-    discovered_pages: list[DiscoveredPage] = []
-    num_found = 0
-
-    # use reservoir sampling so that if there are more urls than the limit, we
-    # keep a uniformly random selection of them rather than whichever come first
-    for sitemap in tree.all_sitemaps():
-      # skip index sitemaps since they yield the pages of their sub-sitemaps,
-      # which are already included as part of "all sitemaps"
-      if isinstance(sitemap, AbstractIndexSitemap):
-        continue
-
-      for page in sitemap.all_pages():
-        num_found += 1
-        if len(discovered_pages) < limit:
-          discovered_pages.append(DiscoveredPage(sitemap.url, page.url))
-        else:
-          # these random numbers are not used for security or cryptographic
-          # purposes so it is safe to use and 'nosec' suppresses bandit
-          index = random.randrange(num_found)  # nosec # noqa: S311
-          if index < limit:
-            discovered_pages[index] = DiscoveredPage(sitemap.url, page.url)
-
-    if num_found > limit:
-      logger.info('Found %i urls from sitemaps for %s, randomly selected %i of them', num_found, url, limit)
-
-    return discovered_pages
 
   def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
     """Record the number of pages that were scanned for the site."""

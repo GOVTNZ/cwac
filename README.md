@@ -201,6 +201,17 @@ $ usp ls https://example.org/
         https://example.org/page1.html
 ```
 
+To keep fetching sitemaps quick and bounded however large a site's sitemaps are,
+CWAC limits how much of them it crawls:
+
+- only one level of `sitemapindex` is followed: sitemaps listed by an index in
+  `robots.txt` or at a known location are fetched, but any index nested within
+  those is ignored
+- at most 25 sitemaps are fetched from any one index (including `robots.txt`),
+  chosen at random
+- at most 10 times `max_links_per_domain` page urls are taken from the fetched
+  sitemaps, chosen at random
+
 ## Updating Chrome and Chromedriver versions
 
 You can find the latest _Chrome for Testing_ version manually by visiting
