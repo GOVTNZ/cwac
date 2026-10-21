@@ -13,6 +13,7 @@ from config import Config, SiteData
 from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 from src.output import CSVWriter
+from src.urls import NormalizedUrl
 
 logger = logging.getLogger('cwac')
 
@@ -159,7 +160,7 @@ class AuditManager:
 
     logger.info('opened %i <details> element%s', num_of_details, plural)
 
-  def run_audits(self, url: str, site_data: SiteData) -> bool:
+  def run_audits(self, url: NormalizedUrl, site_data: SiteData) -> bool:
     """Iterate through registered audits and runs them.
 
     Main entry point for running audits. Iterates through all registered audits

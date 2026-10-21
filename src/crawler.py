@@ -24,7 +24,7 @@ from src.audit_plugins.default_audit import DefaultAudit
 from src.browser import Browser
 from src.crawlable_page_validator import CrawlablePageValidator
 from src.output import CSVWriter
-from src.page_queue import PageQueue, QueuedPage
+from src.page_queue import DiscoveredPage, PageQueue
 
 # pylint: disable=too-many-branches, too-many-locals
 
@@ -158,7 +158,7 @@ class Crawler:
     pages_scanned = 0
 
     queue = PageQueue()
-    queue.push(QueuedPage(base_url, base_url))
+    queue.push(DiscoveredPage(base_url, base_url))
 
     # Filter and sanitise the initial URL
     if not self.url_filter.run_url_filters(base_url):
@@ -217,21 +217,21 @@ class Crawler:
 
         logger.info('Found %i url%s from sitemaps', len(urls_from_sitemap), '' if len(urls_from_sitemap) == 1 else 's')
 
-        for queued_page in urls_from_sitemap:
-          queue.push(queued_page)
+        for discovered_page in urls_from_sitemap:
+          queue.push(discovered_page)
         has_crawled_sitemap = True
 
       links = self.get_links()
 
       for new_link in links:
-        queue.push(QueuedPage(url, new_link))
+        queue.push(DiscoveredPage(url, new_link))
 
     self.analytics.record_test_failure(base_url)
     self.record_pages_scanned(site_data, pages_scanned)
     if self.config.max_links_per_domain != 1:
       logger.info('Crawl exhausted all links %s', base_url)
 
-  def __crawl_sitemap(self, url: str) -> list[QueuedPage]:
+  def __crawl_sitemap(self, url: str) -> list[DiscoveredPage]:
     """Crawls the urls sitemap, if there is one.
 
     Performance:
@@ -249,7 +249,7 @@ class Crawler:
     # them, which makes the crawl queue very slow and memory hungry
     limit = self.config.max_links_per_domain * SITEMAP_URLS_PER_MAX_LINK
 
-    queued_pages: list[QueuedPage] = []
+    discovered_pages: list[DiscoveredPage] = []
     num_found = 0
 
     # use reservoir sampling so that if there are more urls than the limit, we
@@ -262,19 +262,19 @@ class Crawler:
 
       for page in sitemap.all_pages():
         num_found += 1
-        if len(queued_pages) < limit:
-          queued_pages.append(QueuedPage(sitemap.url, page.url))
+        if len(discovered_pages) < limit:
+          discovered_pages.append(DiscoveredPage(sitemap.url, page.url))
         else:
           # these random numbers are not used for security or cryptographic
           # purposes so it is safe to use and 'nosec' suppresses bandit
           index = random.randrange(num_found)  # nosec # noqa: S311
           if index < limit:
-            queued_pages[index] = QueuedPage(sitemap.url, page.url)
+            discovered_pages[index] = DiscoveredPage(sitemap.url, page.url)
 
     if num_found > limit:
       logger.info('Found %i urls from sitemaps for %s, randomly selected %i of them', num_found, url, limit)
 
-    return queued_pages
+    return discovered_pages
 
   def record_pages_scanned(self, site_data: SiteData, pages_scanned: int) -> None:
     """Record the number of pages that were scanned for the site."""

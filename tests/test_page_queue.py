@@ -4,12 +4,21 @@ import random
 
 import pytest
 
-from src.page_queue import PageQueue, QueuedPage
+from src.page_queue import DiscoveredPage, PageQueue, QueuedPage
+from tests.helpers.utils import normalized_url
+
+
+def discovered_page(path: str) -> DiscoveredPage:
+  """Build a DiscoveredPage for the given path on a test site."""
+  return DiscoveredPage(parent_url='https://example.com/', url=f'https://example.com/{path}')
 
 
 def queued_page(path: str) -> QueuedPage:
   """Build a QueuedPage for the given path on a test site."""
-  return QueuedPage(parent_url='https://example.com/', url=f'https://example.com/{path}')
+  return QueuedPage(
+    parent_url='https://example.com/',
+    url=normalized_url(f'https://example.com/{path}'),
+  )
 
 
 class TestPageQueue:
@@ -23,8 +32,8 @@ class TestPageQueue:
 
     # put some items on the queue
     for path in paths:
-      queue.push(queued_page(path))
-    queue.push(QueuedPage('https://example.net/', 'https://example.com/a'))
+      queue.push(discovered_page(path))
+    queue.push(DiscoveredPage('https://example.net/', 'https://example.com/a'))
 
     # we should only have four items
     assert len(queue) == 4
@@ -35,9 +44,9 @@ class TestPageQueue:
 
     # attempt to put the items back on the queue, + a new one
     for path in paths:
-      queue.push(queued_page(path))
-    queue.push(queued_page('xyz'))
-    queue.push(QueuedPage('https://example.net/', 'https://example.com/a'))
+      queue.push(discovered_page(path))
+    queue.push(discovered_page('xyz'))
+    queue.push(DiscoveredPage('https://example.net/', 'https://example.com/a'))
 
     # we should only have the item that had not been previously seen
     assert len(queue) == 1
@@ -60,7 +69,7 @@ class TestPageQueue:
 
     # put some items on the queue
     for url in urls:
-      queue.push(QueuedPage('https://example.net/', url))
+      queue.push(DiscoveredPage('https://example.net/', url))
 
     assert len(queue) == 5
 
@@ -68,9 +77,9 @@ class TestPageQueue:
     """Pushes items with their url normalized, leaving the parent url as is."""
     queue = PageQueue()
 
-    queue.push(QueuedPage('HTTPS://Example.COM/', 'HTTPS://Example.COM:443/b/../a'))
+    queue.push(DiscoveredPage('HTTPS://Example.COM/', 'HTTPS://Example.COM:443/b/../a'))
 
-    assert queue.pop() == QueuedPage('HTTPS://Example.COM/', 'https://example.com/a')
+    assert queue.pop() == QueuedPage('HTTPS://Example.COM/', normalized_url('https://example.com/a'))
 
   def test_push_skips_urls_that_normalize_to_previously_seen_urls(self) -> None:
     """Pushes items that have not already been seen based on their normalized url."""
@@ -86,7 +95,7 @@ class TestPageQueue:
     ]
 
     for url in urls:
-      queue.push(QueuedPage('https://example.com/', url))
+      queue.push(DiscoveredPage('https://example.com/', url))
 
     assert len(queue) == 2
 
@@ -102,7 +111,7 @@ class TestPageQueue:
     ]
 
     for url in urls:
-      queue.push(QueuedPage('https://example.com/', url))
+      queue.push(DiscoveredPage('https://example.com/', url))
 
     assert len(queue) == 0
 
@@ -114,7 +123,7 @@ class TestPageQueue:
     queue = PageQueue()
 
     for path in ['a', 'b', 'c', 'd', 'e']:
-      queue.push(queued_page(path))
+      queue.push(discovered_page(path))
 
     picks = iter([1, 0, 2, 1, 0])
     monkeypatch.setattr(random, 'randrange', lambda _: next(picks))
@@ -136,7 +145,7 @@ class TestPageQueue:
     queue = PageQueue()
 
     for i in range(5):
-      queue.push(queued_page(str(i)))
+      queue.push(discovered_page(str(i)))
 
     calls: list[int] = []
 
@@ -155,13 +164,13 @@ class TestPageQueue:
     """Pops every pushed item exactly once."""
     queue = PageQueue()
 
-    items = [queued_page(str(i)) for i in range(100)]
+    items = [discovered_page(str(i)) for i in range(100)]
     for item in items:
       queue.push(item)
 
     popped = [queue.pop() for _ in range(100)]
 
-    assert sorted(popped) == sorted(items)
+    assert sorted(popped) == sorted(QueuedPage(item.parent_url, normalized_url(item.url)) for item in items)
     assert len(queue) == 0
 
   def test_pop_from_empty_queue_raises(self) -> None:

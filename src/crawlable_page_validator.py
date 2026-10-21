@@ -23,7 +23,12 @@ class CrawlablePageValidator:
     self.analytics = analytics
     self.url_filter = src.filters.URLFilter(config)
 
-  def validate(self, site_data: SiteData, parent_url: str, url: str) -> str | None:
+  def validate(
+    self,
+    site_data: SiteData,
+    parent_url: str,
+    url: src.urls.NormalizedUrl,
+  ) -> src.urls.NormalizedUrl | None:
     """Validates that pages are crawlable.
 
     A page is considered crawlable if all of the following conditions are met:
@@ -37,11 +42,8 @@ class CrawlablePageValidator:
     If a redirect is encountered during header validation, the new (final) URL
     will be re-checked.
     """
-    match self._clean_and_fast_validate_url(site_data['url'], url):
-      case None:
-        return None
-      case clean_url:
-        url = clean_url
+    if not self._fast_validate_url(site_data['url'], url):
+      return None
 
     # If header checks are disabled then we are done so just return the
     # validated URL.
@@ -59,48 +61,50 @@ class CrawlablePageValidator:
     if not self._are_url_headers_acceptable(base_url=site_data['url'], parent_url=parent_url, url_data=url_data):
       return None
 
+    # The final (post redirects) URL comes from the response, so it needs normalizing
+    try:
+      final_url = src.urls.normalize_url(url_data['final_url'])
+    except ValueError:
+      logger.info('URL filtered out due to redirecting to an invalid url %s', url_data['final_url'])
+      return None
+
     # If the URL has not changed after fetching headers (i.e. no redirects) then
     # we consider it valid and can return it as is.
-    if url == url_data['final_url']:
+    if url == final_url:
       return url
 
     # Otherwise we need to re-validate the new (post redirects) URL
-    match self._clean_and_fast_validate_url(site_data['url'], url_data['final_url']):
-      case None:
-        return None
-      case new_clean_url:
-        url = new_clean_url
+    return final_url if self._fast_validate_url(site_data['url'], final_url) else None
 
-    return url
+  def _fast_validate_url(self, base_url: src.urls.NormalizedUrl, url: src.urls.NormalizedUrl) -> bool:
+    """Run all the validations that happen before fetching headers.
 
-  def _clean_and_fast_validate_url(self, base_url: str, url: str) -> str | None:
-    """Cleans the URL and then runs all the validations that happen before fetching headers.
-
-    Return the cleaned version of the URL if it is eligible to be crawled, otherwise None.
+    Returns:
+        bool: True if the URL is eligible to be crawled, else False
     """
-    try:
-      clean_url = src.urls.normalize_url(url)
-    except ValueError:
-      return None
+    if not self.url_filter.run_url_filters(url):
+      return False
 
-    if not self.url_filter.run_url_filters(clean_url):
-      return None
-
-    if not self._owns_url(base_url, clean_url):
-      return None
+    if not self._owns_url(base_url, url):
+      return False
 
     # Check if URL has been scanned before
-    if self.analytics.is_url_in_pages_scanned(base_url, clean_url):
-      logger.info('URL has been scanned before %s for %s', clean_url, base_url)
-      return None
+    if self.analytics.is_url_in_pages_scanned(base_url, url):
+      logger.info('URL has been scanned before %s for %s', url, base_url)
+      return False
 
-    return clean_url
+    return True
 
-  def _are_url_headers_acceptable(self, base_url: str, parent_url: str, url_data: src.filters.UrlData) -> bool:
+  def _are_url_headers_acceptable(
+    self,
+    base_url: src.urls.NormalizedUrl,
+    parent_url: str,
+    url_data: src.filters.UrlData,
+  ) -> bool:
     """Check if the URL has acceptable headers.
 
     Args:
-        base_url (str): base URL - homepage of website specified
+        base_url (src.urls.NormalizedUrl): base URL - homepage of website specified
         parent_url (str): parent URL of url
         url_data (src.filters.UrlData): url data
 
@@ -128,16 +132,16 @@ class CrawlablePageValidator:
       return False
     return src.filters.url_filter_by_header_content_type(url_data['final_url'], url_data['headers'])
 
-  def _split_scope(self, url: str) -> tuple[tuple[str, str], list[str]]:
-    """Split a normalized url into its origin and its path segments, ignoring leading and trailing slashes."""
+  def _split_scope(self, url: src.urls.NormalizedUrl) -> tuple[tuple[str, str], list[str]]:
+    """Split a url into its origin and its path segments, ignoring leading and trailing slashes."""
     parts = urllib.parse.urlsplit(url)
 
     path = parts.path.removeprefix('/').removesuffix('/')
 
     return (parts.scheme, parts.netloc), path.split('/') if path else []
 
-  def _split_base_url_scope(self, base_url: str) -> tuple[tuple[str, str], list[str]]:
-    """Split a normalized base url into its origin and its path segments, treating a url for a file as its directory."""
+  def _split_base_url_scope(self, base_url: src.urls.NormalizedUrl) -> tuple[tuple[str, str], list[str]]:
+    """Split a base url into its origin and its path segments, treating a url for a file as its directory."""
     origin, segments = self._split_scope(base_url)
 
     # base urls that point at a file (e.g. https://example.com/a/index.html) are
@@ -147,17 +151,17 @@ class CrawlablePageValidator:
 
     return origin, segments
 
-  def _is_url_within_base_url(self, base_url: str, url: str) -> bool:
+  def _is_url_within_base_url(self, base_url: src.urls.NormalizedUrl, url: src.urls.NormalizedUrl) -> bool:
     """Return True if the url has the same origin as the base url, and its path starts with the base url's path.
 
-    Paths are compared by segment, and both urls are expected to have already been normalized.
+    Paths are compared by segment.
     """
     base_origin, base_segments = self._split_base_url_scope(base_url)
     url_origin, url_segments = self._split_scope(url)
 
     return base_origin == url_origin and url_segments[: len(base_segments)] == base_segments
 
-  def _owns_url(self, current_base_url: str, current_url: str) -> bool:
+  def _owns_url(self, current_base_url: src.urls.NormalizedUrl, current_url: src.urls.NormalizedUrl) -> bool:
     """Check if the base url is the most appropriate owner of the current url.
 
     A url is owned by a base url if it is within that base url and not also within
@@ -166,8 +170,8 @@ class CrawlablePageValidator:
     by https://example.com/abc rather than https://example.com/
 
     Args:
-        current_base_url (str): The base url currently being crawled
-        current_url (str): The url to check
+        current_base_url (src.urls.NormalizedUrl): The base url currently being crawled
+        current_url (src.urls.NormalizedUrl): The url to check
 
     Returns:
         bool: True if the current base url owns the url, else False

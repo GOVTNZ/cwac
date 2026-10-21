@@ -42,7 +42,7 @@ class DefaultAudit:
   def _default_audit_row(self) -> dict[str, Any]:
     # If we are not crawling pages for additional links, then
     # use the subdomain + domain as the base_url
-    base_url = self.site_data['url']
+    base_url: str = self.site_data['url']
     if self.config.max_links_per_domain == 1:
       # Parse the url to get the subdomain and domain using urlparse
       # and then rejoin them to get the base_url

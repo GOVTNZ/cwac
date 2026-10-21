@@ -12,6 +12,7 @@ from selenium.common.exceptions import JavascriptException, TimeoutException
 
 from config import Config
 from src.browser import Browser
+from tests.helpers.utils import normalized_url
 
 
 @pytest.fixture(name='browser')
@@ -95,11 +96,11 @@ class TestEvaluate:
 
     browser.evaluate('1')
     browser.evaluate('2')
-    assert browser.get('https://example.com/news') is True
-    assert browser.get('https://example.com/contact') is True
+    assert browser.get(normalized_url('https://example.com/news')) is True
+    assert browser.get(normalized_url('https://example.com/contact')) is True
     browser.evaluate('3')
     browser.evaluate('4')
-    assert browser.get('https://example.com/blog') is True
+    assert browser.get(normalized_url('https://example.com/blog')) is True
     browser.evaluate('5')
 
     assert evaluated_context_ids(execute_cdp_cmd) == [1, 1, 2, 2, 3]
@@ -110,7 +111,7 @@ class TestEvaluate:
     cast(Mock, browser.driver.get).side_effect = TimeoutException()
 
     browser.evaluate('1')
-    assert browser.get('https://example.com/') is False
+    assert browser.get(normalized_url('https://example.com/')) is False
     browser.evaluate('2')
 
     assert evaluated_context_ids(execute_cdp_cmd) == [1, 2]
