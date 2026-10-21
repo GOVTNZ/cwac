@@ -40,7 +40,19 @@ def crawl(url: NormalizedUrl, limit: int, web_client: AbstractWebClient | None =
 
     # don't fetch the sitemaps listed by an index nested within a top-level index
     if recursion_level >= 1:
+      if urls:
+        logger.info(
+          'Ignoring %i sitemap%s listed by a nested index for %s', len(urls), '' if len(urls) == 1 else 's', url
+        )
       return []
+
+    if len(urls) > MAX_SITEMAPS_PER_INDEX:
+      logger.info(
+        'Found %i sitemaps listed by an index for %s, randomly selected %i of them',
+        len(urls),
+        url,
+        MAX_SITEMAPS_PER_INDEX,
+      )
 
     # fetch a random selection of at most the max sitemaps from this index
     return random.sample(urls, k=min(len(urls), MAX_SITEMAPS_PER_INDEX))
