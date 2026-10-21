@@ -13,16 +13,44 @@ from src.urls import NormalizedUrl
 logger = logging.getLogger('cwac')
 
 
+# the most sitemaps to fetch from any one index (including robots.txt), as some
+# sites have thousands of them, which makes fetching very slow and disk hungry
+MAX_SITEMAPS_PER_INDEX = 25
+
+
 def crawl(url: NormalizedUrl, limit: int, web_client: AbstractWebClient | None = None) -> list[DiscoveredPage]:
-  """Crawls the urls sitemap, if there is one.
+  """Crawls the url's sitemaps, if there are any, returning a random sample of up to `limit` of their pages.
+
+  Only one level of sitemap index is followed: the sitemaps listed by an index
+  advertised in robots.txt or found at a known path are fetched, but those listed
+  by any index nested within them are not. At most MAX_SITEMAPS_PER_INDEX
+  sitemaps are fetched from each index, chosen at random.
 
   Performance:
-      1+ HTTP requests depending on the sitemap structure and discovery path.
+      1+ HTTP requests depending on the sitemap structure and discovery path,
+      bounded by MAX_SITEMAPS_PER_INDEX per index.
   """
   logger.info('Fetching sitemap for %s', url)
 
+  def limit_sitemaps(urls: list[str], recursion_level: int, parent_urls: set[str]) -> list[str]:
+    # adjust the level to start at 0 if we're coming from a robots.txt
+    # as usp treats that as an index even though it's not a sitemap
+    if any(u.endswith('/robots.txt') for u in parent_urls):
+      recursion_level -= 1
+
+    # don't fetch the sitemaps listed by an index nested within a top-level index
+    if recursion_level >= 1:
+      return []
+
+    # fetch a random selection of at most the max sitemaps from this index
+    return random.sample(urls, k=min(len(urls), MAX_SITEMAPS_PER_INDEX))
+
   try:
-    tree = sitemap_tree_for_homepage(url, web_client=web_client)
+    tree = sitemap_tree_for_homepage(
+      url,
+      web_client=web_client,
+      recurse_list_callback=limit_sitemaps,
+    )
   except Exception:
     logger.exception('Failed to get sitemap')
     return []
