@@ -130,7 +130,7 @@ def test_crawl_returns_nothing_when_fetching_sitemaps_raises(monkeypatch: pytest
 
   monkeypatch.setattr(src.sitemaps, 'sitemap_tree_for_homepage', fake_sitemap_tree_for_homepage)
 
-  assert crawl_site(FakeWebClient({})) == []
+  assert not crawl_site(FakeWebClient({}))
 
 
 def test_crawl_does_not_count_robots_txt_as_an_index_level() -> None:

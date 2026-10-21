@@ -54,8 +54,10 @@ def crawl(url: NormalizedUrl, limit: int, web_client: AbstractWebClient | None =
         MAX_SITEMAPS_PER_INDEX,
       )
 
-    # fetch a random selection of at most the max sitemaps from this index
-    return random.sample(urls, k=min(len(urls), MAX_SITEMAPS_PER_INDEX))
+    # fetch a random selection of at most the max sitemaps from this index;
+    # this is not used for security or cryptographic purposes so it is safe
+    # to use and 'nosec' suppresses bandit
+    return random.sample(urls, k=min(len(urls), MAX_SITEMAPS_PER_INDEX))  # nosec
 
   try:
     tree = sitemap_tree_for_homepage(
