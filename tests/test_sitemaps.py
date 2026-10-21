@@ -38,7 +38,7 @@ class FakeWebClient(AbstractWebClient):
 
   def requested_paths(self) -> set[str]:
     """Return the paths of every url requested."""
-    return {url.removeprefix(normalized_url('https://example.com/')) for url in self.requested}
+    return {url.removeprefix('https://example.com/') for url in self.requested}
 
 
 def robots_txt(*paths: str) -> str:
@@ -99,23 +99,6 @@ def test_crawl_returns_pages_with_their_sitemap_as_the_parent() -> None:
   ]
 
 
-def test_crawl_does_not_sample_pages_when_at_the_limit(monkeypatch: pytest.MonkeyPatch) -> None:
-  """Returns every page without sampling when there are exactly as many as the limit."""
-  web_client = FakeWebClient(
-    {
-      'robots.txt': robots_txt('one.xml'),
-      'one.xml': url_set('a', 'b', 'c'),
-    }
-  )
-
-  def fail_randrange(_: int) -> int:
-    pytest.fail('should not sample')
-
-  monkeypatch.setattr(random, 'randrange', fail_randrange)
-
-  assert len(crawl_site(web_client, 3)) == 3
-
-
 def test_crawl_does_not_duplicate_pages_from_index_sitemaps() -> None:
   """Only takes pages from the leaf sitemaps, since index sitemaps yield the pages of their sub-sitemaps."""
   web_client = FakeWebClient(
@@ -144,6 +127,23 @@ def test_crawl_returns_nothing_when_fetching_sitemaps_raises(monkeypatch: pytest
   monkeypatch.setattr(src.sitemaps, 'sitemap_tree_for_homepage', fake_sitemap_tree_for_homepage)
 
   assert crawl_site(FakeWebClient({})) == []
+
+
+def test_crawl_does_not_sample_pages_when_at_the_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+  """Returns every page without sampling when there are exactly as many as the limit."""
+  web_client = FakeWebClient(
+    {
+      'robots.txt': robots_txt('one.xml'),
+      'one.xml': url_set('a', 'b', 'c'),
+    }
+  )
+
+  def fail_randrange(_: int) -> int:
+    pytest.fail('should not sample')
+
+  monkeypatch.setattr(random, 'randrange', fail_randrange)
+
+  assert len(crawl_site(web_client, 3)) == 3
 
 
 def test_crawl_caps_the_number_of_pages_at_the_limit() -> None:
