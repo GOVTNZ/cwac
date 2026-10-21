@@ -63,6 +63,32 @@ def url_set(*paths: str) -> str:
   )
 
 
+# the ways a top-level index can be discovered, as the path of the index and the
+# responses that lead to it being discovered
+TOP_LEVEL_INDEXES = [
+  pytest.param(
+    'sitemap.xml',
+    {},
+    id='known path',
+  ),
+  pytest.param(
+    'index.xml',
+    {'robots.txt': robots_txt('index.xml')},
+    id='robots.txt',
+  ),
+  pytest.param(
+    'sitemap.xml',
+    {'robots.txt': robots_txt('sitemap.xml')},
+    id='known path advertised in robots.txt',
+  ),
+  pytest.param(
+    'sitemap.xml',
+    {'robots.txt': robots_txt('advertised.xml'), 'advertised.xml': url_set()},
+    id='known path alongside robots.txt with different path',
+  ),
+]
+
+
 def crawl_site(web_client: FakeWebClient, limit: int = 100) -> list[DiscoveredPage]:
   """Crawl the test site's sitemaps."""
   return src.sitemaps.crawl(normalized_url('https://example.com/'), limit, web_client)
@@ -164,13 +190,19 @@ def test_crawl_treats_sitemaps_at_known_paths_as_top_level() -> None:
   assert crawled_urls(web_client) == {'https://example.com/a', 'https://example.com/b'}
 
 
-@pytest.mark.parametrize(
-  ('index_path', 'discovery'),
-  [
-    pytest.param('index.xml', {'robots.txt': robots_txt('index.xml')}, id='robots.txt'),
-    pytest.param('sitemap.xml', {}, id='known path'),
-  ],
-)
+def test_crawl_does_not_duplicate_pages_from_sitemaps_advertised_at_known_paths() -> None:
+  """Returns the pages of a sitemap at a known path only once, even when robots.txt also advertises it."""
+  web_client = FakeWebClient(
+    {
+      'robots.txt': robots_txt('sitemap.xml'),
+      'sitemap.xml': url_set('a'),
+    }
+  )
+
+  assert crawl_site(web_client) == [DiscoveredPage('https://example.com/sitemap.xml', 'https://example.com/a')]
+
+
+@pytest.mark.parametrize(('index_path', 'discovery'), TOP_LEVEL_INDEXES)
 def test_crawl_does_not_follow_nested_indexes(index_path: str, discovery: dict[str, str]) -> None:
   """Fetches the sitemaps listed in an index, but not those listed in an index nested within it."""
   web_client = FakeWebClient(
@@ -189,14 +221,17 @@ def test_crawl_does_not_follow_nested_indexes(index_path: str, discovery: dict[s
   assert 'deep.xml' not in web_client.requested_paths()
 
 
-def test_crawl_fetches_every_sitemap_from_an_index_within_the_max(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(('index_path', 'discovery'), TOP_LEVEL_INDEXES)
+def test_crawl_fetches_every_sitemap_from_an_index_within_the_max(
+  monkeypatch: pytest.MonkeyPatch, index_path: str, discovery: dict[str, str]
+) -> None:
   """Fetches every sitemap from an index that lists no more than the max number of sitemaps."""
   monkeypatch.setattr(src.sitemaps, 'MAX_SITEMAPS_PER_INDEX', 2)
 
   web_client = FakeWebClient(
     {
-      'robots.txt': robots_txt('index.xml'),
-      'index.xml': sitemap_index('one.xml', 'two.xml'),
+      **discovery,
+      index_path: sitemap_index('one.xml', 'two.xml'),
       'one.xml': url_set('a'),
       'two.xml': url_set('b'),
     }
@@ -206,15 +241,18 @@ def test_crawl_fetches_every_sitemap_from_an_index_within_the_max(monkeypatch: p
   assert crawled_urls(web_client) == {'https://example.com/a', 'https://example.com/b'}
 
 
-def test_crawl_fetches_at_most_the_max_sitemaps_from_an_index(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(('index_path', 'discovery'), TOP_LEVEL_INDEXES)
+def test_crawl_fetches_at_most_the_max_sitemaps_from_an_index(
+  monkeypatch: pytest.MonkeyPatch, index_path: str, discovery: dict[str, str]
+) -> None:
   """Fetches only the max number of sitemaps from an index that lists more than that."""
   monkeypatch.setattr(src.sitemaps, 'MAX_SITEMAPS_PER_INDEX', 2)
 
   sitemaps = {f'pages-{i}.xml': url_set(str(i)) for i in range(5)}
   web_client = FakeWebClient(
     {
-      'robots.txt': robots_txt('index.xml'),
-      'index.xml': sitemap_index(*sitemaps),
+      **discovery,
+      index_path: sitemap_index(*sitemaps),
       **sitemaps,
     }
   )
@@ -225,6 +263,38 @@ def test_crawl_fetches_at_most_the_max_sitemaps_from_an_index(monkeypatch: pytes
   # expect we've fetched only 2 of the 5 sitemaps, and only have urls from those
   assert len(fetched) == 2
   assert urls == {f'https://example.com/{path.removeprefix("pages-").removesuffix(".xml")}' for path in fetched}
+
+
+@pytest.mark.parametrize(
+  ('first_index', 'second_index', 'discovery'),
+  [
+    pytest.param('first.xml', 'second.xml', {'robots.txt': robots_txt('first.xml', 'second.xml')}, id='robots.txt'),
+    pytest.param('first.xml', 'sitemap.xml', {'robots.txt': robots_txt('first.xml')}, id='robots.txt and known path'),
+  ],
+)
+def test_crawl_fetches_at_most_the_max_sitemaps_from_each_index(
+  monkeypatch: pytest.MonkeyPatch, first_index: str, second_index: str, discovery: dict[str, str]
+) -> None:
+  """Applies the max number of sitemaps to each index separately, rather than across all of them."""
+  monkeypatch.setattr(src.sitemaps, 'MAX_SITEMAPS_PER_INDEX', 2)
+
+  first_sitemaps = {f'first-{i}.xml': url_set(f'first-{i}') for i in range(5)}
+  second_sitemaps = {f'second-{i}.xml': url_set(f'second-{i}') for i in range(5)}
+  web_client = FakeWebClient(
+    {
+      **discovery,
+      first_index: sitemap_index(*first_sitemaps),
+      second_index: sitemap_index(*second_sitemaps),
+      **first_sitemaps,
+      **second_sitemaps,
+    }
+  )
+
+  crawl_site(web_client)
+
+  # expect we've fetched 2 sitemaps from each index, rather than 2 in total
+  assert len(web_client.requested_paths() & first_sitemaps.keys()) == 2
+  assert len(web_client.requested_paths() & second_sitemaps.keys()) == 2
 
 
 def test_crawl_fetches_at_most_the_max_sitemaps_from_robots_txt(monkeypatch: pytest.MonkeyPatch) -> None:
