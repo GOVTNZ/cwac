@@ -160,7 +160,7 @@ class Config:
             base_urls.add(url)
     return base_urls
 
-  def __should_skip_row(self, row: SiteData) -> bool:
+  def __should_skip_row(self, columns: dict[str, str]) -> bool:
     """Check if a row should be skipped.
 
     Checks if a URL/Organisation should be included
@@ -169,7 +169,7 @@ class Config:
     filter_to_urls.
 
     Args:
-        row (SiteData): an audit subject parsed from a CSV
+        columns (dict[str, str]): a raw row parsed from a CSV
 
     Returns:
         bool: True if the subject should be skipped, False otherwise
@@ -177,14 +177,14 @@ class Config:
     found_org = False
     if self.filter_to_organisations:
       for org in self.filter_to_organisations:
-        if org in row['columns'].get('organisation', ''):
+        if org in columns.get('organisation', ''):
           found_org = True
           break
 
     found_url = False
     if self.filter_to_urls:
       for url in self.filter_to_urls:
-        if url in row['url']:
+        if url in columns['url']:
           found_url = True
           break
 
@@ -226,6 +226,9 @@ class Config:
             if not columns['url']:
               raise ValueError(f'{filename} has a row whose "url" column is blank: {row}')
 
+            if self.__should_skip_row(columns):
+              continue
+
             try:
               subject = SiteData(
                 url=src.urls.normalize_url(columns['url']),
@@ -234,9 +237,6 @@ class Config:
               )
             except ValueError:
               logger.warning('URL is not valid, skipping %s', columns['url'])
-              continue
-
-            if self.__should_skip_row(subject):
               continue
 
             subject['columns']['url'] = subject['url']
