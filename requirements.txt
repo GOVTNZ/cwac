@@ -16,7 +16,7 @@ pandas-stubs==3.0.5.260914
 nltk==3.10.3
 pyfakefs==6.2.0
 pytest==9.1.1
-pytest-mock==3.16.0
+pytest-mock==3.17.0
 responses==0.26.3
 ruff==0.17.0
 ultimate-sitemap-parser==1.8.1
