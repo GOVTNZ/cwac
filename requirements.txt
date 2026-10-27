@@ -11,12 +11,12 @@ flake8==7.4.1
 flake8-simplify==0.31.1
 opencv-python-headless==5.0.0.93
 numpy==2.5.4
-pandas==3.0.6
+pandas==3.1.0
 pandas-stubs==3.0.5.260914
-nltk==3.10.3
+nltk==3.10.4
 pyfakefs==6.2.0
 pytest==9.1.1
-pytest-mock==3.16.0
+pytest-mock==3.17.0
 responses==0.26.3
 ruff==0.17.0
 ultimate-sitemap-parser==1.8.1
