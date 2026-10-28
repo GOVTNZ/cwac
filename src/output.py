@@ -328,7 +328,4 @@ def template_aware_algorithm(input_df: pd.DataFrame, groupby_cols: list[str]) ->
   # so they get a count of 0.
   agg_df['num_pages'] = agg_df.groupby('issue_id')['url'].transform('nunique').fillna(0).astype(int)
 
-  # Reset the index of the final DataFrame to ensure a clean output
-  agg_df.reset_index()
-
   return agg_df
