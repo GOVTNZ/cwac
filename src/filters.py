@@ -163,14 +163,15 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
       if headers.status_code == 405 and method != 'get':
         method = 'get'
         logger.warning(
-          '%s does not support HEAD requests, retrying with GET (status code %i)',
+          '%s does not support HEAD requests, retrying with GET (status code %i %s)',
           url,
           headers.status_code,
+          headers.reason,
         )
         continue
 
       final_url = headers.url
-      logger.info('%s has status code %i', url, headers.status_code)
+      logger.info('%s has status code %i (%s)', url, headers.status_code, headers.reason)
       break
     except Exception:  # pylint: disable=broad-exception-caught
       logger.exception('Failed to get headers; attempt: %d, %s', i + 1, url)
