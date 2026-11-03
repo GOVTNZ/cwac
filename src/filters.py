@@ -2,18 +2,11 @@
 
 import logging
 import urllib.parse
-from collections.abc import Callable
 from typing import Any, TypedDict
 
 import requests
 
 from config import Config
-
-# url_filter_* functions are declared here
-# url_filter_* functions return True when a URL is acceptable
-# url_filter_* functions must be registered in the URLFilter class
-# by using register_url_filter(func)
-
 
 logger = logging.getLogger('cwac')
 
@@ -72,17 +65,19 @@ DISALLOWED_FILE_TYPES = (
 )
 
 
-def url_filter_filetype(_config: Config, url: urllib.parse.ParseResult) -> bool:
-  """Filter out common file extensions in URLs.
+def has_allowed_file_type(url: str) -> bool:
+  """Check that the URL's path does not end with a disallowed file extension.
 
   Args:
-      _config (Config): The configuration to use
-      url (urllib.parse.ParseResult): A URL to filter
+      url (str): A URL to check
 
   Returns:
-      bool: True if URL is valid, else False
+      bool: True if URL is allowed, else False
   """
-  return not url.path.lower().endswith(DISALLOWED_FILE_TYPES)
+  if urllib.parse.urlparse(url).path.lower().endswith(DISALLOWED_FILE_TYPES):
+    logger.info('URL filtered out due to having a disallowed file extension %s', url)
+    return False
+  return True
 
 
 def url_filter_by_header_content_type(url: str, headers: dict[Any, Any]) -> bool:
@@ -184,47 +179,3 @@ def process_url_headers(config: Config, url: str, supports_head_requests: bool =
     'final_url': final_url,
     'headers': dict(headers.headers),
   }
-
-
-class URLFilter:
-  """Registers and runs a set of url_filter functions."""
-
-  def __init__(self, config: Config) -> None:
-    """Init vars, and registers url_filters."""
-    self.config = config
-
-    self.url_filters: dict[str, Callable[[Config, urllib.parse.ParseResult], bool]] = {}
-
-    # Register URL filtration functions defined at the top of this file
-    self.register_url_filter('Non-allowed file extension', url_filter_filetype)
-
-  def register_url_filter(
-    self,
-    filter_name: str,
-    filter_func: Callable[[Config, urllib.parse.ParseResult], bool],
-  ) -> None:
-    """Register a url_filter_* function defined in this file.
-
-    Args:
-        filter_name (str): Human-readable name for the filter
-        filter_func: a function that filters URLs
-    """
-    self.url_filters[filter_name] = filter_func
-
-  def run_url_filters(self, url: str) -> bool:
-    """Iterate through registered url_filters and runs them.
-
-    Args:
-        url (str): The URL to run filtration on
-    """
-    try:
-      parsed_url = urllib.parse.urlparse(url)
-    except Exception as e:  # noqa: BLE001
-      logger.error('Failed to parse URL: %s', e)
-      return False
-
-    for filter_name, filter_func in self.url_filters.items():
-      if not filter_func(self.config, parsed_url):
-        logger.info('%s filter rejected %s', filter_name, url)
-        return False
-    return True
