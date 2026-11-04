@@ -9,7 +9,12 @@ import pytest
 import urllib3
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
-from selenium.common.exceptions import JavascriptException, TimeoutException, WebDriverException
+from selenium.common.exceptions import (
+  InvalidSessionIdException,
+  JavascriptException,
+  TimeoutException,
+  WebDriverException,
+)
 
 from config import Config
 from src.browser import Browser
@@ -115,6 +120,67 @@ class TestGet:
       browser.get(normalized_url('https://example.com/'))
 
     safe_restart.assert_not_called()
+
+
+class TestSafeRestart:
+  """Tests Browser.safe_restart."""
+
+  def test_quits_and_spawns_a_new_browser(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Quits the current browser and spawns a new one at the current viewport size."""
+    old_driver = browser.driver
+    spawn = mocker.spy(browser, 'spawn_single_webdriver')
+
+    browser.safe_restart()
+
+    cast(Mock, old_driver.quit).assert_called_once()
+    spawn.assert_called_once_with(window_size=browser.viewport_size)
+
+  @pytest.mark.parametrize(
+    ('error', 'expected_log'),
+    [
+      pytest.param(
+        InvalidSessionIdException('invalid session id', stacktrace=['#0 0x123']),
+        # selenium appends a link to its docs for some exceptions
+        'InvalidSessionIdException when quitting browser to restart: invalid session id; '
+        'For documentation on this error, please visit: '
+        'https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception',
+        id='InvalidSessionIdException',
+      ),
+      pytest.param(
+        WebDriverException('disconnected: not connected to DevTools', stacktrace=['#0 0x123']),
+        'WebDriverException when quitting browser to restart: disconnected: not connected to DevTools',
+        id='WebDriverException (disconnected)',
+      ),
+      pytest.param(
+        WebDriverException('chrome not reachable', stacktrace=['#0 0x123']),
+        'WebDriverException when quitting browser to restart: chrome not reachable',
+        id='WebDriverException (other)',
+      ),
+      pytest.param(
+        urllib3.exceptions.ProtocolError('Connection aborted.'),
+        'ProtocolError when quitting browser to restart: Connection aborted.',
+        id='urllib3 HTTPError',
+      ),
+    ],
+  )
+  def test_logs_and_spawns_a_new_browser_when_quitting_fails(
+    self, browser: Browser, mocker: MockerFixture, caplog: pytest.LogCaptureFixture, error: Exception, expected_log: str
+  ) -> None:
+    """Logs a warning without the stacktrace when quitting fails, and spawns a new browser regardless."""
+    cast(Mock, browser.driver.quit).side_effect = error
+    spawn = mocker.spy(browser, 'spawn_single_webdriver')
+
+    browser.safe_restart()
+
+    assert [(r.levelname, r.getMessage(), r.exc_info) for r in caplog.records] == [('WARNING', expected_log, None)]
+    spawn.assert_called_once()
+
+  def test_does_not_handle_unexpected_exceptions(self, browser: Browser) -> None:
+    """Lets exceptions that aren't from the browser escape, as they're likely bugs."""
+    cast(Mock, browser.driver.quit).side_effect = ValueError('oh no')
+
+    with pytest.raises(ValueError, match='oh no'):
+      browser.safe_restart()
 
 
 class TestEvaluate:

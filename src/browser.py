@@ -153,20 +153,18 @@ class Browser:  # pylint: disable=too-many-instance-attributes
     return execution_context_id
 
   def safe_restart(self) -> None:
-    """Restart the webdriver."""
+    """Restart the webdriver.
+
+    Failing to quit is expected, since we're usually restarting because the browser
+    is in a bad state, and whatever caused that should have already been logged.
+    """
     try:
       self.driver.quit()
-    except selenium.common.exceptions.InvalidSessionIdException:
-      logger.exception('InvalidSessionIdException, browser probably crashed')
-    except selenium.common.exceptions.WebDriverException as error:
-      # check if 'message' is "disconnected: not connected to DevTools"
-      if 'disconnected' in str(error):
-        logger.exception(
-          'WebDriverException, browser probably crashed %s',
-          self.requested_url,
-        )
-    except urllib3.exceptions.HTTPError:
-      logger.exception('urllib3 HTTPError, browser probably hung %s', self.requested_url)
+    except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError) as e:
+      # only use the message for webdriver exceptions, as their string form
+      # includes the (native, and so not very useful) chromedriver stacktrace
+      message = e.msg if isinstance(e, selenium.common.exceptions.WebDriverException) else str(e)
+      logger.warning('%s when quitting browser to restart: %s', type(e).__name__, message)
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.requested_url = ''
     self._js_execution_context_id = None
