@@ -235,7 +235,7 @@ The steps to upgrade are:
 > [!TIP]
 >
 > macOS might come up with an error stating "chromedriver_mac_arm64" can't be
-> opened because Apple cannot check it for malicious software." This is fixed by
+> opened because Apple cannot check it for malicious software. This is fixed by
 > running `xattr -d com.apple.quarantine <path-to-executable-chromedriver>`
 
 ## Copyright notices
