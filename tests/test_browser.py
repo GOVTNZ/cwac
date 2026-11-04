@@ -141,24 +141,24 @@ class TestSafeRestart:
       pytest.param(
         InvalidSessionIdException('invalid session id', stacktrace=['#0 0x123']),
         # selenium appends a link to its docs for some exceptions
-        'InvalidSessionIdException when quitting browser to restart: invalid session id; '
+        'failed to quit browser before restart error=InvalidSessionIdException msg="invalid session id; '
         'For documentation on this error, please visit: '
-        'https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception',
+        'https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception"',
         id='InvalidSessionIdException',
       ),
       pytest.param(
         WebDriverException('disconnected: not connected to DevTools', stacktrace=['#0 0x123']),
-        'WebDriverException when quitting browser to restart: disconnected: not connected to DevTools',
+        'failed to quit browser before restart error=WebDriverException msg="disconnected: not connected to DevTools"',
         id='WebDriverException (disconnected)',
       ),
       pytest.param(
         WebDriverException('chrome not reachable', stacktrace=['#0 0x123']),
-        'WebDriverException when quitting browser to restart: chrome not reachable',
+        'failed to quit browser before restart error=WebDriverException msg="chrome not reachable"',
         id='WebDriverException (other)',
       ),
       pytest.param(
         urllib3.exceptions.ProtocolError('Connection aborted.'),
-        'ProtocolError when quitting browser to restart: Connection aborted.',
+        'failed to quit browser before restart error=ProtocolError msg="Connection aborted."',
         id='urllib3 HTTPError',
       ),
     ],
@@ -220,7 +220,7 @@ class TestSetWindowSize:
     browser.set_window_size(1280, 800)
 
     assert [(r.levelname, r.getMessage(), r.exc_info) for r in caplog.records] == [
-      ('WARNING', f'{type(error).__name__} when setting window size to 1280x800', None)
+      ('WARNING', f'failed to set window size width=1280 height=800 error={type(error).__name__}', None)
     ]
     spawn.assert_called_once_with(window_size={'width': 1280, 'height': 800})
 

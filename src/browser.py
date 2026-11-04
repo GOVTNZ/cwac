@@ -66,10 +66,12 @@ class Browser:  # pylint: disable=too-many-instance-attributes
         time.sleep(self.config.delay_after_page_load)
         return True
       except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError) as e:
-        logger.warning('%s when loading %s (attempt %i of %i)', type(e).__name__, url, attempt, self.num_retries)
+        logger.warning(
+          'failed to load page url=%s error=%s attempt=%i/%i', url, type(e).__name__, attempt, self.num_retries
+        )
         self.safe_restart()
 
-    logger.error('%i attempts failed to .get: %s', self.num_retries, url)
+    logger.error('gave up loading page url=%s attempts=%i', url, self.num_retries)
     return False
 
   def evaluate(self, js: str) -> Any:
@@ -164,7 +166,7 @@ class Browser:  # pylint: disable=too-many-instance-attributes
       # only use the message for webdriver exceptions, as their string form
       # includes the (native, and so not very useful) chromedriver stacktrace
       message = e.msg if isinstance(e, selenium.common.exceptions.WebDriverException) else str(e)
-      logger.warning('%s when quitting browser to restart: %s', type(e).__name__, message)
+      logger.warning('failed to quit browser before restart error=%s msg=%s', type(e).__name__, json.dumps(message))
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
     self.requested_url = ''
     self._js_execution_context_id = None
@@ -203,7 +205,7 @@ class Browser:  # pylint: disable=too-many-instance-attributes
       self.viewport_size = {'width': width, 'height': height}
       self.driver.set_window_size(width, height)
     except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError) as e:
-      logger.warning('%s when setting window size to %ix%i', type(e).__name__, width, height)
+      logger.warning('failed to set window size width=%i height=%i error=%s', width, height, type(e).__name__)
       self.safe_restart()
 
   def spawn_single_webdriver(self, window_size: dict[Any, Any]) -> WebDriverType:
