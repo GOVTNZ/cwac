@@ -6,9 +6,10 @@ from typing import Any, cast
 from unittest.mock import Mock, call
 
 import pytest
+import urllib3
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
-from selenium.common.exceptions import JavascriptException, TimeoutException
+from selenium.common.exceptions import JavascriptException, TimeoutException, WebDriverException
 
 from config import Config
 from src.browser import Browser
@@ -50,9 +51,70 @@ def mock_cdp_response(browser: Browser, response: dict[str, Any]) -> Mock:
   return execute_cdp_cmd
 
 
+@pytest.fixture(name='sleep', autouse=True)
+def fixture_sleep(mocker: MockerFixture) -> Mock:
+  """Skip the delay after loading a page."""
+  return mocker.patch('src.browser.time.sleep')
+
+
 def evaluated_context_ids(execute_cdp_cmd: Mock) -> list[int]:
   """Get the context id that each Runtime.evaluate call was run in."""
   return [c.args[1]['contextId'] for c in execute_cdp_cmd.call_args_list if c.args[0] == 'Runtime.evaluate']
+
+
+class TestGet:
+  """Tests Browser.get."""
+
+  def test_loads_the_url(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Loads the url once without restarting, and records it as the requested url."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+
+    assert browser.get(normalized_url('https://example.com/')) is True
+
+    cast(Mock, browser.driver.get).assert_called_once_with('https://example.com/')
+    safe_restart.assert_not_called()
+    assert browser.requested_url == 'https://example.com/'
+
+  @pytest.mark.parametrize(
+    'error',
+    [
+      pytest.param(TimeoutException(), id='TimeoutException'),
+      pytest.param(WebDriverException(), id='WebDriverException'),
+      pytest.param(urllib3.exceptions.ProtocolError(), id='urllib3 HTTPError'),
+    ],
+  )
+  def test_restarts_and_retries_when_loading_fails(
+    self, browser: Browser, mocker: MockerFixture, error: Exception
+  ) -> None:
+    """Restarts the browser after every failed attempt, including the last, then gives up."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+    cast(Mock, browser.driver.get).side_effect = error
+
+    assert browser.get(normalized_url('https://example.com/')) is False
+
+    assert cast(Mock, browser.driver.get).call_count == browser.num_retries
+    assert safe_restart.call_count == browser.num_retries
+    assert browser.requested_url == ''
+
+  def test_loads_the_url_after_a_failed_attempt(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Loads the url if a retry after restarting succeeds."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+    cast(Mock, browser.driver.get).side_effect = [TimeoutException(), None]
+
+    assert browser.get(normalized_url('https://example.com/')) is True
+
+    safe_restart.assert_called_once()
+    assert browser.requested_url == 'https://example.com/'
+
+  def test_does_not_handle_unexpected_exceptions(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Lets exceptions that aren't from the browser escape, as they're likely bugs."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+    cast(Mock, browser.driver.get).side_effect = ValueError('oh no')
+
+    with pytest.raises(ValueError, match='oh no'):
+      browser.get(normalized_url('https://example.com/'))
+
+    safe_restart.assert_not_called()
 
 
 class TestEvaluate:
@@ -89,9 +151,8 @@ class TestEvaluate:
 
     assert evaluated_context_ids(execute_cdp_cmd) == [1, 1, 1]
 
-  def test_creates_a_new_isolated_world_after_loading_a_page(self, browser: Browser, mocker: MockerFixture) -> None:
+  def test_creates_a_new_isolated_world_after_loading_a_page(self, browser: Browser) -> None:
     """Creates a new isolated world on the first evaluation after a page is loaded, and reuses it for that page."""
-    mocker.patch('src.browser.time.sleep')
     execute_cdp_cmd = mock_cdp_response(browser, {'result': {'type': 'undefined'}})
 
     browser.evaluate('1')

@@ -43,6 +43,10 @@ class Browser:  # pylint: disable=too-many-instance-attributes
   def get(self, url: NormalizedUrl) -> bool:
     """Load a URL in the webdriver.
 
+    If loading fails, the browser is assumed to be in a bad state and is restarted
+    before retrying, including after the last attempt so the browser is left in a
+    good state for whatever comes next.
+
     Args:
         url (str): url to load
 
@@ -50,34 +54,23 @@ class Browser:  # pylint: disable=too-many-instance-attributes
         bool: True if page loaded, False if something went wrong
     """
     self.requested_url = ''
-    for attempts in range(self.num_retries):
+    for attempt in range(1, self.num_retries + 1):
       try:
         logger.info('Running .get: %s', url)
         self._js_execution_context_id = None
         self.driver.get(url)
         logger.info('.get successful')
         self.requested_url = url
-        break
-      except selenium.common.exceptions.TimeoutException:
-        logger.exception('Timeout exception: %s, attempt:%i', url, attempts)
-        if attempts == self.num_retries - 1:
-          logger.error('%i attempts failed to .get: %s', attempts + 1, url)
-          return False
-      except selenium.common.exceptions.WebDriverException:
-        logger.exception('WebDriverException')
-        if attempts == self.num_retries - 1:
-          logger.error('%i attempts failed to .get: %s', attempts + 1, url)
-          return False
-        self.safe_restart()
-      except Exception:  # pylint: disable=broad-exception-caught
-        logger.exception('Unhandled exception')
-        if attempts == self.num_retries - 1:
-          logger.error('%i attempts failed to .get: %s', attempts + 1, url)
-          return False
 
-    # Delay to allow page to load more
-    time.sleep(self.config.delay_after_page_load)
-    return True
+        # Delay to allow page to load more
+        time.sleep(self.config.delay_after_page_load)
+        return True
+      except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError) as e:
+        logger.warning('%s when loading %s (attempt %i of %i)', type(e).__name__, url, attempt, self.num_retries)
+        self.safe_restart()
+
+    logger.error('%i attempts failed to .get: %s', self.num_retries, url)
+    return False
 
   def evaluate(self, js: str) -> Any:
     """Evaluate a JavaScript snippet on the current page using CDP.
