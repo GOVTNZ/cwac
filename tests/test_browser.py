@@ -122,6 +122,34 @@ class TestGet:
     safe_restart.assert_not_called()
 
 
+# the ways quitting the browser can fail, along with the fields that should be logged
+QUIT_ERRORS = [
+  pytest.param(
+    InvalidSessionIdException('invalid session id', stacktrace=['#0 0x123']),
+    # selenium appends a link to its docs for some exceptions
+    'error=InvalidSessionIdException msg="invalid session id; '
+    'For documentation on this error, please visit: '
+    'https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception"',
+    id='InvalidSessionIdException',
+  ),
+  pytest.param(
+    WebDriverException('disconnected: not connected to DevTools', stacktrace=['#0 0x123']),
+    'error=WebDriverException msg="disconnected: not connected to DevTools"',
+    id='WebDriverException (disconnected)',
+  ),
+  pytest.param(
+    WebDriverException('chrome not reachable', stacktrace=['#0 0x123']),
+    'error=WebDriverException msg="chrome not reachable"',
+    id='WebDriverException (other)',
+  ),
+  pytest.param(
+    urllib3.exceptions.ProtocolError('Connection aborted.'),
+    'error=ProtocolError msg="Connection aborted."',
+    id='urllib3 HTTPError',
+  ),
+]
+
+
 class TestSafeRestart:
   """Tests Browser.safe_restart."""
 
@@ -135,36 +163,28 @@ class TestSafeRestart:
     cast(Mock, old_driver.quit).assert_called_once()
     spawn.assert_called_once_with(window_size=browser.viewport_size)
 
-  @pytest.mark.parametrize(
-    ('error', 'expected_log'),
-    [
-      pytest.param(
-        InvalidSessionIdException('invalid session id', stacktrace=['#0 0x123']),
-        # selenium appends a link to its docs for some exceptions
-        'failed to quit browser before restart error=InvalidSessionIdException msg="invalid session id; '
-        'For documentation on this error, please visit: '
-        'https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception"',
-        id='InvalidSessionIdException',
-      ),
-      pytest.param(
-        WebDriverException('disconnected: not connected to DevTools', stacktrace=['#0 0x123']),
-        'failed to quit browser before restart error=WebDriverException msg="disconnected: not connected to DevTools"',
-        id='WebDriverException (disconnected)',
-      ),
-      pytest.param(
-        WebDriverException('chrome not reachable', stacktrace=['#0 0x123']),
-        'failed to quit browser before restart error=WebDriverException msg="chrome not reachable"',
-        id='WebDriverException (other)',
-      ),
-      pytest.param(
-        urllib3.exceptions.ProtocolError('Connection aborted.'),
-        'failed to quit browser before restart error=ProtocolError msg="Connection aborted."',
-        id='urllib3 HTTPError',
-      ),
-    ],
-  )
+  def test_replaces_the_temp_dir(self, browser: Browser, fs: FakeFilesystem) -> None:
+    """Removes the temp dir used by the old browser, and creates a new one for the new browser."""
+    old_tmp_dir = browser._chrome_tmp_dir  # pylint: disable=protected-access
+    assert old_tmp_dir is not None
+    assert fs.exists(old_tmp_dir)
+
+    browser.safe_restart()
+
+    new_tmp_dir = browser._chrome_tmp_dir  # pylint: disable=protected-access
+    assert new_tmp_dir is not None
+    assert new_tmp_dir != old_tmp_dir
+    assert not fs.exists(old_tmp_dir)
+    assert fs.exists(new_tmp_dir)
+
+  @pytest.mark.parametrize(('error', 'expected_fields'), QUIT_ERRORS)
   def test_logs_and_spawns_a_new_browser_when_quitting_fails(
-    self, browser: Browser, mocker: MockerFixture, caplog: pytest.LogCaptureFixture, error: Exception, expected_log: str
+    self,
+    browser: Browser,
+    mocker: MockerFixture,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+    expected_fields: str,
   ) -> None:
     """Logs a warning without the stacktrace when quitting fails, and spawns a new browser regardless."""
     cast(Mock, browser.driver.quit).side_effect = error
@@ -172,7 +192,9 @@ class TestSafeRestart:
 
     browser.safe_restart()
 
-    assert [(r.levelname, r.getMessage(), r.exc_info) for r in caplog.records] == [('WARNING', expected_log, None)]
+    assert [(r.levelname, r.getMessage(), r.exc_info) for r in caplog.records] == [
+      ('WARNING', f'failed to quit browser reason=restart {expected_fields}', None)
+    ]
     spawn.assert_called_once()
 
   def test_does_not_handle_unexpected_exceptions(self, browser: Browser) -> None:
@@ -181,6 +203,45 @@ class TestSafeRestart:
 
     with pytest.raises(ValueError, match='oh no'):
       browser.safe_restart()
+
+
+class TestClose:
+  """Tests Browser.close."""
+
+  def test_quits_the_browser_and_removes_its_temp_dir(self, browser: Browser, fs: FakeFilesystem) -> None:
+    """Quits the browser and removes the temp dir it was using."""
+    tmp_dir = browser._chrome_tmp_dir  # pylint: disable=protected-access
+    assert tmp_dir is not None
+    assert fs.exists(tmp_dir)
+
+    browser.close()
+
+    cast(Mock, browser.driver.quit).assert_called_once()
+    assert not fs.exists(tmp_dir)
+
+  @pytest.mark.parametrize(('error', 'expected_fields'), QUIT_ERRORS)
+  def test_logs_and_removes_the_temp_dir_when_quitting_fails(
+    self, browser: Browser, fs: FakeFilesystem, caplog: pytest.LogCaptureFixture, error: Exception, expected_fields: str
+  ) -> None:
+    """Logs a warning without the stacktrace when quitting fails, and removes the temp dir regardless."""
+    tmp_dir = browser._chrome_tmp_dir  # pylint: disable=protected-access
+    assert tmp_dir is not None
+    assert fs.exists(tmp_dir)
+    cast(Mock, browser.driver.quit).side_effect = error
+
+    browser.close()
+
+    assert [(r.levelname, r.getMessage(), r.exc_info) for r in caplog.records if r.levelname != 'INFO'] == [
+      ('WARNING', f'failed to quit browser reason=close {expected_fields}', None)
+    ]
+    assert not fs.exists(tmp_dir)
+
+  def test_does_not_handle_unexpected_exceptions(self, browser: Browser) -> None:
+    """Lets exceptions that aren't from the browser escape, as they're likely bugs."""
+    cast(Mock, browser.driver.quit).side_effect = ValueError('oh no')
+
+    with pytest.raises(ValueError, match='oh no'):
+      browser.close()
 
 
 class TestSetWindowSize:

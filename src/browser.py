@@ -155,10 +155,26 @@ class Browser:  # pylint: disable=too-many-instance-attributes
     return execution_context_id
 
   def safe_restart(self) -> None:
-    """Restart the webdriver.
+    """Restart the webdriver."""
+    self._quit('restart')
+    self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
 
-    Failing to quit is expected, since we're usually restarting because the browser
-    is in a bad state, and whatever caused that should have already been logged.
+  def close(self) -> None:
+    """Close the browser."""
+    logger.info('Quitting browser')
+    self._quit('close')
+
+  def _quit(self, reason: str) -> None:
+    """Quit the webdriver, logging rather than raising if the browser fails to quit.
+
+    State tied to the current browser is reset regardless, as it won't be valid
+    for whatever browser (if any) comes next.
+
+    Failing to quit is expected, since the browser is often in a bad state when
+    we're quitting it, and whatever caused that should have already been logged.
+
+    Args:
+        reason (str): why the browser is being quit, for logging
     """
     try:
       self.driver.quit()
@@ -166,18 +182,8 @@ class Browser:  # pylint: disable=too-many-instance-attributes
       # only use the message for webdriver exceptions, as their string form
       # includes the (native, and so not very useful) chromedriver stacktrace
       message = e.msg if isinstance(e, selenium.common.exceptions.WebDriverException) else str(e)
-      logger.warning('failed to quit browser before restart error=%s msg=%s', type(e).__name__, json.dumps(message))
-    self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
-    self.requested_url = ''
-    self._js_execution_context_id = None
+      logger.warning('failed to quit browser reason=%s error=%s msg=%s', reason, type(e).__name__, json.dumps(message))
 
-  def close(self) -> None:
-    """Close the browser."""
-    logger.info('Quitting browser')
-    try:
-      self.driver.quit()
-    except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
-      logger.exception('Failed to quit browser')
     self._remove_chrome_tmp_dir()
     self.requested_url = ''
     self._js_execution_context_id = None
