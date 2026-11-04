@@ -1176,7 +1176,10 @@ def test_run_audits_skips_an_audit_when_the_page_fails_to_load(
     ('get', 'https://bnl.com/'),
     ('run', 'first'),
     ('write', 'first'),
+    # the browser restarts after each failed attempt to load the page
     ('get', 'https://bnl.com/'),
+    ('restart',),
+    ('restart',),
     # second audit is not run since the page failed to load
     ('get', 'https://bnl.com/'),
     ('run', 'third'),
@@ -1225,8 +1228,13 @@ def test_run_audits_returns_false_when_the_page_fails_to_load_for_every_audit(
 
   assert event_log(events) == [
     ('set_window_size', 320, 450),
+    # the browser restarts after each failed attempt to load the page
     ('get', 'https://bnl.com/'),
+    ('restart',),
+    ('restart',),
     ('get', 'https://bnl.com/'),
+    ('restart',),
+    ('restart',),
   ]
 
   assert on_run.call_args_list == []
@@ -1265,6 +1273,9 @@ def test_run_audits_loads_the_page_for_an_audit_that_does_not_modify_it_after_a_
     ('set_window_size', 320, 450),
     *[
       ('get', 'https://bnl.com/news'),
+      # the browser restarts after each failed attempt to load the page
+      ('restart',),
+      ('restart',),
     ],
     # "reads_a" is not run since the page failed to load,
     # so the page is loaded again for the next two audits

@@ -6,9 +6,15 @@ from typing import Any, cast
 from unittest.mock import Mock, call
 
 import pytest
+import urllib3
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
-from selenium.common.exceptions import JavascriptException, TimeoutException
+from selenium.common.exceptions import (
+  InvalidSessionIdException,
+  JavascriptException,
+  TimeoutException,
+  WebDriverException,
+)
 
 from config import Config
 from src.browser import Browser
@@ -50,9 +56,244 @@ def mock_cdp_response(browser: Browser, response: dict[str, Any]) -> Mock:
   return execute_cdp_cmd
 
 
+@pytest.fixture(name='sleep', autouse=True)
+def fixture_sleep(mocker: MockerFixture) -> Mock:
+  """Skip the delay after loading a page."""
+  return mocker.patch('src.browser.time.sleep')
+
+
 def evaluated_context_ids(execute_cdp_cmd: Mock) -> list[int]:
   """Get the context id that each Runtime.evaluate call was run in."""
   return [c.args[1]['contextId'] for c in execute_cdp_cmd.call_args_list if c.args[0] == 'Runtime.evaluate']
+
+
+class TestGet:
+  """Tests Browser.get."""
+
+  def test_loads_the_url(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Loads the url once without restarting, and records it as the requested url."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+
+    assert browser.get(normalized_url('https://example.com/')) is True
+
+    cast(Mock, browser.driver.get).assert_called_once_with('https://example.com/')
+    safe_restart.assert_not_called()
+    assert browser.requested_url == 'https://example.com/'
+
+  @pytest.mark.parametrize(
+    'error',
+    [
+      pytest.param(TimeoutException(), id='TimeoutException'),
+      pytest.param(WebDriverException(), id='WebDriverException'),
+      pytest.param(urllib3.exceptions.ProtocolError(), id='urllib3 HTTPError'),
+    ],
+  )
+  def test_restarts_and_retries_when_loading_fails(
+    self, browser: Browser, mocker: MockerFixture, error: Exception
+  ) -> None:
+    """Restarts the browser after every failed attempt, including the last, then gives up."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+    cast(Mock, browser.driver.get).side_effect = error
+
+    assert browser.get(normalized_url('https://example.com/')) is False
+
+    assert cast(Mock, browser.driver.get).call_count == browser.num_retries
+    assert safe_restart.call_count == browser.num_retries
+    assert browser.requested_url == ''
+
+  def test_loads_the_url_after_a_failed_attempt(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Loads the url if a retry after restarting succeeds."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+    cast(Mock, browser.driver.get).side_effect = [TimeoutException(), None]
+
+    assert browser.get(normalized_url('https://example.com/')) is True
+
+    safe_restart.assert_called_once()
+    assert browser.requested_url == 'https://example.com/'
+
+  def test_does_not_handle_unexpected_exceptions(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Lets exceptions that aren't from the browser escape, as they're likely bugs."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+    cast(Mock, browser.driver.get).side_effect = ValueError('oh no')
+
+    with pytest.raises(ValueError, match='oh no'):
+      browser.get(normalized_url('https://example.com/'))
+
+    safe_restart.assert_not_called()
+
+
+# the ways quitting the browser can fail, along with the fields that should be logged
+QUIT_ERRORS = [
+  pytest.param(
+    InvalidSessionIdException('invalid session id', stacktrace=['#0 0x123']),
+    # selenium appends a link to its docs for some exceptions
+    'error=InvalidSessionIdException msg="invalid session id; '
+    'For documentation on this error, please visit: '
+    'https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception"',
+    id='InvalidSessionIdException',
+  ),
+  pytest.param(
+    WebDriverException('disconnected: not connected to DevTools', stacktrace=['#0 0x123']),
+    'error=WebDriverException msg="disconnected: not connected to DevTools"',
+    id='WebDriverException (disconnected)',
+  ),
+  pytest.param(
+    WebDriverException('chrome not reachable', stacktrace=['#0 0x123']),
+    'error=WebDriverException msg="chrome not reachable"',
+    id='WebDriverException (other)',
+  ),
+  pytest.param(
+    urllib3.exceptions.ProtocolError('Connection aborted.'),
+    'error=ProtocolError msg="Connection aborted."',
+    id='urllib3 HTTPError',
+  ),
+]
+
+
+class TestSafeRestart:
+  """Tests Browser.safe_restart."""
+
+  def test_quits_and_spawns_a_new_browser(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Quits the current browser and spawns a new one at the current viewport size."""
+    old_driver = browser.driver
+    spawn = mocker.spy(browser, 'spawn_single_webdriver')
+
+    browser.safe_restart()
+
+    cast(Mock, old_driver.quit).assert_called_once()
+    spawn.assert_called_once_with(window_size=browser.viewport_size)
+
+  def test_replaces_the_temp_dir(self, browser: Browser, fs: FakeFilesystem) -> None:
+    """Removes the temp dir used by the old browser, and creates a new one for the new browser."""
+    old_tmp_dir = browser._chrome_tmp_dir  # pylint: disable=protected-access
+    assert old_tmp_dir is not None
+    assert fs.exists(old_tmp_dir)
+
+    browser.safe_restart()
+
+    new_tmp_dir = browser._chrome_tmp_dir  # pylint: disable=protected-access
+    assert new_tmp_dir is not None
+    assert new_tmp_dir != old_tmp_dir
+    assert not fs.exists(old_tmp_dir)
+    assert fs.exists(new_tmp_dir)
+
+  @pytest.mark.parametrize(('error', 'expected_fields'), QUIT_ERRORS)
+  def test_logs_and_spawns_a_new_browser_when_quitting_fails(
+    self,
+    browser: Browser,
+    mocker: MockerFixture,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+    expected_fields: str,
+  ) -> None:
+    """Logs a warning without the stacktrace when quitting fails, and spawns a new browser regardless."""
+    cast(Mock, browser.driver.quit).side_effect = error
+    spawn = mocker.spy(browser, 'spawn_single_webdriver')
+
+    browser.safe_restart()
+
+    assert [(r.levelname, r.getMessage(), r.exc_info) for r in caplog.records] == [
+      ('WARNING', f'failed to quit browser reason=restart {expected_fields}', None)
+    ]
+    spawn.assert_called_once()
+
+  def test_does_not_handle_unexpected_exceptions(self, browser: Browser) -> None:
+    """Lets exceptions that aren't from the browser escape, as they're likely bugs."""
+    cast(Mock, browser.driver.quit).side_effect = ValueError('oh no')
+
+    with pytest.raises(ValueError, match='oh no'):
+      browser.safe_restart()
+
+
+class TestClose:
+  """Tests Browser.close."""
+
+  def test_quits_the_browser_and_removes_its_temp_dir(self, browser: Browser, fs: FakeFilesystem) -> None:
+    """Quits the browser and removes the temp dir it was using."""
+    tmp_dir = browser._chrome_tmp_dir  # pylint: disable=protected-access
+    assert tmp_dir is not None
+    assert fs.exists(tmp_dir)
+
+    browser.close()
+
+    cast(Mock, browser.driver.quit).assert_called_once()
+    assert not fs.exists(tmp_dir)
+
+  @pytest.mark.parametrize(('error', 'expected_fields'), QUIT_ERRORS)
+  def test_logs_and_removes_the_temp_dir_when_quitting_fails(
+    self, browser: Browser, fs: FakeFilesystem, caplog: pytest.LogCaptureFixture, error: Exception, expected_fields: str
+  ) -> None:
+    """Logs a warning without the stacktrace when quitting fails, and removes the temp dir regardless."""
+    tmp_dir = browser._chrome_tmp_dir  # pylint: disable=protected-access
+    assert tmp_dir is not None
+    assert fs.exists(tmp_dir)
+    cast(Mock, browser.driver.quit).side_effect = error
+
+    browser.close()
+
+    assert [(r.levelname, r.getMessage(), r.exc_info) for r in caplog.records if r.levelname != 'INFO'] == [
+      ('WARNING', f'failed to quit browser reason=close {expected_fields}', None)
+    ]
+    assert not fs.exists(tmp_dir)
+
+  def test_does_not_handle_unexpected_exceptions(self, browser: Browser) -> None:
+    """Lets exceptions that aren't from the browser escape, as they're likely bugs."""
+    cast(Mock, browser.driver.quit).side_effect = ValueError('oh no')
+
+    with pytest.raises(ValueError, match='oh no'):
+      browser.close()
+
+
+class TestSetWindowSize:
+  """Tests Browser.set_window_size."""
+
+  def test_sets_the_window_size(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Resizes the browser without restarting, and remembers the size for future restarts."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+
+    browser.set_window_size(1280, 800)
+
+    cast(Mock, browser.driver.set_window_size).assert_called_with(1280, 800)
+    safe_restart.assert_not_called()
+    assert browser.viewport_size == {'width': 1280, 'height': 800}
+
+  @pytest.mark.parametrize(
+    'error',
+    [
+      pytest.param(TimeoutException(), id='TimeoutException'),
+      pytest.param(WebDriverException(), id='WebDriverException'),
+      pytest.param(urllib3.exceptions.ProtocolError(), id='urllib3 HTTPError'),
+    ],
+  )
+  def test_restarts_at_the_new_size_when_resizing_fails(
+    self, browser: Browser, mocker: MockerFixture, caplog: pytest.LogCaptureFixture, error: Exception
+  ) -> None:
+    """Logs a warning without the stacktrace, and restarts the browser with the new size."""
+
+    def fail_unless_spawning(*args: int, **_: int) -> None:
+      # spawning resizes with keyword arguments, which should still succeed
+      if args:
+        raise error
+
+    cast(Mock, browser.driver.set_window_size).side_effect = fail_unless_spawning
+    spawn = mocker.spy(browser, 'spawn_single_webdriver')
+
+    browser.set_window_size(1280, 800)
+
+    assert [(r.levelname, r.getMessage(), r.exc_info) for r in caplog.records] == [
+      ('WARNING', f'failed to set window size width=1280 height=800 error={type(error).__name__}', None)
+    ]
+    spawn.assert_called_once_with(window_size={'width': 1280, 'height': 800})
+
+  def test_does_not_handle_unexpected_exceptions(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Lets exceptions that aren't from the browser escape, as they're likely bugs."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+    cast(Mock, browser.driver.set_window_size).side_effect = ValueError('oh no')
+
+    with pytest.raises(ValueError, match='oh no'):
+      browser.set_window_size(1280, 800)
+
+    safe_restart.assert_not_called()
 
 
 class TestEvaluate:
@@ -89,9 +330,8 @@ class TestEvaluate:
 
     assert evaluated_context_ids(execute_cdp_cmd) == [1, 1, 1]
 
-  def test_creates_a_new_isolated_world_after_loading_a_page(self, browser: Browser, mocker: MockerFixture) -> None:
+  def test_creates_a_new_isolated_world_after_loading_a_page(self, browser: Browser) -> None:
     """Creates a new isolated world on the first evaluation after a page is loaded, and reuses it for that page."""
-    mocker.patch('src.browser.time.sleep')
     execute_cdp_cmd = mock_cdp_response(browser, {'result': {'type': 'undefined'}})
 
     browser.evaluate('1')

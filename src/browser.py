@@ -43,6 +43,10 @@ class Browser:  # pylint: disable=too-many-instance-attributes
   def get(self, url: NormalizedUrl) -> bool:
     """Load a URL in the webdriver.
 
+    If loading fails, the browser is assumed to be in a bad state and is restarted
+    before retrying, including after the last attempt so the browser is left in a
+    good state for whatever comes next.
+
     Args:
         url (str): url to load
 
@@ -50,34 +54,25 @@ class Browser:  # pylint: disable=too-many-instance-attributes
         bool: True if page loaded, False if something went wrong
     """
     self.requested_url = ''
-    for attempts in range(self.num_retries):
+    for attempt in range(1, self.num_retries + 1):
       try:
         logger.info('Running .get: %s', url)
         self._js_execution_context_id = None
         self.driver.get(url)
         logger.info('.get successful')
         self.requested_url = url
-        break
-      except selenium.common.exceptions.TimeoutException:
-        logger.exception('Timeout exception: %s, attempt:%i', url, attempts)
-        if attempts == self.num_retries - 1:
-          logger.error('%i attempts failed to .get: %s', attempts + 1, url)
-          return False
-      except selenium.common.exceptions.WebDriverException:
-        logger.exception('WebDriverException')
-        if attempts == self.num_retries - 1:
-          logger.error('%i attempts failed to .get: %s', attempts + 1, url)
-          return False
-        self.safe_restart()
-      except Exception:  # pylint: disable=broad-exception-caught
-        logger.exception('Unhandled exception')
-        if attempts == self.num_retries - 1:
-          logger.error('%i attempts failed to .get: %s', attempts + 1, url)
-          return False
 
-    # Delay to allow page to load more
-    time.sleep(self.config.delay_after_page_load)
-    return True
+        # Delay to allow page to load more
+        time.sleep(self.config.delay_after_page_load)
+        return True
+      except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError) as e:
+        logger.warning(
+          'failed to load page url=%s error=%s attempt=%i/%i', url, type(e).__name__, attempt, self.num_retries
+        )
+        self.safe_restart()
+
+    logger.error('gave up loading page url=%s attempts=%i', url, self.num_retries)
+    return False
 
   def evaluate(self, js: str) -> Any:
     """Evaluate a JavaScript snippet on the current page using CDP.
@@ -161,30 +156,34 @@ class Browser:  # pylint: disable=too-many-instance-attributes
 
   def safe_restart(self) -> None:
     """Restart the webdriver."""
-    try:
-      self.driver.quit()
-    except selenium.common.exceptions.InvalidSessionIdException:
-      logger.exception('InvalidSessionIdException, browser probably crashed')
-    except selenium.common.exceptions.WebDriverException as error:
-      # check if 'message' is "disconnected: not connected to DevTools"
-      if 'disconnected' in str(error):
-        logger.exception(
-          'WebDriverException, browser probably crashed %s',
-          self.requested_url,
-        )
-    except urllib3.exceptions.HTTPError:
-      logger.exception('urllib3 HTTPError, browser probably hung %s', self.requested_url)
+    self._quit('restart')
     self.driver = self.spawn_single_webdriver(window_size=self.viewport_size)
-    self.requested_url = ''
-    self._js_execution_context_id = None
 
   def close(self) -> None:
     """Close the browser."""
     logger.info('Quitting browser')
+    self._quit('close')
+
+  def _quit(self, reason: str) -> None:
+    """Quit the webdriver, logging rather than raising if the browser fails to quit.
+
+    State tied to the current browser is reset regardless, as it won't be valid
+    for whatever browser (if any) comes next.
+
+    Failing to quit is expected, since the browser is often in a bad state when
+    we're quitting it, and whatever caused that should have already been logged.
+
+    Args:
+        reason (str): why the browser is being quit, for logging
+    """
     try:
       self.driver.quit()
-    except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
-      logger.exception('Failed to quit browser')
+    except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError) as e:
+      # only use the message for webdriver exceptions, as their string form
+      # includes the (native, and so not very useful) chromedriver stacktrace
+      message = e.msg if isinstance(e, selenium.common.exceptions.WebDriverException) else str(e)
+      logger.warning('failed to quit browser reason=%s error=%s msg=%s', reason, type(e).__name__, json.dumps(message))
+
     self._remove_chrome_tmp_dir()
     self.requested_url = ''
     self._js_execution_context_id = None
@@ -201,6 +200,9 @@ class Browser:  # pylint: disable=too-many-instance-attributes
   def set_window_size(self, width: int, height: int) -> None:
     """Set browser size.
 
+    If resizing fails, the browser is assumed to be in a bad state and is restarted,
+    which also applies the new size since the browser is spawned with it.
+
     Args:
         width (int): width of browser.
         height (int): height of browser.
@@ -208,8 +210,8 @@ class Browser:  # pylint: disable=too-many-instance-attributes
     try:
       self.viewport_size = {'width': width, 'height': height}
       self.driver.set_window_size(width, height)
-    except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
-      logger.exception('Failed to set window size')
+    except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError) as e:
+      logger.warning('failed to set window size width=%i height=%i error=%s', width, height, type(e).__name__)
       self.safe_restart()
 
   def spawn_single_webdriver(self, window_size: dict[Any, Any]) -> WebDriverType:
