@@ -183,6 +183,58 @@ class TestSafeRestart:
       browser.safe_restart()
 
 
+class TestSetWindowSize:
+  """Tests Browser.set_window_size."""
+
+  def test_sets_the_window_size(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Resizes the browser without restarting, and remembers the size for future restarts."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+
+    browser.set_window_size(1280, 800)
+
+    cast(Mock, browser.driver.set_window_size).assert_called_with(1280, 800)
+    safe_restart.assert_not_called()
+    assert browser.viewport_size == {'width': 1280, 'height': 800}
+
+  @pytest.mark.parametrize(
+    'error',
+    [
+      pytest.param(TimeoutException(), id='TimeoutException'),
+      pytest.param(WebDriverException(), id='WebDriverException'),
+      pytest.param(urllib3.exceptions.ProtocolError(), id='urllib3 HTTPError'),
+    ],
+  )
+  def test_restarts_at_the_new_size_when_resizing_fails(
+    self, browser: Browser, mocker: MockerFixture, caplog: pytest.LogCaptureFixture, error: Exception
+  ) -> None:
+    """Logs a warning without the stacktrace, and restarts the browser with the new size."""
+
+    def fail_unless_spawning(*args: int, **_: int) -> None:
+      # spawning resizes with keyword arguments, which should still succeed
+      if args:
+        raise error
+
+    cast(Mock, browser.driver.set_window_size).side_effect = fail_unless_spawning
+    spawn = mocker.spy(browser, 'spawn_single_webdriver')
+
+    browser.set_window_size(1280, 800)
+
+    assert [(r.levelname, r.getMessage(), r.exc_info) for r in caplog.records] == [
+      ('WARNING', f'{type(error).__name__} when setting window size to 1280x800', None)
+    ]
+    spawn.assert_called_once_with(window_size={'width': 1280, 'height': 800})
+
+  def test_does_not_handle_unexpected_exceptions(self, browser: Browser, mocker: MockerFixture) -> None:
+    """Lets exceptions that aren't from the browser escape, as they're likely bugs."""
+    safe_restart = mocker.spy(browser, 'safe_restart')
+    cast(Mock, browser.driver.set_window_size).side_effect = ValueError('oh no')
+
+    with pytest.raises(ValueError, match='oh no'):
+      browser.set_window_size(1280, 800)
+
+    safe_restart.assert_not_called()
+
+
 class TestEvaluate:
   """Tests Browser.evaluate."""
 

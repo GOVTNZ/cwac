@@ -192,6 +192,9 @@ class Browser:  # pylint: disable=too-many-instance-attributes
   def set_window_size(self, width: int, height: int) -> None:
     """Set browser size.
 
+    If resizing fails, the browser is assumed to be in a bad state and is restarted,
+    which also applies the new size since the browser is spawned with it.
+
     Args:
         width (int): width of browser.
         height (int): height of browser.
@@ -199,8 +202,8 @@ class Browser:  # pylint: disable=too-many-instance-attributes
     try:
       self.viewport_size = {'width': width, 'height': height}
       self.driver.set_window_size(width, height)
-    except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError):
-      logger.exception('Failed to set window size')
+    except (selenium.common.exceptions.WebDriverException, urllib3.exceptions.HTTPError) as e:
+      logger.warning('%s when setting window size to %ix%i', type(e).__name__, width, height)
       self.safe_restart()
 
   def spawn_single_webdriver(self, window_size: dict[Any, Any]) -> WebDriverType:
