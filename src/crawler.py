@@ -11,7 +11,6 @@ from typing import cast
 import selenium.common.exceptions
 import urllib3
 
-import src.filters
 import src.output
 from config import Config
 from config import SiteData as ConfigSiteData
@@ -118,7 +117,7 @@ class Crawler:
 
     return audit_plugins
 
-  def crawl(self, site_data: SiteData) -> None:  # noqa: PLR0912, PLR0915
+  def crawl(self, site_data: SiteData) -> None:  # noqa: PLR0912
     """Crawls a domain and executes the AuditManager.
 
     Sanitises the URL and checks if it should be crawled by checking:
@@ -156,12 +155,6 @@ class Crawler:
 
     queue = PageQueue()
     queue.push(DiscoveredPage(base_url, base_url))
-
-    # Filter and sanitise the initial URL
-    if not src.filters.has_allowed_file_type(base_url):
-      self.record_pages_scanned(site_data, pages_scanned)
-      logger.warning('base_url was filtered out! %s', base_url)
-      return
 
     has_crawled_sitemap = not self.config.crawl_sitemaps
 
