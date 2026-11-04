@@ -21,7 +21,6 @@ class CrawlablePageValidator:
     """Initialise the validator."""
     self.config = config
     self.analytics = analytics
-    self.url_filter = src.filters.URLFilter(config)
 
   def validate(
     self,
@@ -82,7 +81,7 @@ class CrawlablePageValidator:
     Returns:
         bool: True if the URL is eligible to be crawled, else False
     """
-    if not self.url_filter.run_url_filters(url):
+    if not src.filters.has_allowed_file_type(url):
       return False
 
     if not self._owns_url(base_url, url):

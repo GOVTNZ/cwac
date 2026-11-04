@@ -50,7 +50,6 @@ class Crawler:
     self.browser = browser
     self.url_queue = url_queue
     self.analytics = analytics
-    self.url_filter = src.filters.URLFilter(self.config)
     self.page_validator = CrawlablePageValidator(config=self.config, analytics=self.analytics)
     self.audit_plugins = self.load_audit_plugins()
 
@@ -159,7 +158,7 @@ class Crawler:
     queue.push(DiscoveredPage(base_url, base_url))
 
     # Filter and sanitise the initial URL
-    if not self.url_filter.run_url_filters(base_url):
+    if not src.filters.has_allowed_file_type(base_url):
       self.record_pages_scanned(site_data, pages_scanned)
       logger.warning('base_url was filtered out! %s', base_url)
       return
