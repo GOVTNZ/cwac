@@ -30,8 +30,11 @@ RUN apt-get update && \
 # create cwac directory
 WORKDIR /cwac
 
-# create .venv
-RUN python3.12 -m venv .venv
+# install python (via uv) and create the .venv
+ENV UV_PYTHON_INSTALL_DIR=/opt/python
+RUN --mount=from=ghcr.io/astral-sh/uv:0.13.0,source=/uv,target=/bin/uv \
+    uv python install 3.15.0 && \
+    $(uv python find 3.15.0) -m venv .venv
 
 ENV VIRTUAL_ENV=".venv" \
     PATH=".venv/bin:$PATH"
@@ -46,7 +49,7 @@ COPY requirements.txt .
 
 # install dependencies, and then remove stuff we don't need when running the tool,
 # along with test files as they can be quite large for dependencies like pandas
-RUN python3.12 -m pip install --no-cache-dir -r requirements.txt && \
+RUN python3.15 -m pip install --no-cache-dir -r requirements.txt && \
     python3 -m pip uninstall -y ruff mypy pyfakefs pytest pytest-mock pip && \
     find .venv/lib -depth -type d \( -name tests -o -name test \) -exec rm -rf -- {} +
 
