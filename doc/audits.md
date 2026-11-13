@@ -14,5 +14,6 @@ audit works.
 | [Focus indicator audit](audits/focus-indicator-audit.md) | Checks whether keyboard focus produces a visible on-screen indicator.                              |
 | [Language audit](audits/language-audit.md)               | Measures readability and optional sentiment for English-language pages.                            |
 | [Reflow audit](audits/reflow-audit.md)                   | Checks whether a page overflows horizontally at a 320px viewport.                                  |
+| [Rendered object audit](audits/rendered-object-audit.md) | Detects likely JavaScript object coercion mistakes in rendered page text.                          |
 | [Screenshot audit](audits/screenshot-audit.md)           | Captures a screenshot of each scanned page for visual review.                                      |
 | [Title audit](audits/title-audit.md)                     | Records each page's `<title>` element for manual review of uniqueness and clarity.                 |
