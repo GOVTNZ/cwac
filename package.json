@@ -15,7 +15,7 @@
     "axe-core": "4.14.0"
   },
   "devDependencies": {
-    "prettier": "^3.9.10",
+    "prettier": "^3.10.1",
     "prettier-config-ackama": "^1.2.0"
   }
 }
